@@ -72,7 +72,30 @@
     반제품 : 상부 분리막 - isaTypeOf - 반제품 : Separator
     반제품 : 하부 분리막 - isaTypeOf - 반제품 : Separator
 
+>>> 수정
+    Polarity라는 class를 추가해서 상부 전극이 양극 or 음극일 때의 상황을 대비
+
 14. 반제품 : Cathode - hasAbbreviation - C
     반제품 : Anode - hasAbbreviation - A
     반제품 : Separator - hasAbbreviation - S
+
+>>> 수정
+    skos 연동하여 Cathode, Anode, Separator 각 Individual에 속성을 넣음
+
+15. 불량 : AC_Gap - measures_gap_between - 반제품 : Cathode, Anode
+    불량 : AS_Gap - measures_gap_between - 반제품 : Anode, Separator
+    불량 : CS_Gap - measures_gap_between - 반제품 : Cathode, Separator
+
+16. 반제품 : Cathode - hasFeature - 반제품 : Cathode_tab
+    반제품 : Anode - hasFeature - 반제품 : Anode_tab
+
+17. 진행 방향 - hasIndividual - 진행 방향 : Left_to_Right
+    진행 방향 - hasIndividual - 진행 방향 : Right_to_Left
+
+18. 제품 Side Position - hasIndividual - 제품 Side Position : Upper_side
+    제품 Side Position - hasIndividual - 제품 Side Position : Lower_side
+
+
+
+
 
