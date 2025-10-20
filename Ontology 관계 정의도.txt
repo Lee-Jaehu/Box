@@ -61,4 +61,18 @@
     공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정 - produces - 반제품 : 모노셀
     반제품 : 모노셀 - isComposedOf - 반제품 : 상부 전극(Cut), 상부 분리막(Cut), 중앙 전극(Cut), 하부 분리막(Cut)
 
+11. 반제품 : 상부 전극(Cut) - isSmallerThan - 반제품 : 중앙 전극(Cut)
+    반제품 : 중앙 전극(Cut) - isSmallerThan - 반제품 : 상부 분리막(Cut), 하부 분리막(Cut)
+
+12. 반제품 : 중앙 전극(Cut) - isSurroundedBy - 반제품 : 상부 분리막(Cut), 하부 분리막(Cut)
+    반제품 : 상부 전극(Cut) - isSurroundedBy - 반제품 : 중앙 전극(Cut)
+
+13. 반제품 : 상부 전극 - isaTypeOf - 반제품 : Cathode
+    반제품 : 중앙 전극 - isaTypeOf - 반제품 : Anode
+    반제품 : 상부 분리막 - isaTypeOf - 반제품 : Separator
+    반제품 : 하부 분리막 - isaTypeOf - 반제품 : Separator
+
+14. 반제품 : Cathode - hasAbbreviation - C
+    반제품 : Anode - hasAbbreviation - A
+    반제품 : Separator - hasAbbreviation - S
 
