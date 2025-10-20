@@ -1,4 +1,4 @@
-1. 공정 : Lamination - hasPart - 공정 : 상부 분리막 (Roll)_중앙 전극 (Cut)_하부 분리막(Roll)_합치_공정 
+1. 공정 : Lamination - hasPart - 공정 : 상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll)_합치_공정 
    공정 : Lamination - hasPart - 공정 : 상부 전극(Cut)_상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll)_합치_공정 
    공정 : Lamination - hasPart - 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정
 
@@ -29,4 +29,36 @@
 >>> 수정
    반제품 - hasForm - Form : Roll / Cut
 
-6. 
+6. 반제품 : 상부 전극 - hasInitialForm - 반제품 : 상부 전극(Roll)
+   반제품 : 중앙 전극 - hasInitialForm - 반제품 : 중앙 전극(Roll)
+   반제품 : 상부 분리막 - hasInitialForm - 반제품 : 상부 분리막(Roll)
+   반제품 : 하부 분리막 - hasInitialForm - 반제품 : 하부 분리막(Roll)
+
+>>> 수정
+   상부/중앙 전극, 상부/하부 분리막 Individual 생성하여 Object Property 로 생성
+
+7. 반제품 : 상부 전극 - hasFinalForm - 반제품 : 상부 전극(Cut)
+   반제품 : 중앙 전극 - hasFinalForm - 반제품 : 중앙 전극(Cut)
+   반제품 : 상부 분리막 - hasFinalForm - 반제품 : 상부 분리막(Cut)
+   반제품 : 하부 분리막 - hasFinalForm - 반제품 : 하부 분리막(Cut)
+
+>>> 수정
+   상부/중앙 전극, 상부/하부 분리막 Individual 생성하여 Object Property 로 생성
+
+8. 공정 : 상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll)_합치_공정 - hasInput - 반제품 : 중앙 전극(Roll), 상부 분리막(Roll), 하부 분리막(Roll) #중앙 전극 컷팅 후, 상부/하부 분리막 과 합치하는 과정 에는 최초 Roll 형태의 중앙 전극 / 상부 분리막 / 하부 분리막이 투입 된다 
+   반제품 : 중앙 전극(Roll) - isCutBy - 설비 : Cutter1_중앙 전극 #중앙 전극은 Cutter1에 의해 cutting 된다
+   공정 : 상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll)_합치_공정 - produces - 반제품 : 상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll) #중앙 전극 컷팅 후, 상부/하부 분리막 과 합치하는 과정 에서 Roll 형태의 상부/하부 분리막 과 Cutting 된 중앙 전극이 생산된다 
+   반제품 : 상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll) - isComposedOf - 반제품 : 상부 분리막(Roll), 중앙 전극(Cut), 하부 분리막(Roll) #해당 공정에서 생성된 반제품은 Roll 형태의 상부/하부 분리막 과 Cutting 된 중앙 전극으로 구성된다
+
+9. 공정 : 상부 전극(Cut)_상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll)_합치_공정 - hasInput - 반제품 : 상부 분리막(Roll), 중앙 전극(Cut), 하부 분리막(Roll), 상부 전극(Roll) #상부 전극 컷팅 후, 8번에서 만들어진 반제품과 합치하는 과정 에는 최초 Roll 형태의 상부 전극 과 8번에서 만들어진 반제품이 투입된다
+   반제품 : 상부 전극(Roll) - isCutBy - 설비 : Cutter2_상부 전극 #상부 전극(Roll)은 Cutter2에 의해 cutting 된다
+   공정 : 상부 전극(Cut) - isStackedOn - 반제품 : 상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll) #상부 전극(Cut)은 8번에서 만들어진 반제품 위에 쌓인다
+   반제품 : 상부 전극(Cut)_상부 분리막(Roll)_중앙 전극(Cut)_하부 분리막(Roll) - isComposedOf - 반제품 : 상부 전극(Cut), 상부 분리막(Roll), 중앙 전극(Cut), 하부 분리막(Roll)
+
+10. 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정 - hasInput - 반제품 : 상부 전극(Cut), 상부 분리막(Roll), 중앙 전극(Cut), 하부 분리막(Roll)
+    반제품 : 상부 분리막(Roll) - isCutBy - 설비 : Cutter3_분리막
+    반제품 : 하부 분리막(Roll) - isCutBy - 설비 : Cutter3_분리막
+    공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정 - produces - 반제품 : 모노셀
+    반제품 : 모노셀 - isComposedOf - 반제품 : 상부 전극(Cut), 상부 분리막(Cut), 중앙 전극(Cut), 하부 분리막(Cut)
+
+
