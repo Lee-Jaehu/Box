@@ -82,17 +82,17 @@
 >>> 수정
     skos 연동하여 Cathode, Anode, Separator 각 Individual에 속성을 넣음
 
-15. 불량 : AC_Gap - measures_gap_between - 반제품 : Cathode, Anode
+15. 불량 : AC_Gap - measures_gap_between - 반제품 : Cathode, Anode #가장 기본적인 AC/AS/CS 정의
     불량 : AS_Gap - measures_gap_between - 반제품 : Anode, Separator
     불량 : CS_Gap - measures_gap_between - 반제품 : Cathode, Separator
 
-16. 반제품 : Cathode - hasFeature - 반제품 : Cathode_tab
+16. 반제품 : Cathode - hasFeature - 반제품 : Cathode_tab #전극에는 Tab 이 있다는 것을 정의
     반제품 : Anode - hasFeature - 반제품 : Anode_tab
 
-17. 진행 방향 - hasIndividual - 진행 방향 : Left_to_Right
+17. 진행 방향 - hasIndividual - 진행 방향 : Left_to_Right #설비의 진행 방향에 따라 Tab 위치가 달라짐. 그에 따라 진행 방향을 우선 정의 
     진행 방향 - hasIndividual - 진행 방향 : Right_to_Left
 
-18. 제품 Side Position - hasIndividual - 제품 Side Position : Upper_side
+18. 제품 Side Position - hasIndividual - 제품 Side Position : Upper_side #탭 위치가 위/아래에 있을 수 있으니, 우선 위/아래가 존재한다는 것을 정의
     제품 Side Position - hasIndividual - 제품 Side Position : Lower_side
 
 19. 반제품 : Cathode, 진행 방향 : Left_To_Right - has_tab_at_when_direction_is - 제품 Side Position : Lower_Side
@@ -100,18 +100,24 @@
     반제품 : Cathode, 진행 방향 : Right_To_Left - has_tab_at_when_direction_is - 제품 Side Position : Upper_Side
     반제품 : Anode, 진행 방향 : Right_To_Left - has_tab_at_when_direction_is - 제품 Side Position : Lower_Side
 
-20. 불량 : TWC - defines_width_of - 반제품 : Cathode_Tab
+20. 불량 : TWC - defines_width_of - 반제품 : Cathode_Tab #Tab 폭인 TWC / TWA 정의
     불량 : TWA - defines_width_of - 반제품 : Anode_Tab
 
-21. 불량 : TPC - measures_position_of - 반제품 : Cathode_Tab
+21. 불량 : TPC - measures_position_of - 반제품 : Cathode_Tab #Tab 위치를 정의하는 TPC/TPA 정의
     불량 : TPC - measures_distance_to - 반제품 : Cathode_Side
     불량 : TPC - uses_reference_point - Measurement_Reference : Tab_Side_Edge
     불량 : TPA - measures_position_of - 반제품 : Anode_Tab
     불량 : TPA - measures_distance_to - 반제품 : Anode_Side
     불량 : TPA - uses_reference_point - Measurement_Reference : Tab_Side_Edge
 
-22. 불량 : AA - measures_distance_between_consecutive - 반제품 : Anode
-    불량 : AA - is_relevant_to_stage_Before - 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정
+22. 불량 : AA - measures_distance_between_consecutive - 반제품 : Anode #AA 정의
+    불량 : AA - is_relevant_to_stage_Before - 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정 #모노셀이 만들어 지기전, 즉 분리막이 컷팅 되기전 측정한다는 것을 정의
+
+23. Measurement_Reference : Sealing_Side_Edge - is_feature_of - 반제품 : Separator #SAG/SCG 정의
+    불량 : SAG - measures_distance_from_feature - 반제품 : Anode, Measurement_Reference : Sealing_Side_Edge
+    불량 : SCG - measures_distance_from_feature - 반제품 : Cathode, Measurement_Reference : Sealing_Side_Edge
+    불량 : SAG, SCG - is_relevant_to_stage_Before - 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정 #모노셀이 만들어 지기전, 즉 분리막이 컷팅 되기전 측정한다는 것을 정의
+
 
 
 
