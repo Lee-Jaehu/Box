@@ -86,19 +86,31 @@
     불량 : AS_Gap - measures_gap_between - 반제품 : Anode, Separator
     불량 : CS_Gap - measures_gap_between - 반제품 : Cathode, Separator
 
+>>> 수정
+    Object를 gap에 국한하지 않고 측정하는 형태에 대해서 모두 사용할 수 있도록 measureRole로 변경
+
 16. 반제품 : Cathode - hasFeature - 반제품 : Cathode_tab #전극에는 Tab 이 있다는 것을 정의
     반제품 : Anode - hasFeature - 반제품 : Anode_tab
 
 17. 진행 방향 - hasIndividual - 진행 방향 : Left_to_Right #설비의 진행 방향에 따라 Tab 위치가 달라짐. 그에 따라 진행 방향을 우선 정의 
     진행 방향 - hasIndividual - 진행 방향 : Right_to_Left
 
+>>> 수정
+    hasDirection (Functional) 을 Object로 지정
+
 18. 제품 Side Position - hasIndividual - 제품 Side Position : Upper_side #탭 위치가 위/아래에 있을 수 있으니, 우선 위/아래가 존재한다는 것을 정의
     제품 Side Position - hasIndividual - 제품 Side Position : Lower_side
+
+>>> 수정
+    hasSidePosition (Functional) 을 Object로 지정
 
 19. 반제품 : Cathode, 진행 방향 : Left_To_Right - has_tab_at_when_direction_is - 제품 Side Position : Lower_Side
     반제품 : Anode, 진행 방향 : Left_To_Right - has_tab_at_when_direction_is - 제품 Side Position : Upper_Side
     반제품 : Cathode, 진행 방향 : Right_To_Left - has_tab_at_when_direction_is - 제품 Side Position : Upper_Side
     반제품 : Anode, 진행 방향 : Right_To_Left - has_tab_at_when_direction_is - 제품 Side Position : Lower_Side
+
+>>> 수정
+    극성(어떤 설비에 어떤 극성의 전극인지), 이동방향 등을 Object로 추가해서 Axiom으로 추가
 
 20. 불량 : TWC - defines_width_of - 반제품 : Cathode_Tab #Tab 폭인 TWC / TWA 정의
     불량 : TWA - defines_width_of - 반제품 : Anode_Tab
@@ -117,6 +129,7 @@
     불량 : SAG - measures_distance_from_feature - 반제품 : Anode, Measurement_Reference : Sealing_Side_Edge
     불량 : SCG - measures_distance_from_feature - 반제품 : Cathode, Measurement_Reference : Sealing_Side_Edge
     불량 : SAG, SCG - is_relevant_to_stage_Before - 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정 #모노셀이 만들어 지기전, 즉 분리막이 컷팅 되기전 측정한다는 것을 정의
+
 
 
 
