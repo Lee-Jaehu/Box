@@ -130,10 +130,87 @@
     불량 : SCG - measures_distance_from_feature - 반제품 : Cathode, Measurement_Reference : Sealing_Side_Edge
     불량 : SAG, SCG - is_relevant_to_stage_Before - 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정 #모노셀이 만들어 지기전, 즉 분리막이 컷팅 되기전 측정한다는 것을 정의
 
+24. Gap_Data_Field : AC_1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Right_Side_Upper
+    Gap_Data_Field : AC_2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : AC_3 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : AC_4 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Left_Side_Upper
 
+25. Gap_Data_Field : AC_1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Left_Side_Upper
+    Gap_Data_Field : AC_2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : AC_3 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : AC_4 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Right_Side_Upper
 
+26. Gap_Data_Field : CS_1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Right_Side_Upper
+    Gap_Data_Field : CS_2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : CS_3 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : CS_4 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Left_Side_Upper
 
+27. Gap_Data_Field : CS_1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Left_Side_Upper
+    Gap_Data_Field : CS_2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : CS_3 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : CS_4 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Right_Side_Upper
 
+28. Gap_Data_Field : AS_1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Right_Side_Upper
+    Gap_Data_Field : AS_2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : AS_3 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : AS_4 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Left_Side_Upper
 
+29. Gap_Data_Field : AS_1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Left_Side_Upper
+    Gap_Data_Field : AS_2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : AS_3 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : AS_4 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Right_Side_Upper
 
+30. Gap_Data_Field : AC_A1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Upper_Side_Right
+    Gap_Data_Field : AC_A2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Upper_Side_Left
+    Gap_Data_Field : AC_C1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Lower_Side_Right
+    Gap_Data_Field : AC_C2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Lower_Side_Left
 
+31. Gap_Data_Field : AC_A1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Lower_Side_Left
+    Gap_Data_Field : AC_A2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Lower_Side_Right
+    Gap_Data_Field : AC_C1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Upper_Side_Left
+    Gap_Data_Field : AC_C2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Upper_Side_Right
+
+32. Gap_Data_Field : CS_A1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Upper_Side_Right
+    Gap_Data_Field : CS_A2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Upper_Side_Left
+    Gap_Data_Field : CS_C1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Lower_Side_Right
+    Gap_Data_Field : CS_C2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Lower_Side_Left
+
+33. Gap_Data_Field : CS_A1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Lower_Side_Left
+    Gap_Data_Field : CS_A2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Lower_Side_Right
+    Gap_Data_Field : CS_C1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Upper_Side_Left
+    Gap_Data_Field : CS_C2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Upper_Side_Right
+
+34. Gap_Data_Field : AS_A1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Upper_Side_Right
+    Gap_Data_Field : AS_A2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Upper_Side_Left
+    Gap_Data_Field : AS_C1 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Lower_Side_Right
+    Gap_Data_Field : AS_C2 - maps_to_point_when_진행방향_is_Left_To_Right - Measurement_Point : Lower_Side_Left
+
+35. Gap_Data_Field : CS_A1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Lower_Side_Left
+    Gap_Data_Field : CS_A2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Lower_Side_Right
+    Gap_Data_Field : CS_C1 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Upper_Side_Left
+    Gap_Data_Field : CS_C2 - maps_to_point_when_진행방향_is_Right_To_Left - Measurement_Point : Upper_Side_Right
+
+36. 불량 : SAG - involves_cell_sequence - Cell Sequence : Leading_cell #SAG/SCG는 두 전극 사이를 측정한다는 것을 정의해야함으로 선두셀과 후발셀이 있다고 표현
+    불량 : SAG - involves_cell_sequence - Cell Sequence : Trailing_cell
+    불량 : SCG - involves_cell_sequence - Cell Sequence : Leading_cell
+    불량 : SCG - involves_cell_sequence - Cell Sequence : Trailing_cell
+
+37. Gap_Data_Field : SAG1 - is_measured_on_cell Trailing_Cell_when_Left_To_Right - Measurement_Point : Right_Side_Upper
+    Gap_Data_Field : SAG2 - is_measured_on_cell Trailing_Cell_when_Left_To_Right - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : SAG3 - is_measured_on_cell Leading_Cell_when_Left_To_Right - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : SAG4 - is_measured_on_cell Leading_Cell_when_Left_To_Right - Measurement_Point : Left_Side_Upper
+
+38. Gap_Data_Field : SAG1 - is_measured_on_cell Trailing_Cell_when_Right_To_Left - Measurement_Point : Left_Side_Upper
+    Gap_Data_Field : SAG2 - is_measured_on_cell Trailing_Cell_when_Right_To_Left - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : SAG3 - is_measured_on_cell Leading_Cell_when_Right_To_Left - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : SAG4 - is_measured_on_cell Leading_Cell_when_Right_To_Left - Measurement_Point : Right_Side_Upper
+
+39. Gap_Data_Field : SCG1 - is_measured_on_cell Trailing_Cell_when_Left_To_Right - Measurement_Point : Right_Side_Upper
+    Gap_Data_Field : SCG2 - is_measured_on_cell Trailing_Cell_when_Left_To_Right - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : SCG3 - is_measured_on_cell Leading_Cell_when_Left_To_Right - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : SCG4 - is_measured_on_cell Leading_Cell_when_Left_To_Right - Measurement_Point : Left_Side_Upper
+
+40. Gap_Data_Field : SCG1 - is_measured_on_cell Trailing_Cell_when_Right_To_Left - Measurement_Point : Left_Side_Upper
+    Gap_Data_Field : SCG2 - is_measured_on_cell Trailing_Cell_when_Right_To_Left - Measurement_Point : Left_Side_Lower
+    Gap_Data_Field : SCG3 - is_measured_on_cell Leading_Cell_when_Right_To_Left - Measurement_Point : Right_Side_Lower
+    Gap_Data_Field : SCG4 - is_measured_on_cell Leading_Cell_when_Right_To_Left - Measurement_Point : Right_Side_Upper
