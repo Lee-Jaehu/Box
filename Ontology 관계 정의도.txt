@@ -95,6 +95,25 @@
 18. 제품 Side Position - hasIndividual - 제품 Side Position : Upper_side
     제품 Side Position - hasIndividual - 제품 Side Position : Lower_side
 
+19. 반제품 : Cathode, 진행 방향 : Left_To_Right - has_tab_at_when_direction_is - 제품 Side Position : Lower_Side
+    반제품 : Anode, 진행 방향 : Left_To_Right - has_tab_at_when_direction_is - 제품 Side Position : Upper_Side
+    반제품 : Cathode, 진행 방향 : Right_To_Left - has_tab_at_when_direction_is - 제품 Side Position : Upper_Side
+    반제품 : Anode, 진행 방향 : Right_To_Left - has_tab_at_when_direction_is - 제품 Side Position : Lower_Side
+
+20. 불량 : TWC - defines_width_of - 반제품 : Cathode_Tab
+    불량 : TWA - defines_width_of - 반제품 : Anode_Tab
+
+21. 불량 : TPC - measures_position_of - 반제품 : Cathode_Tab
+    불량 : TPC - measures_distance_to - 반제품 : Cathode_Side
+    불량 : TPC - uses_reference_point - Measurement_Reference : Tab_Side_Edge
+    불량 : TPA - measures_position_of - 반제품 : Anode_Tab
+    불량 : TPA - measures_distance_to - 반제품 : Anode_Side
+    불량 : TPA - uses_reference_point - Measurement_Reference : Tab_Side_Edge
+
+22. 불량 : AA - measures_distance_between_consecutive - 반제품 : Anode
+    불량 : AA - is_relevant_to_stage_Before - 공정 : 상부 전극(Cut)_상부 분리막(Cut)_중앙 전극(Cut)_하부 분리막(Cut)_Final Cut_공정
+
+
 
 
 
