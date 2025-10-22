@@ -1,0 +1,2012 @@
+@prefix : <http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@base <http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/> .
+
+<http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10> rdf:type owl:Ontology ;
+                                                                           owl:imports <http://www.w3.org/2004/02/skos/core> .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/appliesWhenDirection
+:appliesWhenDirection rdf:type owl:ObjectProperty ;
+                      rdfs:domain :FieldPointMapping ;
+                      rdfs:range :MovementDirection .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/appliesWhenSequenceRole
+:appliesWhenSequenceRole rdf:type owl:ObjectProperty ;
+                         rdfs:domain :FieldPointMapping ;
+                         rdfs:range :CellSequenceRole .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/belongsToEquipment
+:belongsToEquipment rdf:type owl:ObjectProperty ;
+                    rdfs:domain :Electrode ;
+                    rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasDirection
+:hasDirection rdf:type owl:ObjectProperty ,
+                       owl:FunctionalProperty ;
+              rdfs:domain :Equipment ;
+              rdfs:range :MovementDirection .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasFeature
+:hasFeature rdf:type owl:ObjectProperty ;
+            owl:inverseOf :isFeatureOf ;
+            rdfs:domain :Electrode ;
+            rdfs:range :Feature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasFinalForm
+:hasFinalForm rdf:type owl:ObjectProperty ,
+                       owl:FunctionalProperty ;
+              rdfs:domain :LayeredPart ;
+              rdfs:range :Form .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasForm
+:hasForm rdf:type owl:ObjectProperty ,
+                  owl:FunctionalProperty ;
+         rdfs:domain :LayeredPart ;
+         rdfs:range :Form .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasFunction
+:hasFunction rdf:type owl:ObjectProperty ;
+             rdfs:domain :SemiProduct ;
+             rdfs:range skos:Concept .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasInitialForm
+:hasInitialForm rdf:type owl:ObjectProperty ,
+                         owl:FunctionalProperty ;
+                rdfs:domain :LayeredPart ;
+                rdfs:range :Form .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasInput
+:hasInput rdf:type owl:ObjectProperty ;
+          rdfs:domain :Process ;
+          rdfs:range :Material .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasPart
+:hasPart rdf:type owl:ObjectProperty ,
+                  owl:TransitiveProperty ;
+         rdfs:domain :Process ;
+         rdfs:range :Process .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasPattern
+:hasPattern rdf:type owl:ObjectProperty ;
+            rdfs:domain :SpacingDefect ;
+            rdfs:range :MeasurementPattern .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasPolarity
+:hasPolarity rdf:type owl:ObjectProperty ;
+             rdfs:domain :LayeredPart ;
+             rdfs:range :Polarity .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasRequiredTabSide
+:hasRequiredTabSide rdf:type owl:ObjectProperty ,
+                             owl:FunctionalProperty ;
+                    rdfs:domain :Electrode ;
+                    rdfs:range :ProductSidePosition .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/hasSidePosition
+:hasSidePosition rdf:type owl:ObjectProperty ,
+                          owl:FunctionalProperty ;
+                 rdfs:domain :ElectrodeTab ;
+                 rdfs:range :ProductSidePosition .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/involvesCellSequence
+:involvesCellSequence rdf:type owl:ObjectProperty ;
+                      rdfs:domain :PositionDefect ;
+                      rdfs:range :CellSequenceRole .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isComposedOf
+:isComposedOf rdf:type owl:ObjectProperty ;
+              rdfs:subPropertyOf :hasPart .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isCoverdAboveBy
+:isCoverdAboveBy rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf :isSurroundedBy .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isCutBy
+:isCutBy rdf:type owl:ObjectProperty ;
+         rdfs:subPropertyOf :participatesWith ;
+         rdfs:domain :SemiProduct ;
+         rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isFeatureOf
+:isFeatureOf rdf:type owl:ObjectProperty ;
+             rdfs:domain :Feature ;
+             rdfs:range :SemiProduct .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isLargerThan
+:isLargerThan rdf:type owl:ObjectProperty ;
+              owl:inverseOf :isSmallerThan ;
+              rdfs:domain :LayeredPart ;
+              rdfs:range :LayeredPart .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isPlacedOn
+:isPlacedOn rdf:type owl:ObjectProperty ;
+            rdfs:domain :Material ;
+            rdfs:range :Material .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isRelevantToStageBefore
+:isRelevantToStageBefore rdf:type owl:ObjectProperty ;
+                         rdfs:domain :Defect ;
+                         rdfs:range :SubProcess .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isSmallerThan
+:isSmallerThan rdf:type owl:ObjectProperty ,
+                        owl:AsymmetricProperty ,
+                        owl:TransitiveProperty ,
+                        owl:IrreflexiveProperty ;
+               rdfs:domain :LayeredPart ;
+               rdfs:range :LayeredPart .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isStackedOn
+:isStackedOn rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf :isPlacedOn .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isSupportedBelowBy
+:isSupportedBelowBy rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf :isSurroundedBy .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/isSurroundedBy
+:isSurroundedBy rdf:type owl:ObjectProperty ,
+                         owl:AsymmetricProperty ,
+                         owl:IrreflexiveProperty .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/mapsField
+:mapsField rdf:type owl:ObjectProperty ;
+           rdfs:domain :FieldPointMapping ;
+           rdfs:range :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/mapsToPoint
+:mapsToPoint rdf:type owl:ObjectProperty ;
+             rdfs:domain :FieldPointMapping ;
+             rdfs:range :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/measuresDistanceTo
+:measuresDistanceTo rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf :measuresTarget ;
+                    rdfs:domain :PositionDefect ;
+                    rdfs:range :SideFeature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/measuresFeature
+:measuresFeature rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf :measuresTarget ;
+                 rdfs:domain :WidthDefect ;
+                 rdfs:range :ElectrodeTab .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/measuresFromFeature
+:measuresFromFeature rdf:type owl:ObjectProperty ;
+                     rdfs:domain :PositionDefect ;
+                     rdfs:range :EdgeFeature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/measuresGap
+:measuresGap rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf :measuresTarget ;
+             rdfs:domain :GapDefect ;
+             rdfs:range skos:Concept .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/measuresPositionOf
+:measuresPositionOf rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf :measuresTarget ;
+                    rdfs:domain :PositionDefect ;
+                    rdfs:range :ElectrodeTab .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/measuresTarget
+:measuresTarget rdf:type owl:ObjectProperty ;
+                rdfs:domain :Defect ;
+                rdfs:range [ rdf:type owl:Class ;
+                             owl:unionOf ( :GapDefect
+                                           :PositionDefect
+                                           :WidthDefect
+                                         )
+                           ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/measuresToRole
+:measuresToRole rdf:type owl:ObjectProperty ;
+                rdfs:domain :PositionDefect ;
+                rdfs:range skos:Concept .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/participatesWith
+:participatesWith rdf:type owl:ObjectProperty ;
+                  rdfs:domain :SemiProduct ;
+                  rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/precedes
+:precedes rdf:type owl:ObjectProperty ,
+                   owl:AsymmetricProperty ,
+                   owl:IrreflexiveProperty ;
+          rdfs:domain :SubProcess ;
+          rdfs:range :SubProcess .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/produces
+:produces rdf:type owl:ObjectProperty ;
+          rdfs:domain :Process ;
+          rdfs:range :Material .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/usesReferencePoint
+:usesReferencePoint rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf :measuresTarget ;
+                    rdfs:domain :PositionDefect ;
+                    rdfs:range :MeasurementReference .
+
+
+#################################################################
+#    Data properties
+#################################################################
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/layerIndex
+:layerIndex rdf:type owl:DatatypeProperty ;
+            rdfs:domain :LayeredPart ;
+            rdfs:range xsd:integer .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/operationOrder
+:operationOrder rdf:type owl:DatatypeProperty ;
+                rdfs:domain :SubProcess ;
+                rdfs:range xsd:integer .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AA
+:AA rdf:type owl:Class ;
+    rdfs:subClassOf :SpacingDefect ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasPattern ;
+                      owl:hasValue :ConsecutivePair
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :isRelevantToStageBefore ;
+                      owl:hasValue <http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TE(Cut)_TS(Cut)_CE(Cut)_BS(Cut)>
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :measuresGap ;
+                      owl:hasValue :Anode
+                    ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_Gap
+:AC_Gap rdf:type owl:Class ;
+        owl:equivalentClass [ owl:intersectionOf ( :GapDefect
+                                                   [ rdf:type owl:Restriction ;
+                                                     owl:onProperty :measuresGap ;
+                                                     owl:hasValue :Anode
+                                                   ]
+                                                   [ rdf:type owl:Restriction ;
+                                                     owl:onProperty :measuresGap ;
+                                                     owl:hasValue :Cathode
+                                                   ]
+                                                 ) ;
+                              rdf:type owl:Class
+                            ] ;
+        rdfs:subClassOf :GapDefect ,
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :measuresGap ;
+                          owl:qualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                          owl:onClass skos:Concept
+                        ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_Gap
+:AS_Gap rdf:type owl:Class ;
+        owl:equivalentClass [ owl:intersectionOf ( :GapDefect
+                                                   [ rdf:type owl:Restriction ;
+                                                     owl:onProperty :measuresGap ;
+                                                     owl:hasValue :Anode
+                                                   ]
+                                                   [ rdf:type owl:Restriction ;
+                                                     owl:onProperty :measuresGap ;
+                                                     owl:hasValue :Separator
+                                                   ]
+                                                 ) ;
+                              rdf:type owl:Class
+                            ] ;
+        rdfs:subClassOf :GapDefect ,
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :measuresGap ;
+                          owl:qualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                          owl:onClass skos:Concept
+                        ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AnodeSide
+:AnodeSide rdf:type owl:Class ;
+           rdfs:subClassOf :SideFeature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AnodeTab
+:AnodeTab rdf:type owl:Class ;
+          rdfs:subClassOf :ElectrodeTab .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/BottomSeparator
+:BottomSeparator rdf:type owl:Class ;
+                 rdfs:subClassOf :Separator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/BottomSeparatorCut
+:BottomSeparatorCut rdf:type owl:Class ;
+                    owl:equivalentClass [ owl:intersectionOf ( :BottomSeparator
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty :hasForm ;
+                                                                 owl:hasValue :Cut
+                                                               ]
+                                                             ) ;
+                                          rdf:type owl:Class
+                                        ] ;
+                    rdfs:subClassOf :BottomSeparator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/BottomSeparatorRoll
+:BottomSeparatorRoll rdf:type owl:Class ;
+                     owl:equivalentClass [ owl:intersectionOf ( :BottomSeparator
+                                                                [ rdf:type owl:Restriction ;
+                                                                  owl:onProperty :hasForm ;
+                                                                  owl:hasValue :Roll
+                                                                ]
+                                                              ) ;
+                                           rdf:type owl:Class
+                                         ] ;
+                     rdfs:subClassOf :BottomSeparator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_Gap
+:CS_Gap rdf:type owl:Class ;
+        owl:equivalentClass [ owl:intersectionOf ( :GapDefect
+                                                   [ rdf:type owl:Restriction ;
+                                                     owl:onProperty :measuresGap ;
+                                                     owl:hasValue :Cathode
+                                                   ]
+                                                   [ rdf:type owl:Restriction ;
+                                                     owl:onProperty :measuresGap ;
+                                                     owl:hasValue :Separator
+                                                   ]
+                                                 ) ;
+                              rdf:type owl:Class
+                            ] ;
+        rdfs:subClassOf :GapDefect ,
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :measuresGap ;
+                          owl:qualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                          owl:onClass skos:Concept
+                        ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CathodeSide
+:CathodeSide rdf:type owl:Class ;
+             rdfs:subClassOf :SideFeature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CathodeTab
+:CathodeTab rdf:type owl:Class ;
+            rdfs:subClassOf :ElectrodeTab .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CellSequenceRole
+:CellSequenceRole rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CenterElectrode
+:CenterElectrode rdf:type owl:Class ;
+                 owl:equivalentClass [ owl:intersectionOf ( :Electrode
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty :hasPolarity ;
+                                                              owl:hasValue :AnodeRole
+                                                            ]
+                                                          ) ;
+                                       rdf:type owl:Class
+                                     ] ;
+                 rdfs:subClassOf :Electrode ,
+                                 [ rdf:type owl:Restriction ;
+                                   owl:onProperty :isPlacedOn ;
+                                   owl:someValuesFrom :BottomSeparator
+                                 ] ,
+                                 [ rdf:type owl:Restriction ;
+                                   owl:onProperty :hasFeature ;
+                                   owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                   owl:onClass :AnodeTab
+                                 ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CenterElectrodeCut
+:CenterElectrodeCut rdf:type owl:Class ;
+                    owl:equivalentClass [ owl:intersectionOf ( :CenterElectrode
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty :hasForm ;
+                                                                 owl:hasValue :Cut
+                                                               ]
+                                                             ) ;
+                                          rdf:type owl:Class
+                                        ] ;
+                    rdfs:subClassOf :CenterElectrode .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CenterElectrodeRoll
+:CenterElectrodeRoll rdf:type owl:Class ;
+                     owl:equivalentClass [ owl:intersectionOf ( :CenterElectrode
+                                                                [ rdf:type owl:Restriction ;
+                                                                  owl:onProperty :hasForm ;
+                                                                  owl:hasValue :Roll
+                                                                ]
+                                                              ) ;
+                                           rdf:type owl:Class
+                                         ] ;
+                     rdfs:subClassOf :CenterElectrode .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CutProcess
+:CutProcess rdf:type owl:Class ;
+            rdfs:subClassOf :SubProcess .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Cutter
+:Cutter rdf:type owl:Class ;
+        rdfs:subClassOf :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Defect
+:Defect rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/EdgeFeature
+:EdgeFeature rdf:type owl:Class ;
+             rdfs:subClassOf :Feature ,
+                             [ rdf:type owl:Restriction ;
+                               owl:onProperty :isFeatureOf ;
+                               owl:someValuesFrom :Separator
+                             ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Electrode
+:Electrode rdf:type owl:Class ;
+           rdfs:subClassOf :LayeredPart .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/ElectrodeTab
+:ElectrodeTab rdf:type owl:Class ;
+              rdfs:subClassOf :TabFeature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Equipment
+:Equipment rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Feature
+:Feature rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/FieldPointMapping
+:FieldPointMapping rdf:type owl:Class ;
+                   rdfs:subClassOf [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                                            owl:onProperty :appliesWhenDirection ;
+                                                            owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                            owl:onClass :MovementDirection
+                                                          ]
+                                                          [ rdf:type owl:Restriction ;
+                                                            owl:onProperty :mapsField ;
+                                                            owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                            owl:onClass :GapDataField
+                                                          ]
+                                                          [ rdf:type owl:Restriction ;
+                                                            owl:onProperty :mapsToPoint ;
+                                                            owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                            owl:onClass :MeasurementPoint
+                                                          ]
+                                                        ) ;
+                                     rdf:type owl:Class
+                                   ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/FinalCutProcess
+:FinalCutProcess rdf:type owl:Class ;
+                 rdfs:subClassOf :SubProcess .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Form
+:Form rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/GapDataField
+:GapDataField rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/GapDefect
+:GapDefect rdf:type owl:Class ;
+           rdfs:subClassOf :Defect .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/LaminationProcess
+:LaminationProcess rdf:type owl:Class ;
+                   rdfs:subClassOf :Process ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasInput ;
+                                     owl:someValuesFrom :BottomSeparator
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasInput ;
+                                     owl:someValuesFrom :CenterElectrode
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasInput ;
+                                     owl:someValuesFrom :MonoCell
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasInput ;
+                                     owl:someValuesFrom :TopElectrode
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasInput ;
+                                     owl:someValuesFrom :TopSeparator
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasPart ;
+                                     owl:someValuesFrom :CutProcess
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasPart ;
+                                     owl:someValuesFrom :MergeProcess
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :hasPart ;
+                                     owl:someValuesFrom :RollProcess
+                                   ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/LayeredPart
+:LayeredPart rdf:type owl:Class ;
+             rdfs:subClassOf :SemiProduct .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Material
+:Material rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/MeasurementPattern
+:MeasurementPattern rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/MeasurementPoint
+:MeasurementPoint rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/MeasurementReference
+:MeasurementReference rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/MergeProcess
+:MergeProcess rdf:type owl:Class ;
+              rdfs:subClassOf :SubProcess .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/MonoCell
+:MonoCell rdf:type owl:Class ;
+          rdfs:subClassOf :SemiProduct ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasPart ;
+                            owl:someValuesFrom :BottomSeparator
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasPart ;
+                            owl:someValuesFrom :CenterElectrode
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasPart ;
+                            owl:someValuesFrom :TopElectrode
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasPart ;
+                            owl:someValuesFrom :TopSeparator
+                          ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/MovementDirection
+:MovementDirection rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Polarity
+:Polarity rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/PositionDefect
+:PositionDefect rdf:type owl:Class ;
+                rdfs:subClassOf :Defect .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Process
+:Process rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/ProductSidePosition
+:ProductSidePosition rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/RollProcess
+:RollProcess rdf:type owl:Class ;
+             rdfs:subClassOf :SubProcess .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SAG
+:SAG rdf:type owl:Class ;
+     rdfs:subClassOf :PositionDefect ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresFromFeature ;
+                       owl:someValuesFrom :SealingSideEdge
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresFromFeature ;
+                       owl:allValuesFrom :SealingSideEdge
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :involvesCellSequence ;
+                       owl:hasValue :Leading_Cell
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :involvesCellSequence ;
+                       owl:hasValue :Trailing_Cell
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :isRelevantToStageBefore ;
+                       owl:hasValue <http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TE(Cut)_TS(Cut)_CE(Cut)_BS(Cut)>
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresToRole ;
+                       owl:hasValue :Anode
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :involvesCellSequence ;
+                       owl:qualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                       owl:onClass :CellSequenceRole
+                     ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SCG
+:SCG rdf:type owl:Class ;
+     rdfs:subClassOf :PositionDefect ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresFromFeature ;
+                       owl:someValuesFrom :SealingSideEdge
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresFromFeature ;
+                       owl:allValuesFrom :SealingSideEdge
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :involvesCellSequence ;
+                       owl:hasValue :Leading_Cell
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :involvesCellSequence ;
+                       owl:hasValue :Trailing_Cell
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :isRelevantToStageBefore ;
+                       owl:hasValue <http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TE(Cut)_TS(Cut)_CE(Cut)_BS(Cut)>
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresToRole ;
+                       owl:hasValue :Cathode
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :involvesCellSequence ;
+                       owl:qualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                       owl:onClass :CellSequenceRole
+                     ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SealingSideEdge
+:SealingSideEdge rdf:type owl:Class ;
+                 rdfs:subClassOf :EdgeFeature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SemiProduct
+:SemiProduct rdf:type owl:Class ;
+             rdfs:subClassOf :Material .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Separator
+:Separator rdf:type owl:Class ;
+           rdfs:subClassOf :LayeredPart .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SideFeature
+:SideFeature rdf:type owl:Class ;
+             rdfs:subClassOf :Feature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SpacingDefect
+:SpacingDefect rdf:type owl:Class ;
+               rdfs:subClassOf :GapDefect .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SubProcess
+:SubProcess rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TPA
+:TPA rdf:type owl:Class ;
+     rdfs:subClassOf :PositionDefect ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresDistanceTo ;
+                       owl:allValuesFrom :AnodeSide
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresPositionOf ;
+                       owl:allValuesFrom :AnodeTab
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :usesReferencePoint ;
+                       owl:allValuesFrom :TabSideEdge
+                     ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TPC
+:TPC rdf:type owl:Class ;
+     rdfs:subClassOf :PositionDefect ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresDistanceTo ;
+                       owl:allValuesFrom :CathodeSide
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresPositionOf ;
+                       owl:allValuesFrom :CathodeTab
+                     ] ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :usesReferencePoint ;
+                       owl:allValuesFrom :TabSideEdge
+                     ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TWA
+:TWA rdf:type owl:Class ;
+     rdfs:subClassOf :WidthDefect ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresFeature ;
+                       owl:allValuesFrom :AnodeTab
+                     ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TWC
+:TWC rdf:type owl:Class ;
+     rdfs:subClassOf :WidthDefect ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :measuresFeature ;
+                       owl:allValuesFrom :CathodeTab
+                     ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TabFeature
+:TabFeature rdf:type owl:Class ;
+            rdfs:subClassOf :Feature .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TabSideEdge
+:TabSideEdge rdf:type owl:Class ;
+             rdfs:subClassOf :MeasurementReference .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopElectrode
+:TopElectrode rdf:type owl:Class ;
+              owl:equivalentClass [ owl:intersectionOf ( :Electrode
+                                                         [ rdf:type owl:Restriction ;
+                                                           owl:onProperty :hasPolarity ;
+                                                           owl:hasValue :CathodeRole
+                                                         ]
+                                                       ) ;
+                                    rdf:type owl:Class
+                                  ] ;
+              rdfs:subClassOf :Electrode ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :isPlacedOn ;
+                                owl:someValuesFrom :TopSeparator
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :hasFeature ;
+                                owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                owl:onClass :CathodeTab
+                              ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopElectrodeCut
+:TopElectrodeCut rdf:type owl:Class ;
+                 owl:equivalentClass [ owl:intersectionOf ( :TopElectrode
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty :hasForm ;
+                                                              owl:hasValue :Cut
+                                                            ]
+                                                          ) ;
+                                       rdf:type owl:Class
+                                     ] ;
+                 rdfs:subClassOf :TopElectrode .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopElectrodeRoll
+:TopElectrodeRoll rdf:type owl:Class ;
+                  owl:equivalentClass [ owl:intersectionOf ( :TopElectrode
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty :hasForm ;
+                                                               owl:hasValue :Roll
+                                                             ]
+                                                           ) ;
+                                        rdf:type owl:Class
+                                      ] ;
+                  rdfs:subClassOf :TopElectrode .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopSeparator
+:TopSeparator rdf:type owl:Class ;
+              rdfs:subClassOf :Separator ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :isPlacedOn ;
+                                owl:someValuesFrom :CenterElectrode
+                              ] .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopSeparatorCut
+:TopSeparatorCut rdf:type owl:Class ;
+                 owl:equivalentClass [ owl:intersectionOf ( :TopSeparator
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty :hasForm ;
+                                                              owl:hasValue :Cut
+                                                            ]
+                                                          ) ;
+                                       rdf:type owl:Class
+                                     ] ;
+                 rdfs:subClassOf :TopSeparator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopSeparatorRoll
+:TopSeparatorRoll rdf:type owl:Class ;
+                  owl:equivalentClass [ owl:intersectionOf ( :TopSeparator
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty :hasForm ;
+                                                               owl:hasValue :Roll
+                                                             ]
+                                                           ) ;
+                                        rdf:type owl:Class
+                                      ] ;
+                  rdfs:subClassOf :TopSeparator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/WidthDefect
+:WidthDefect rdf:type owl:Class ;
+             rdfs:subClassOf :Defect .
+
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SAG_1_RTL
+:Map_SAG_1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SAG_1 ;
+               :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SAG_2_LTR
+:Map_SAG_2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SAG_2 ;
+               :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SAG_2_RTL
+:Map_SAG_2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SAG_2 ;
+               :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SAG_3_LTR
+:Map_SAG_3_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SAG_3 ;
+               :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SAG_3_RTL
+:Map_SAG_3_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SAG_3 ;
+               :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SAG_4_LTR
+:Map_SAG_4_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SAG_4 ;
+               :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SAG_4_RTL
+:Map_SAG_4_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SAG_4 ;
+               :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_1_LTR
+:Map_SCG_1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SCG_1 ;
+               :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_1_RTL
+:Map_SCG_1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SCG_1 ;
+               :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_2_LTR
+:Map_SCG_2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SCG_2 ;
+               :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_2_RTL
+:Map_SCG_2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SCG_2 ;
+               :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_3_LTR
+:Map_SCG_3_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SCG_3 ;
+               :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_3_RTL
+:Map_SCG_3_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SCG_3 ;
+               :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_4_LTR
+:Map_SCG_4_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SCG_4 ;
+               :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#Map_SCG_4_RTL
+:Map_SCG_4_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :appliesWhenSequenceRole :Leading_Cell ;
+               :mapsField :SCG_4 ;
+               :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#SCG_1
+:SCG_1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#SCG_2
+:SCG_2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#SCG_3
+:SCG_3 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#SCG_4
+:SCG_4 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TE(Cut)_TS(Cut)_CE(Cut)_BS(Cut)
+<http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TE(Cut)_TS(Cut)_CE(Cut)_BS(Cut)> rdf:type owl:NamedIndividual ,
+                                                                                                                   :FinalCutProcess ;
+                                                                                                          :hasInput :SecondStepLami ;
+                                                                                                          :produces :MonoCell-001 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TE(Cut)_TS(Roll)_CE(Cut)_BS(Roll)
+<http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TE(Cut)_TS(Roll)_CE(Cut)_BS(Roll)> rdf:type owl:NamedIndividual ,
+                                                                                                                     :MergeProcess ;
+                                                                                                            :hasInput :FirstStepLami ,
+                                                                                                                      :TopElectrodeCut-001 ;
+                                                                                                            :isComposedOf :FirstStepLami ,
+                                                                                                                          :TopElectrodeCut-001 ;
+                                                                                                            :produces :SecondStepLami .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TS(Roll)_CE(Cut)_BS(Roll)
+<http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10#TS(Roll)_CE(Cut)_BS(Roll)> rdf:type owl:NamedIndividual ,
+                                                                                                             :MergeProcess ;
+                                                                                                    :hasInput :BottomSeparatorRoll-001 ,
+                                                                                                              :CenterElectrodeCut-001 ,
+                                                                                                              :TopSeparatorRoll-001 ;
+                                                                                                    :isComposedOf :BottomSeparatorRoll-001 ,
+                                                                                                                  :CenterElectrodeCut-001 ,
+                                                                                                                  :TopSeparatorRoll-001 ;
+                                                                                                    :produces :FirstStepLami .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_1
+:AC_1 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_2
+:AC_2 rdf:type owl:NamedIndividual ,
+               :GapDataField ;
+      :mapsField :AC_2 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_3
+:AC_3 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_4
+:AC_4 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_A1
+:AC_A1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_A2
+:AC_A2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_C1
+:AC_C1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AC_C2
+:AC_C2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_1
+:AS_1 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_2
+:AS_2 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_3
+:AS_3 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_4
+:AS_4 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_A1
+:AS_A1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_A2
+:AS_A2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_C1
+:AS_C1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AS_C2
+:AS_C2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Anode
+:Anode rdf:type owl:NamedIndividual ,
+                skos:Concept ;
+       skos:inScheme :BatteryComponentFunction ;
+       skos:notation "A"@en ;
+       rdfs:label "음극"@ko ;
+       skos:prefLabel "Anode"@en .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/AnodeRole
+:AnodeRole rdf:type owl:NamedIndividual ,
+                    :Polarity .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/BatteryComponentFunction
+:BatteryComponentFunction rdf:type owl:NamedIndividual ,
+                                   skos:ConceptScheme .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/BottomSeparator-001
+:BottomSeparator-001 rdf:type owl:NamedIndividual ,
+                              :BottomSeparator ;
+                     :hasFinalForm :Cut ;
+                     :hasFunction :Separator ;
+                     :hasInitialForm :Roll ;
+                     :layerIndex 1 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/BottomSeparatorCut-001
+:BottomSeparatorCut-001 rdf:type owl:NamedIndividual ,
+                                 :BottomSeparatorCut .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/BottomSeparatorRoll-001
+:BottomSeparatorRoll-001 rdf:type owl:NamedIndividual ,
+                                  :BottomSeparatorRoll ;
+                         :hasForm :Roll ;
+                         :hasInitialForm :Roll ;
+                         :isCoverdAboveBy :TopSeparatorCut-001 ;
+                         :isCutBy :Cutter3_Separator ;
+                         :isPlacedOn :CenterElectrodeCut-001 ;
+                         :isSupportedBelowBy :BottomSeparatorCut-001 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_1
+:CS_1 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_2
+:CS_2 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_3
+:CS_3 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_4
+:CS_4 rdf:type owl:NamedIndividual ,
+               :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_A1
+:CS_A1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_A2
+:CS_A2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_C1
+:CS_C1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CS_C2
+:CS_C2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Cathode
+:Cathode rdf:type owl:NamedIndividual ,
+                  skos:Concept ;
+         skos:inScheme :BatteryComponentFunction ;
+         skos:notation "C"@en ;
+         rdfs:label "양극"@ko ;
+         skos:prefLabel "Cathode"@en .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CathodeRole
+:CathodeRole rdf:type owl:NamedIndividual ,
+                      :Polarity .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CenterElectrode-001
+:CenterElectrode-001 rdf:type owl:NamedIndividual ,
+                              :CenterElectrode ;
+                     :hasFinalForm :Cut ;
+                     :hasFunction :Anode ;
+                     :hasInitialForm :Roll ;
+                     :layerIndex 2 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CenterElectrodeCut-001
+:CenterElectrodeCut-001 rdf:type owl:NamedIndividual ,
+                                 :CenterElectrodeCut ;
+                        :hasForm :Cut ;
+                        :hasInitialForm :Roll ;
+                        :isSmallerThan :BottomSeparatorCut-001 ,
+                                       :TopSeparatorCut-001 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/CenterElectrodeRoll-001
+:CenterElectrodeRoll-001 rdf:type owl:NamedIndividual ,
+                                  :CenterElectrodeRoll ;
+                         :isCutBy :Cutter1_CenterElectrode .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/ConsecutivePair
+:ConsecutivePair rdf:type owl:NamedIndividual ,
+                          :MeasurementPattern .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Cut
+:Cut rdf:type owl:NamedIndividual ,
+              :Form ;
+     owl:differentFrom :Roll .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Cutter1_CenterElectrode
+:Cutter1_CenterElectrode rdf:type owl:NamedIndividual ,
+                                  :Cutter .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Cutter2_TopElectrode
+:Cutter2_TopElectrode rdf:type owl:NamedIndividual ,
+                               :Cutter .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Cutter3_Separator
+:Cutter3_Separator rdf:type owl:NamedIndividual ,
+                            :Cutter .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/FirstStepLami
+:FirstStepLami rdf:type owl:NamedIndividual ,
+                        :SemiProduct ;
+               :isComposedOf :BottomSeparatorRoll-001 ,
+                             :CenterElectrodeCut-001 ,
+                             :TopSeparatorRoll-001 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/LaminationEquipment-001
+:LaminationEquipment-001 rdf:type owl:NamedIndividual ,
+                                  :Equipment ;
+                         :hasDirection :Left_To_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Leading_Cell
+:Leading_Cell rdf:type owl:NamedIndividual ,
+                       :CellSequenceRole .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Left_Side_Lower
+:Left_Side_Lower rdf:type owl:NamedIndividual ,
+                          :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Left_Side_Upper
+:Left_Side_Upper rdf:type owl:NamedIndividual ,
+                          :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Left_To_Right
+:Left_To_Right rdf:type owl:NamedIndividual ,
+                        :MovementDirection .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Lower_Side
+:Lower_Side rdf:type owl:NamedIndividual ,
+                     :ProductSidePosition .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Lower_Side_Left
+:Lower_Side_Left rdf:type owl:NamedIndividual ,
+                          :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Lower_Side_Right
+:Lower_Side_Right rdf:type owl:NamedIndividual ,
+                           :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC1_LTR
+:Map_AC1_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AC_1 ;
+             :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC1_RTL
+:Map_AC1_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AC_1 ;
+             :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC2_LTR
+:Map_AC2_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AC_2 ;
+             :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC2_RTL
+:Map_AC2_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AC_2 ;
+             :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC3_LTR
+:Map_AC3_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AC_3 ;
+             :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC3_RTL
+:Map_AC3_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AC_3 ;
+             :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC4_LTR
+:Map_AC4_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AC_4 ;
+             :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC4_RTL
+:Map_AC4_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AC_4 ;
+             :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_A1_LTR
+:Map_AC_A1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AC_A1 ;
+               :mapsToPoint :Upper_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_A1_RTL
+:Map_AC_A1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AC_A1 ;
+               :mapsToPoint :Lower_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_A2_LTR
+:Map_AC_A2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AC_A2 ;
+               :mapsToPoint :Upper_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_A2_RTL
+:Map_AC_A2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AC_A2 ;
+               :mapsToPoint :Lower_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_C1_LTR
+:Map_AC_C1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AC_C1 ;
+               :mapsToPoint :Lower_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_C1_RTL
+:Map_AC_C1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AC_C1 ;
+               :mapsToPoint :Upper_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_C2_LTR
+:Map_AC_C2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AC_C2 ;
+               :mapsToPoint :Lower_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AC_C2_RTL
+:Map_AC_C2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AC_C2 ;
+               :mapsToPoint :Upper_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS1_LTR
+:Map_AS1_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AS_1 ;
+             :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS1_RTL
+:Map_AS1_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AS_1 ;
+             :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS2_LTR
+:Map_AS2_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AS_2 ;
+             :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS2_RTL
+:Map_AS2_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AS_2 ;
+             :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS3_LTR
+:Map_AS3_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AS_3 ;
+             :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS3_RTL
+:Map_AS3_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AS_3 ;
+             :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS4_LTR
+:Map_AS4_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :AS_4 ;
+             :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS4_RTL
+:Map_AS4_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :AS_4 ;
+             :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_A1_LTR
+:Map_AS_A1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AS_A1 ;
+               :mapsToPoint :Upper_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_A1_RTL
+:Map_AS_A1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AS_A1 ;
+               :mapsToPoint :Lower_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_A2_LTR
+:Map_AS_A2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AS_A2 ;
+               :mapsToPoint :Upper_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_A2_RTL
+:Map_AS_A2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AS_A2 ;
+               :mapsToPoint :Lower_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_C1_LTR
+:Map_AS_C1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AS_C1 ;
+               :mapsToPoint :Lower_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_C1_RTL
+:Map_AS_C1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AS_C1 ;
+               :mapsToPoint :Upper_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_C2_LTR
+:Map_AS_C2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :AS_C2 ;
+               :mapsToPoint :Lower_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_AS_C2_RTL
+:Map_AS_C2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :AS_C2 ;
+               :mapsToPoint :Upper_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS1_LTR
+:Map_CS1_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :CS_1 ;
+             :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS1_RTL
+:Map_CS1_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :CS_1 ;
+             :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS2_LTR
+:Map_CS2_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :CS_2 ;
+             :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS2_RTL
+:Map_CS2_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :CS_2 ;
+             :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS3_LTR
+:Map_CS3_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :CS_3 ;
+             :mapsToPoint :Left_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS3_RTL
+:Map_CS3_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :CS_3 ;
+             :mapsToPoint :Right_Side_Lower .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS4_LTR
+:Map_CS4_LTR rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Left_To_Right ;
+             :mapsField :CS_4 ;
+             :mapsToPoint :Left_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS4_RTL
+:Map_CS4_RTL rdf:type owl:NamedIndividual ,
+                      :FieldPointMapping ;
+             :appliesWhenDirection :Right_To_Left ;
+             :mapsField :CS_4 ;
+             :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_A1_LTR
+:Map_CS_A1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :CS_A1 ;
+               :mapsToPoint :Upper_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_A1_RTL
+:Map_CS_A1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :CS_A1 ;
+               :mapsToPoint :Lower_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_A2_LTR
+:Map_CS_A2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :CS_A2 ;
+               :mapsToPoint :Upper_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_A2_RTL
+:Map_CS_A2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :CS_A2 ;
+               :mapsToPoint :Lower_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_C1_LTR
+:Map_CS_C1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :CS_C1 ;
+               :mapsToPoint :Lower_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_C1_RTL
+:Map_CS_C1_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :CS_C1 ;
+               :mapsToPoint :Upper_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_C2_LTR
+:Map_CS_C2_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :mapsField :CS_C2 ;
+               :mapsToPoint :Lower_Side_Left .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_CS_C2_RTL
+:Map_CS_C2_RTL rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Right_To_Left ;
+               :mapsField :CS_C2 ;
+               :mapsToPoint :Upper_Side_Right .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Map_SAG_1_LTR
+:Map_SAG_1_LTR rdf:type owl:NamedIndividual ,
+                        :FieldPointMapping ;
+               :appliesWhenDirection :Left_To_Right ;
+               :appliesWhenSequenceRole :Trailing_Cell ;
+               :mapsField :SAG_1 ;
+               :mapsToPoint :Right_Side_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/MonoCell-001
+:MonoCell-001 rdf:type owl:NamedIndividual ,
+                       :MonoCell ;
+              :isComposedOf :BottomSeparatorCut-001 ,
+                            :CenterElectrodeCut-001 ,
+                            :TopElectrodeCut-001 ,
+                            :TopSeparatorCut-001 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Right_Side_Lower
+:Right_Side_Lower rdf:type owl:NamedIndividual ,
+                           :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Right_Side_Upper
+:Right_Side_Upper rdf:type owl:NamedIndividual ,
+                           :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Right_To_Left
+:Right_To_Left rdf:type owl:NamedIndividual ,
+                        :MovementDirection .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Roll
+:Roll rdf:type owl:NamedIndividual ,
+               :Form ;
+      :hasFinalForm :Cut .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SAG_1
+:SAG_1 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SAG_2
+:SAG_2 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SAG_3
+:SAG_3 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SAG_4
+:SAG_4 rdf:type owl:NamedIndividual ,
+                :GapDataField .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/SecondStepLami
+:SecondStepLami rdf:type owl:NamedIndividual ,
+                         :SemiProduct ;
+                :isComposedOf :BottomSeparatorRoll-001 ,
+                              :CenterElectrodeCut-001 ,
+                              :TopElectrodeCut-001 ,
+                              :TopSeparatorRoll-001 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Separator
+:Separator rdf:type owl:NamedIndividual ,
+                    skos:Concept ;
+           skos:inScheme :BatteryComponentFunction ;
+           skos:notation "S"@en .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopElectrode-001
+:TopElectrode-001 rdf:type owl:NamedIndividual ,
+                           :TopElectrode ;
+                  :hasFinalForm :Cut ;
+                  :hasFunction :Cathode ;
+                  :hasInitialForm :Roll ;
+                  :hasSidePosition :Upper_Side ;
+                  :layerIndex 4 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopElectrodeCut-001
+:TopElectrodeCut-001 rdf:type owl:NamedIndividual ,
+                              :TopElectrodeCut ;
+                     :hasForm :Cut ;
+                     :hasInitialForm :Roll ;
+                     :isSmallerThan :CenterElectrodeCut-001 ;
+                     :isStackedOn :FirstStepLami .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopElectrodeRoll-001
+:TopElectrodeRoll-001 rdf:type owl:NamedIndividual ,
+                               :TopElectrodeRoll ;
+                      :hasForm :Roll ;
+                      :hasInitialForm :Roll ;
+                      :isCutBy :Cutter2_TopElectrode .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopSeparator-001
+:TopSeparator-001 rdf:type owl:NamedIndividual ,
+                           :TopSeparator ;
+                  :hasFinalForm :Cut ;
+                  :hasFunction :Separator ;
+                  :hasInitialForm :Roll ;
+                  :layerIndex 3 .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopSeparatorCut-001
+:TopSeparatorCut-001 rdf:type owl:NamedIndividual ,
+                              :TopSeparatorCut .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/TopSeparatorRoll-001
+:TopSeparatorRoll-001 rdf:type owl:NamedIndividual ,
+                               :TopSeparatorRoll ;
+                      :hasForm :Roll ;
+                      :hasInitialForm :Roll ;
+                      :isCutBy :Cutter3_Separator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Trailing_Cell
+:Trailing_Cell rdf:type owl:NamedIndividual ,
+                        :CellSequenceRole .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Upper_Side
+:Upper_Side rdf:type owl:NamedIndividual ,
+                     :ProductSidePosition .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Upper_Side_Left
+:Upper_Side_Left rdf:type owl:NamedIndividual ,
+                          :MeasurementPoint .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/9/untitled-ontology-10/Upper_Side_Right
+:Upper_Side_Right rdf:type owl:NamedIndividual ,
+                           :MeasurementPoint .
+
+
+#################################################################
+#    Annotations
+#################################################################
+
+:Separator rdfs:label "분리막"@ko ;
+           skos:prefLabel "Separator"@en .
+
+
+#################################################################
+#    General axioms
+#################################################################
+
+[ owl:intersectionOf ( :Electrode
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :belongsToEquipment ;
+                         owl:someValuesFrom [ rdf:type owl:Restriction ;
+                                              owl:onProperty :hasDirection ;
+                                              owl:hasValue :Left_To_Right
+                                            ]
+                       ]
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :hasPolarity ;
+                         owl:hasValue :AnodeRole
+                       ]
+                     ) ;
+  rdf:type owl:Class ;
+  rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:onProperty :hasRequiredTabSide ;
+                    owl:hasValue :Upper_Side
+                  ]
+] .
+
+
+[ owl:intersectionOf ( :Electrode
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :belongsToEquipment ;
+                         owl:someValuesFrom [ rdf:type owl:Restriction ;
+                                              owl:onProperty :hasDirection ;
+                                              owl:hasValue :Left_To_Right
+                                            ]
+                       ]
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :hasPolarity ;
+                         owl:hasValue :CathodeRole
+                       ]
+                     ) ;
+  rdf:type owl:Class ;
+  rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:onProperty :hasRequiredTabSide ;
+                    owl:hasValue :Lower_Side
+                  ]
+] .
+
+
+[ owl:intersectionOf ( :Electrode
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :belongsToEquipment ;
+                         owl:someValuesFrom [ rdf:type owl:Restriction ;
+                                              owl:onProperty :hasDirection ;
+                                              owl:hasValue :Right_To_Left
+                                            ]
+                       ]
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :hasPolarity ;
+                         owl:hasValue :AnodeRole
+                       ]
+                     ) ;
+  rdf:type owl:Class ;
+  rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:onProperty :hasRequiredTabSide ;
+                    owl:hasValue :Lower_Side
+                  ]
+] .
+
+
+[ owl:intersectionOf ( :Electrode
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :belongsToEquipment ;
+                         owl:someValuesFrom [ rdf:type owl:Restriction ;
+                                              owl:onProperty :hasDirection ;
+                                              owl:hasValue :Right_To_Left
+                                            ]
+                       ]
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :hasPolarity ;
+                         owl:hasValue :CathodeRole
+                       ]
+                     ) ;
+  rdf:type owl:Class ;
+  rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:onProperty :hasRequiredTabSide ;
+                    owl:hasValue :Upper_Side
+                  ]
+] .
+
+
+###  Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi
