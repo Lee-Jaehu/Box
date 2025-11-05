@@ -225,5 +225,46 @@
 
 
 1. 라미 공정은 상부 전극 / 중앙 전극 / 상부 분리막 / 하부 분리막을 투입하고, 모노셀을 생산한다
-   Process : Lamination - hasInputProduct - 
+   - Process : Lamination - hasInputProduct - Product : UpperElectrode
+   - Process : Lamination - hasInputProduct - Product : CenterElectrode
+   - Process : Lamination - hasInputProduct - Product : UpperSeparator
+   - Process : Lamination - hasInputProduct - Product : LowerSeparator
+   - Process : Lamination - hasOutputProudct - Product : MonoCell
 
+
+2. 모노셀은 상부 전극 / 중앙 전극 / 상부 분리막 / 하부 분리막으로 조립된다
+   - Product : MonoCell - hasAssembledProduct - Product : UpperElectrode
+   - Product : MonoCell - hasAssembledProduct - Product : CenterElectrode
+   - Product : MonoCell - hasAssembledProduct - Product : UpperSeparator
+   - Product : MonoCell - hasAssembledProduct - Product : LowerSeparator
+
+
+3. 모노셀의 적층 순서 정의 : 상부 전극 > 상부 분리막 > 중앙 전극 > 하부 분리막 순으로 적재
+   - Product : UpperElectrode - isPlacedAbove - Product : UpperSeparator
+   - Product : UpperSeparator - isPlacedAbove - Product : CenterElectrode
+   - Product : CenterElectrode - isPlacedAbove - Product : LowerSeparator
+
+
+4. 투입 제품들은 최초 ROLL 형태로 존재한다
+   - Product : UpperElectrode - hasInitialForm - Form : Roll
+   - Product : CenterElectrode - hasInitialForm - Form : Roll
+   - Product : UpperSeparator - hasInitialForm - Form : Roll
+   - Product : LowerSeparator - hasInitialForm - Form : Roll
+
+
+5. 중앙 전극은 Cutter에 의해 Sheet 형태로 변경된다
+   - Equipment : CutterCenter - cutsToProduct - Product : CenterElectrodeSheet
+   - Product : CenterElectrodeSheet - derivedFrom - Product : CenterElectrode
+   - Product : CenterElectrodeSheet - hasForm - Form : Sheet
+
+
+6. 상부 전극은 Cutter에 의해 Sheet 형태로 변경된다
+   - Equipment : CutterCenter - cutsToProduct - Product : UpperElectrodeSheet
+   - Product : UpperElectrodeSheet - derivedFrom - Product : UpperElectrode
+   - Product : UpperElectrodeSheet - hasForm - Form : Sheet
+
+
+7. 상부 분리막 과 하부 분리막이 만나는 구간을 Between_Separators 라고 정의하고, 그 구간에서 Sheet 형태의 중앙 전극이 분리막 사이로 Insert 된다
+   - AssemblyZone : BetweenSeparators - definedByUpper - Product : UpperSeparator
+   - AssemblyZone : BetweenSeparators - definedByLower - Product : LowerSeparator
+   - Product : CenterElectrodeSheet - isInsertedIn - AssemblyZone : BetweenSeparators
