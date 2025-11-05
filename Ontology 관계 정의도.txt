@@ -214,3 +214,16 @@
     Gap_Data_Field : SCG2 - is_measured_on_cell Trailing_Cell_when_Right_To_Left - Measurement_Point : Left_Side_Lower
     Gap_Data_Field : SCG3 - is_measured_on_cell Leading_Cell_when_Right_To_Left - Measurement_Point : Right_Side_Lower
     Gap_Data_Field : SCG4 - is_measured_on_cell Leading_Cell_when_Right_To_Left - Measurement_Point : Right_Side_Upper
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+1. 라미 공정은 상부 전극 / 중앙 전극 / 상부 분리막 / 하부 분리막을 투입하고, 모노셀을 생산한다
+   Process : Lamination - hasInputProduct - 
+
