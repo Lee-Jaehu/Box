@@ -1,0 +1,3031 @@
+@prefix : <http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/> .
+
+<http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40> rdf:type owl:Ontology .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/actsOn
+:actsOn rdf:type owl:ObjectProperty ;
+        rdfs:domain :Action ;
+        rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/actsOnComponent
+:actsOnComponent rdf:type owl:ObjectProperty ;
+                 rdfs:domain :Action ;
+                 rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/appliesWhenFlowDirection
+:appliesWhenFlowDirection rdf:type owl:ObjectProperty ;
+                          rdfs:domain :MeasurementItem ;
+                          rdfs:range :Direction .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/comparesLengthOf
+:comparesLengthOf rdf:type owl:ObjectProperty ;
+                  rdfs:domain :EdgeSelectionRule ;
+                  rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/computedFrom
+:computedFrom rdf:type owl:ObjectProperty ;
+              rdfs:domain :MeasurementItem ;
+              rdfs:range :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/consumesInputMeasurement
+:consumesInputMeasurement rdf:type owl:ObjectProperty ;
+                          rdfs:domain :VisionSystem ;
+                          rdfs:range :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/definedByLower
+:definedByLower rdf:type owl:ObjectProperty ;
+                rdfs:domain :AssemblyZone ;
+                rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/definedByUpper
+:definedByUpper rdf:type owl:ObjectProperty ;
+                rdfs:domain :AssemblyZone ;
+                rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/existsWhenState
+:existsWhenState rdf:type owl:ObjectProperty ;
+                 rdfs:domain :Region ;
+                 rdfs:range :ProductState .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasAlignment
+:hasAlignment rdf:type owl:ObjectProperty ;
+              rdfs:domain :ProductPair ;
+              rdfs:range :AlignmentType .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasAssembledProduct
+:hasAssembledProduct rdf:type owl:ObjectProperty ;
+                     rdfs:domain :Product ;
+                     rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasAxis
+:hasAxis rdf:type owl:ObjectProperty ;
+         rdfs:domain :ReferenceFrame ;
+         rdfs:range :CoordinateAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasComponent
+:hasComponent rdf:type owl:ObjectProperty ;
+              rdfs:domain :Product ;
+              rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasComponentProduct
+:hasComponentProduct rdf:type owl:ObjectProperty ;
+                     rdfs:domain :Product ;
+                     rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasComputationRule
+:hasComputationRule rdf:type owl:ObjectProperty ;
+                    rdfs:domain :MeasurementItem ;
+                    rdfs:range :ComputationRule .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasComputationType
+:hasComputationType rdf:type owl:ObjectProperty ;
+                    rdfs:domain :ComputationRule ;
+                    rdfs:range :ComputationType .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasEdge
+:hasEdge rdf:type owl:ObjectProperty ;
+         rdfs:domain :EdgePair ;
+         rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasForm
+:hasForm rdf:type owl:ObjectProperty ;
+         rdfs:subPropertyOf owl:topObjectProperty ;
+         rdfs:domain :Product ;
+         rdfs:range :Form .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasInitialForm
+:hasInitialForm rdf:type owl:ObjectProperty ;
+                rdfs:domain :Product ;
+                rdfs:range :Form .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasInputProduct
+:hasInputProduct rdf:type owl:ObjectProperty ;
+                 rdfs:domain :Process ;
+                 rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasLargerSizeThan
+:hasLargerSizeThan rdf:type owl:ObjectProperty ;
+                   rdfs:domain :Product ;
+                   rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasMeasurementAxis
+:hasMeasurementAxis rdf:type owl:ObjectProperty ;
+                    rdfs:domain :MeasurementItem ;
+                    rdfs:range :CoordinateAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasMemberEdge
+:hasMemberEdge rdf:type owl:ObjectProperty ;
+               rdfs:domain :EdgeOption ;
+               rdfs:range :Entity .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasMinuend
+:hasMinuend rdf:type owl:ObjectProperty ;
+            rdfs:domain :ComputationRule ;
+            rdfs:range :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasOutputProduct
+:hasOutputProduct rdf:type owl:ObjectProperty ;
+                  rdfs:domain :Process ;
+                  rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasProduct
+:hasProduct rdf:type owl:ObjectProperty ;
+            rdfs:domain :ProductPair ;
+            rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasProductState
+:hasProductState rdf:type owl:ObjectProperty ;
+                 rdfs:domain :Product ;
+                 rdfs:range :ProductState .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasRegionSegment
+:hasRegionSegment rdf:type owl:ObjectProperty ;
+                  rdfs:domain :MeasurementItem ;
+                  rdfs:range :EdgeSegment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasSelectionCriterion
+:hasSelectionCriterion rdf:type owl:ObjectProperty ;
+                       rdfs:domain :MeasurementItem ;
+                       rdfs:range :Property .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasShape
+:hasShape rdf:type owl:ObjectProperty ;
+          rdfs:domain :Product ;
+          rdfs:range :Shape .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/hasSubtrahend
+:hasSubtrahend rdf:type owl:ObjectProperty ;
+               rdfs:domain :ComputationRule ;
+               rdfs:range :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isATypeOf
+:isATypeOf rdf:type owl:ObjectProperty ;
+           rdfs:domain :Product ;
+           rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isAttachedToOneOf
+:isAttachedToOneOf rdf:type owl:ObjectProperty ;
+                   rdfs:domain :Part ;
+                   rdfs:range :EdgeOption .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isDefinedFromViewpointOf
+:isDefinedFromViewpointOf rdf:type owl:ObjectProperty ;
+                          rdfs:domain :ReferenceFrame ;
+                          rdfs:range :Entity .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isEdgeOf
+:isEdgeOf rdf:type owl:ObjectProperty ;
+          rdfs:domain :Edge ;
+          rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isFormStateOf
+:isFormStateOf rdf:type owl:ObjectProperty ;
+               rdfs:domain :Product ;
+               rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isInsertedIn
+:isInsertedIn rdf:type owl:ObjectProperty ;
+              rdfs:domain :Product ;
+              rdfs:range :AssemblyZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isLocatedAlong
+:isLocatedAlong rdf:type owl:ObjectProperty ;
+                rdfs:domain :Part ;
+                rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isMadeOf
+:isMadeOf rdf:type owl:ObjectProperty ;
+          rdfs:domain :Product ;
+          rdfs:range :Material .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isOppositeToAlongAxis
+:isOppositeToAlongAxis rdf:type owl:ObjectProperty ;
+                       rdfs:domain :Part ;
+                       rdfs:range :Part .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isOrientedToward
+:isOrientedToward rdf:type owl:ObjectProperty ;
+                  rdfs:domain :Edge ;
+                  rdfs:range :Direction .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isParallelTo
+:isParallelTo rdf:type owl:ObjectProperty ;
+              rdfs:domain :Edge ;
+              rdfs:range :CoordinateAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isPartOf
+:isPartOf rdf:type owl:ObjectProperty ;
+          rdfs:domain :Part ;
+          rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isPerpendicularTo
+:isPerpendicularTo rdf:type owl:ObjectProperty ;
+                   rdfs:domain :CoordinateAxis ;
+                   rdfs:range :CoordinateAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isPlacedAbove
+:isPlacedAbove rdf:type owl:ObjectProperty ;
+               rdfs:domain :Product ;
+               rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isPlacedOn
+:isPlacedOn rdf:type owl:ObjectProperty ;
+            rdfs:domain :Product ;
+            rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isProcessDirectionOf
+:isProcessDirectionOf rdf:type owl:ObjectProperty ;
+                      rdfs:domain :CoordinateAxis ;
+                      rdfs:range :Process .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isSegmentOf
+:isSegmentOf rdf:type owl:ObjectProperty ;
+             rdfs:domain :Edge ;
+             rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isStackingDerectionOf
+:isStackingDerectionOf rdf:type owl:ObjectProperty ;
+                       rdfs:domain :CoordinateAxis ;
+                       rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/isSymmetricAlongAxis
+:isSymmetricAlongAxis rdf:type owl:ObjectProperty ;
+                      rdfs:domain :Product ;
+                      rdfs:range :CoordinateAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/locatedAlong
+:locatedAlong rdf:type owl:ObjectProperty ;
+              rdfs:domain :Part ;
+              rdfs:range :CoordinateAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/locatedOn
+:locatedOn rdf:type owl:ObjectProperty ;
+           rdfs:domain :Region ;
+           rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/measuredAt
+:measuredAt rdf:type owl:ObjectProperty ;
+            rdfs:domain :MeasurementItem ;
+            rdfs:range :VisionSystem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/measuresDistanceOnEdgePair
+:measuresDistanceOnEdgePair rdf:type owl:ObjectProperty ;
+                            rdfs:domain :MeasurementItem ;
+                            rdfs:range :EdgePair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/measuresGapOf
+:measuresGapOf rdf:type owl:ObjectProperty ;
+               rdfs:domain :MeasurementItem ;
+               rdfs:range :ProductPair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/measuresProductState
+:measuresProductState rdf:type owl:ObjectProperty ;
+                      rdfs:domain :VisionSystem ;
+                      rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/measuresWidthOf
+:measuresWidthOf rdf:type owl:ObjectProperty ;
+                 rdfs:domain :MeasurementItem ;
+                 rdfs:range :Part .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/occursAfter
+:occursAfter rdf:type owl:ObjectProperty ;
+             rdfs:domain :Equipment ;
+             rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/occursBefore
+:occursBefore rdf:type owl:ObjectProperty ;
+              rdfs:domain :Equipment ;
+              rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/occursBetween
+:occursBetween rdf:type owl:ObjectProperty ;
+               rdfs:domain :Action ;
+               rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/operatesAfter
+:operatesAfter rdf:type owl:ObjectProperty ;
+               rdfs:domain :VisionSystem ;
+               rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/operatesBefore
+:operatesBefore rdf:type owl:ObjectProperty ;
+                rdfs:domain :VisionSystem ;
+                rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/partOf
+:partOf rdf:type owl:ObjectProperty ;
+        rdfs:domain :ProductState ;
+        rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/performsAction
+:performsAction rdf:type owl:ObjectProperty ;
+                rdfs:domain :Equipment ;
+                rdfs:range :Action .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/producedBy
+:producedBy rdf:type owl:ObjectProperty ;
+            rdfs:domain :MeasurementItem ;
+            rdfs:range :VisionSystem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/producesOutput
+:producesOutput rdf:type owl:ObjectProperty ;
+                rdfs:domain :ComputationRule ;
+                rdfs:range :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/representsDirection
+:representsDirection rdf:type owl:ObjectProperty ;
+                     rdfs:domain :CoordinateAxis ;
+                     rdfs:range :Direction .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/resultIn
+:resultIn rdf:type owl:ObjectProperty ;
+          rdfs:domain :Action ;
+          rdfs:range :ProductState .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/resultOf
+:resultOf rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf owl:topObjectProperty ;
+          rdfs:domain :Product ;
+          rdfs:range :Equipment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/selectsEdgeBy
+:selectsEdgeBy rdf:type owl:ObjectProperty ;
+               rdfs:domain :MeasurementItem ;
+               rdfs:range :EdgeSelectionRule .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/surroundsOnAllEdges
+:surroundsOnAllEdges rdf:type owl:ObjectProperty ;
+                     rdfs:domain :Product ;
+                     rdfs:range :Product .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/usesAnodeEdgeRegion
+:usesAnodeEdgeRegion rdf:type owl:ObjectProperty ;
+                     rdfs:domain :MeasurementItem ;
+                     rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/usesCenterEdgeRegion
+:usesCenterEdgeRegion rdf:type owl:ObjectProperty ;
+                      rdfs:domain :MeasurementItem ;
+                      rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/usesSeparatorEdgeRegion
+:usesSeparatorEdgeRegion rdf:type owl:ObjectProperty ;
+                         rdfs:domain :MeasurementItem ;
+                         rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/usesUpperEdgeRegion
+:usesUpperEdgeRegion rdf:type owl:ObjectProperty ;
+                     rdfs:domain :MeasurementItem ;
+                     rdfs:range :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/validUnderDirection
+:validUnderDirection rdf:type owl:ObjectProperty ;
+                     rdfs:domain :Part ;
+                     rdfs:range :Direction .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Action
+:Action rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AlignmentType
+:AlignmentType rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AssemblyZone
+:AssemblyZone rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ComputationRule
+:ComputationRule rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ComputationType
+:ComputationType rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CoordinateAxis
+:CoordinateAxis rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Direction
+:Direction rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Edge
+:Edge rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/EdgeOption
+:EdgeOption rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/EdgePair
+:EdgePair rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/EdgeSegment
+:EdgeSegment rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/EdgeSelectionRule
+:EdgeSelectionRule rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Entity
+:Entity rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Equipment
+:Equipment rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Form
+:Form rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Material
+:Material rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/MeasurementItem
+:MeasurementItem rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Part
+:Part rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Process
+:Process rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Product
+:Product rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ProductPair
+:ProductPair rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ProductState
+:ProductState rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Property
+:Property rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ReferenceFrame
+:ReferenceFrame rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Region
+:Region rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Shape
+:Shape rdf:type owl:Class .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/VisionSystem
+:VisionSystem rdf:type owl:Class .
+
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AA_1
+:AA_1 rdf:type owl:NamedIndividual ,
+               :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AA_2
+:AA_2 rdf:type owl:NamedIndividual ,
+               :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_1
+:AC_1 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ,
+                  :LongsideSealingVision ,
+                  :MergeVision ;
+      :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_2
+:AC_2 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ,
+                  :LongsideSealingVision ,
+                  :MergeVision ;
+      :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_3
+:AC_3 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ,
+                  :LongsideSealingVision ,
+                  :MergeVision ;
+      :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_4
+:AC_4 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ,
+                  :LongsideSealingVision ,
+                  :MergeVision ;
+      :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_A1
+:AC_A1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_A2
+:AC_A2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_C1
+:AC_C1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AC_C2
+:AC_C2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeCathode_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ASS_A1
+:ASS_A1 rdf:type owl:NamedIndividual ,
+                 :MeasurementItem ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :LeftToRight_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :FrontEdgeRightOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :FrontEdgeRightOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :RightToLeft_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :BackEdgeLeftOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :BackEdgeLeftOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ;
+        :hasSelectionCriterion :ShortestSeparatorEdge ;
+        :measuredAt :FinalVision ,
+                    :LongsideSealingVision ;
+        :measuresGapOf :AnodeSeparator_Pair ;
+        :selectsEdgeBy :Select_ShortestSeparatorEdge_ByLength .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ASS_A2
+:ASS_A2 rdf:type owl:NamedIndividual ,
+                 :MeasurementItem ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :LeftToRight_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :FrontEdgeLeftOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :FrontEdgeLeftOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :RightToLeft_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :BackEdgeRightOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :BackEdgeRightOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ;
+        :hasSelectionCriterion :ShortestSeparatorEdge ;
+        :measuredAt :FinalVision ,
+                    :LongsideSealingVision ;
+        :measuresGapOf :AnodeSeparator_Pair ;
+        :selectsEdgeBy :Select_ShortestSeparatorEdge_ByLength .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ASS_C1
+:ASS_C1 rdf:type owl:NamedIndividual ,
+                 :MeasurementItem ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :LeftToRight_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :BackEdgeRightOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :BackEdgeRightOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :RightToLeft_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :FrontEdgeLeftOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :FrontEdgeLeftOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ;
+        :hasSelectionCriterion :ShortestSeparatorEdge ;
+        :measuredAt :FinalVision ,
+                    :LongsideSealingVision ;
+        :measuresGapOf :AnodeSeparator_Pair ;
+        :selectsEdgeBy :Select_ShortestSeparatorEdge_ByLength .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ASS_C2
+:ASS_C2 rdf:type owl:NamedIndividual ,
+                 :MeasurementItem ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :LeftToRight_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :BackEdgeLeftOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :BackEdgeLeftOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ,
+                 [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                          owl:onProperty :appliesWhenFlowDirection ;
+                                          owl:hasValue :RightToLeft_AlongProcessFlow
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesAnodeEdgeRegion ;
+                                          owl:hasValue :FrontEdgeRightOf_CenterElectrodeSheet
+                                        ]
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :usesSeparatorEdgeRegion ;
+                                          owl:hasValue :FrontEdgeRightOf_SeparatorSheet
+                                        ]
+                                      ) ;
+                   rdf:type owl:Class
+                 ] ;
+        :hasSelectionCriterion :ShortestSeparatorEdge ;
+        :measuredAt :FinalVision ,
+                    :LongsideSealingVision ;
+        :measuresGapOf :AnodeSeparator_Pair ;
+        :selectsEdgeBy :Select_ShortestSeparatorEdge_ByLength .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_1
+:AS_1 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_2
+:AS_2 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_3
+:AS_3 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_4
+:AS_4 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesCenterEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_CenterElectrodeSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_SeparatorSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_A1
+:AS_A1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_A2
+:AS_A2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_C1
+:AS_C1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AS_C2
+:AS_C2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesCenterEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_CenterElectrodeSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_SeparatorSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :MergeVision ;
+       :measuresGapOf :AnodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Anode
+:Anode rdf:type owl:NamedIndividual ,
+                :Material ;
+       rdfs:comment "음극"@ko ;
+       rdfs:label "음극"@ko .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AnodeCathode_Pair
+:AnodeCathode_Pair rdf:type owl:NamedIndividual ,
+                            :ProductPair ;
+                   :hasProduct :CenterElectrodeSheet ,
+                               :UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/AnodeSeparator_Pair
+:AnodeSeparator_Pair rdf:type owl:NamedIndividual ,
+                              :ProductPair ;
+                     :hasProduct :CenterElectrodeSheet ,
+                                 :SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeLeftOf_CenterElectrodeSheet
+:BackEdgeLeftOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                              :Edge ;
+                                     :isSegmentOf :BackEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeLeftOf_SeparatorSheet
+:BackEdgeLeftOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                        :Edge ;
+                               :isSegmentOf :BackEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeLeftOf_UpperElectrodeSheet
+:BackEdgeLeftOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                             :Edge ;
+                                    :isSegmentOf :BackEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeOf_CenterElectrodeSheet
+:BackEdgeOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                          :Edge ;
+                                 :isEdgeOf :CenterElectrodeSheet ;
+                                 :isOrientedToward :FrontToBack_FromOperatorView ;
+                                 :isParallelTo :XAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeOf_LowerSeparatorSheet
+:BackEdgeOf_LowerSeparatorSheet rdf:type owl:NamedIndividual ,
+                                         :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeOf_SeparatorSheet
+:BackEdgeOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                    :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeOf_UpperElectrodeSheet
+:BackEdgeOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                         :Edge ;
+                                :isEdgeOf :UpperElectrodeSheet ;
+                                :isOrientedToward :FrontToBack_FromOperatorView ;
+                                :isParallelTo :XAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeOf_UpperSeparatorSheet
+:BackEdgeOf_UpperSeparatorSheet rdf:type owl:NamedIndividual ,
+                                         :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeRightOf_CenterElectrodeSheet
+:BackEdgeRightOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                               :Edge ;
+                                      :isSegmentOf :BackEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeRightOf_SeparatorSheet
+:BackEdgeRightOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                         :Edge ;
+                                :isSegmentOf :BackEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BackEdgeRightOf_UpperElectrodeSheet
+:BackEdgeRightOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                              :Edge ;
+                                     :isSegmentOf :BackEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BetweenSeparators
+:BetweenSeparators rdf:type owl:NamedIndividual ,
+                            :AssemblyZone ;
+                   :definedByLower :LowerSeparator ;
+                   :definedByUpper :UpperSeparator ;
+                   :isInsertedIn :BetweenSeparators .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/BottomSegment
+:BottomSegment rdf:type owl:NamedIndividual ,
+                        :EdgeSegment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS
+:CS rdf:type owl:NamedIndividual ,
+             :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_1
+:CS_1 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_2
+:CS_2 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_3
+:CS_3 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeBottomOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_4
+:CS_4 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :LeftToRight_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :LeftEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ,
+               [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                        owl:onProperty :appliesWhenFlowDirection ;
+                                        owl:hasValue :RightToLeft_AlongProcessFlow
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesSeparatorEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_SeparatorSheet
+                                      ]
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty :usesUpperEdgeRegion ;
+                                        owl:hasValue :RightEdgeTopOf_UpperElectrodeSheet
+                                      ]
+                                    ) ;
+                 rdf:type owl:Class
+               ] ;
+      :measuredAt :FinalVision ;
+      :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_A1
+:CS_A1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :LongsideSealingVision ,
+                   :MergeVision ;
+       :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_A2
+:CS_A2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :LongsideSealingVision ,
+                   :MergeVision ;
+       :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_C1
+:CS_C1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :LongsideSealingVision ,
+                   :MergeVision ;
+       :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_C2
+:CS_C2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :BackEdgeLeftOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesSeparatorEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_SeparatorSheet
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :usesUpperEdgeRegion ;
+                                         owl:hasValue :FrontEdgeRightOf_UpperElectrodeSheet
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision ,
+                   :LongsideSealingVision ,
+                   :MergeVision ;
+       :measuresGapOf :CathodeSeparator_Pair .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CS_Minus_SCG
+:CS_Minus_SCG rdf:type owl:NamedIndividual ,
+                       :ComputationRule ;
+              :hasComputationType :Subtraction ;
+              :hasMinuend :CS ;
+              :hasSubtrahend :SCG ;
+              :producesOutput :SW .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CUT_1
+:CUT_1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CUT_2
+:CUT_2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CUT_3
+:CUT_3 rdf:type owl:NamedIndividual ,
+                :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CUT_4
+:CUT_4 rdf:type owl:NamedIndividual ,
+                :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Cathode
+:Cathode rdf:type owl:NamedIndividual ,
+                  :Material ;
+         rdfs:comment "양극"@ko ;
+         rdfs:label "양극"@ko .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CathodeSeparator_Pair
+:CathodeSeparator_Pair rdf:type owl:NamedIndividual ,
+                                :ProductPair ;
+                       :hasProduct :SeparatorSheet ,
+                                   :UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CenterElectrode
+:CenterElectrode rdf:type owl:NamedIndividual ,
+                          :Product ;
+                 :hasInitialForm :Roll .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/CenterElectrodeSheet
+:CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                               :Product ;
+                      :hasForm :Sheet ;
+                      :hasLargerSizeThan :Tab_Center_ElectrodeSheet ,
+                                         :UpperElectrodeSheet ;
+                      :hasShape :Rectangle ;
+                      :isFormStateOf :CenterElectrode ;
+                      :isMadeOf :Anode ;
+                      :isPlacedAbove :LowerSeparatorSheet ;
+                      :isSymmetricAlongAxis :XAxis ,
+                                            :YAxis ;
+                      :resultOf :Cutter_Center ;
+                      :surroundsOnAllEdges :UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Cutter_Center
+:Cutter_Center rdf:type owl:NamedIndividual ,
+                        :Equipment ;
+               :occursBefore :Cutter_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Cutter_Final
+:Cutter_Final rdf:type owl:NamedIndividual ,
+                       :Equipment ;
+              :occursAfter :Cutter_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Cutter_Upper
+:Cutter_Upper rdf:type owl:NamedIndividual ,
+                       :Equipment ;
+              :occursAfter :Cutter_Center ;
+              :occursBefore :Cutter_Final .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FinalVision
+:FinalVision rdf:type owl:NamedIndividual ,
+                      :VisionSystem ;
+             :consumesInputMeasurement :SCG_1 ,
+                                       :SCG_2 ,
+                                       :SCG_3 ,
+                                       :SCG_4 ;
+             :measuresProductState :MonoCell ;
+             :operatesAfter :Cutter_Final .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeLeftOf_CenterElectrodeSheet
+:FrontEdgeLeftOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                               :Edge ;
+                                      :isSegmentOf :FrontEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeLeftOf_SeparatorSheet
+:FrontEdgeLeftOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                         :Edge ;
+                                :isSegmentOf :FrontEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeLeftOf_UpperElectrodeSheet
+:FrontEdgeLeftOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                              :Edge ;
+                                     :isSegmentOf :FrontEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeOf_CenterElectrodeSheet
+:FrontEdgeOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                           :Edge ;
+                                  :isEdgeOf :CenterElectrodeSheet ;
+                                  :isOrientedToward :FrontToBack_FromOperatorView ;
+                                  :isParallelTo :XAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeOf_LowerSeparatorSheet
+:FrontEdgeOf_LowerSeparatorSheet rdf:type owl:NamedIndividual ,
+                                          :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeOf_SeparatorSheet
+:FrontEdgeOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                     :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeOf_UpperElectrodeSheet
+:FrontEdgeOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                          :Edge ;
+                                 :isEdgeOf :UpperElectrodeSheet ;
+                                 :isOrientedToward :FrontToBack_FromOperatorView ;
+                                 :isParallelTo :XAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeOf_UpperSeparatorSheet
+:FrontEdgeOf_UpperSeparatorSheet rdf:type owl:NamedIndividual ,
+                                          :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeRightOf_CenterElectrodeSheet
+:FrontEdgeRightOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                                :Edge ;
+                                       :isSegmentOf :FrontEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeRightOf_SeparatorSheet
+:FrontEdgeRightOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                          :Edge ;
+                                 :isSegmentOf :FrontEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontEdgeRightOf_UpperElectrodeSheet
+:FrontEdgeRightOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                               :Edge ;
+                                      :isSegmentOf :FrontEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontOrBackEdgeOf_CenterElectrodeSheet
+:FrontOrBackEdgeOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                                 :EdgeOption ;
+                                        :hasMemberEdge :BackEdgeOf_CenterElectrodeSheet ,
+                                                       :FrontEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontOrBackEdgeOf_UpperElectrodeSheet
+:FrontOrBackEdgeOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                                :EdgeOption ;
+                                       :hasMemberEdge :BackEdgeOf_UpperElectrodeSheet ,
+                                                      :FrontEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/FrontToBack_FromOperatorView
+:FrontToBack_FromOperatorView rdf:type owl:NamedIndividual ,
+                                       :Direction .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Lamination
+:Lamination rdf:type owl:NamedIndividual ,
+                     :Process ;
+            :hasInputProduct :CenterElectrode ,
+                             :LowerSeparator ,
+                             :UpperElectrode ,
+                             :UpperSeparator ;
+            :hasOutputProduct :MonoCell .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LaminationViewFrame
+:LaminationViewFrame rdf:type owl:NamedIndividual ,
+                              :ReferenceFrame ;
+                     :hasAxis :XAxis ,
+                              :YAxis ,
+                              :ZAxis ;
+                     :isDefinedFromViewpointOf :Operator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeBottomOf_CenterElectrodeSheet
+:LeftEdgeBottomOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                                :Edge ;
+                                       :isSegmentOf :LeftEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeBottomOf_SealingZone
+:LeftEdgeBottomOf_SealingZone rdf:type owl:NamedIndividual ,
+                                       :Edge ;
+                              :isSegmentOf :LeftEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeBottomOf_SeparatorSheet
+:LeftEdgeBottomOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                          :Edge ;
+                                 :isSegmentOf :LeftEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeBottomOf_UpperElectrodeSheet
+:LeftEdgeBottomOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                               :Edge ;
+                                      :isSegmentOf :LeftEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeOf_CenterElectrodeSheet
+:LeftEdgeOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                          :Edge ;
+                                 :isEdgeOf :CenterElectrodeSheet ;
+                                 :isOrientedToward :LeftToRight_AlongProcessFlow ;
+                                 :isParallelTo :YAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeOf_SealingZone
+:LeftEdgeOf_SealingZone rdf:type owl:NamedIndividual ,
+                                 :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeOf_SeparatorSheet
+:LeftEdgeOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                    :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeOf_TabCenterElectrodeSheet
+:LeftEdgeOf_TabCenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                             :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeOf_TabUpperElectrodeSheet
+:LeftEdgeOf_TabUpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                            :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeOf_UpperElectrodeSheet
+:LeftEdgeOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                         :Edge ;
+                                :isEdgeOf :UpperElectrodeSheet ;
+                                :isOrientedToward :LeftToRight_AlongProcessFlow ;
+                                :isParallelTo :YAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeTopOf_CenterElectrodeSheet
+:LeftEdgeTopOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                             :Edge ;
+                                    :isSegmentOf :LeftEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeTopOf_SealingZone
+:LeftEdgeTopOf_SealingZone rdf:type owl:NamedIndividual ,
+                                    :Edge ;
+                           :isSegmentOf :LeftEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeTopOf_SeparatorSheet
+:LeftEdgeTopOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                       :Edge ;
+                              :isSegmentOf :LeftEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftEdgeTopOf_UpperElectrodeSheet
+:LeftEdgeTopOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                            :Edge ;
+                                   :isSegmentOf :LeftEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LeftToRight_AlongProcessFlow
+:LeftToRight_AlongProcessFlow rdf:type owl:NamedIndividual ,
+                                       :Direction .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LongsideSealer
+:LongsideSealer rdf:type owl:NamedIndividual ,
+                         :Equipment ;
+                :performsAction :Sealing .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LongsideSealingVision
+:LongsideSealingVision rdf:type owl:NamedIndividual ,
+                                :VisionSystem ;
+                       :measuresProductState :RollSeparatorsWith_SheetElectrodes ;
+                       :operatesAfter :LongsideSealer ;
+                       :operatesBefore :Cutter_Final .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LowerSeparator
+:LowerSeparator rdf:type owl:NamedIndividual ,
+                         :Product ;
+                :hasInitialForm :Roll .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/LowerSeparatorSheet
+:LowerSeparatorSheet rdf:type owl:NamedIndividual ,
+                              :Product ;
+                     :hasForm :Sheet ;
+                     :hasLargerSizeThan :CenterElectrodeSheet ;
+                     :hasShape :Rectangle ;
+                     :isATypeOf :SeparatorSheet ;
+                     :isFormStateOf :LowerSeparator ;
+                     :isMadeOf :Separator ;
+                     :isSymmetricAlongAxis :XAxis ,
+                                           :YAxis ;
+                     :resultOf :Cutter_Final ;
+                     :surroundsOnAllEdges :CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/MergeVision
+:MergeVision rdf:type owl:NamedIndividual ,
+                      :VisionSystem ;
+             :measuresProductState :RollSeparatorsWith_SheetElectrodes ;
+             :operatesAfter :Cutter_Upper ;
+             :operatesBefore :LongsideSealer .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/MonoCell
+:MonoCell rdf:type owl:NamedIndividual ,
+                   :Product ;
+          :hasAssembledProduct :CenterElectrodeSheet ,
+                               :LowerSeparatorSheet ,
+                               :UpperElectrodeSheet ,
+                               :UpperSeparatorSheet ;
+          :hasComponent :LowerSeparatorSheet ,
+                        :UpperSeparatorSheet ;
+          :hasForm :Sheet ;
+          :hasShape :Rectangle ;
+          :resultOf :Cutter_Final .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Operator
+:Operator rdf:type owl:NamedIndividual ,
+                   :Entity .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Rectangle
+:Rectangle rdf:type owl:NamedIndividual ,
+                    :Shape .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeBottomOf_CenterElectrodeSheet
+:RightEdgeBottomOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                                 :Edge ;
+                                        :isSegmentOf :RightEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeBottomOf_SealingZone
+:RightEdgeBottomOf_SealingZone rdf:type owl:NamedIndividual ,
+                                        :Edge ;
+                               :isSegmentOf :RightEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeBottomOf_SeparatorSheet
+:RightEdgeBottomOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                           :Edge ;
+                                  :isSegmentOf :RightEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeBottomOf_UpperElectrodeSheet
+:RightEdgeBottomOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                                :Edge ;
+                                       :isSegmentOf :RightEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeOf_CenterElectrodeSheet
+:RightEdgeOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                           :Edge ;
+                                  :isEdgeOf :CenterElectrodeSheet ;
+                                  :isOrientedToward :LeftToRight_AlongProcessFlow ;
+                                  :isParallelTo :YAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeOf_SealingZone
+:RightEdgeOf_SealingZone rdf:type owl:NamedIndividual ,
+                                  :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeOf_SeparatorSheet
+:RightEdgeOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                     :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeOf_TabCenterElectrodeSheet
+:RightEdgeOf_TabCenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                              :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeOf_TabUpperElectrodeSheet
+:RightEdgeOf_TabUpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                             :Edge .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeOf_UpperElectrodeSheet
+:RightEdgeOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                          :Edge ;
+                                 :isEdgeOf :UpperElectrodeSheet ;
+                                 :isOrientedToward :LeftToRight_AlongProcessFlow ;
+                                 :isParallelTo :YAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeTopOf_CenterElectrodeSheet
+:RightEdgeTopOf_CenterElectrodeSheet rdf:type owl:NamedIndividual ,
+                                              :Edge ;
+                                     :isSegmentOf :RightEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeTopOf_SealingZone
+:RightEdgeTopOf_SealingZone rdf:type owl:NamedIndividual ,
+                                     :Edge ;
+                            :isSegmentOf :RightEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeTopOf_SeparatorSheet
+:RightEdgeTopOf_SeparatorSheet rdf:type owl:NamedIndividual ,
+                                        :Edge ;
+                               :isSegmentOf :RightEdgeOf_SeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightEdgeTopOf_UpperElectrodeSheet
+:RightEdgeTopOf_UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                                             :Edge ;
+                                    :isSegmentOf :RightEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RightToLeft_AlongProcessFlow
+:RightToLeft_AlongProcessFlow rdf:type owl:NamedIndividual ,
+                                       :Direction .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Roll
+:Roll rdf:type owl:NamedIndividual ,
+               :Form .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/RollSeparatorsWith_SheetElectrodes
+:RollSeparatorsWith_SheetElectrodes rdf:type owl:NamedIndividual ,
+                                             :Product ;
+                                    :hasComponentProduct :CenterElectrodeSheet ,
+                                                         :LowerSeparator ,
+                                                         :UpperElectrodeSheet ,
+                                                         :UpperSeparator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_1
+:SAG_1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_TrailRight_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_TrailLeft_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_2
+:SAG_2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_TrailRight_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_TrailLeft_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_3
+:SAG_3 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_LeadLeft_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_LeadRight_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_4
+:SAG_4 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_LeadLeft_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SAG_LeadRight_Anode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_LeadLeft_Anode
+:SAG_LeadLeft_Anode rdf:type owl:NamedIndividual ,
+                             :EdgePair ;
+                    :hasEdge :LeftEdgeOf_SealingZone ,
+                             :RightEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_LeadRight_Anode
+:SAG_LeadRight_Anode rdf:type owl:NamedIndividual ,
+                              :EdgePair ;
+                     :hasEdge :LeftEdgeOf_CenterElectrodeSheet ,
+                              :RightEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_TrailLeft_Anode
+:SAG_TrailLeft_Anode rdf:type owl:NamedIndividual ,
+                              :EdgePair ;
+                     :hasEdge :LeftEdgeOf_CenterElectrodeSheet ,
+                              :RightEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SAG_TrailRight_Anode
+:SAG_TrailRight_Anode rdf:type owl:NamedIndividual ,
+                               :EdgePair ;
+                      :hasEdge :LeftEdgeOf_SealingZone ,
+                               :RightEdgeOf_CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG
+:SCG rdf:type owl:NamedIndividual ,
+              :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_1
+:SCG_1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_TrailRight_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_TrailLeft_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_2
+:SCG_2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_TrailRight_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_TrailLeft_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_3
+:SCG_3 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_LeadLeft_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :BottomSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_LeadRight_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_4
+:SCG_4 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_LeadLeft_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :hasRegionSegment ;
+                                         owl:hasValue :TopSegment
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :SCG_LeadRight_Cathode
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :LongsideSealingVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_LeadLeft_Cathode
+:SCG_LeadLeft_Cathode rdf:type owl:NamedIndividual ,
+                               :EdgePair ;
+                      :hasEdge :LeftEdgeOf_UpperElectrodeSheet ,
+                               :RightEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_LeadRight_Cathode
+:SCG_LeadRight_Cathode rdf:type owl:NamedIndividual ,
+                                :EdgePair ;
+                       :hasEdge :LeftEdgeOf_SealingZone ,
+                                :RightEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_TrailLeft_Cathode
+:SCG_TrailLeft_Cathode rdf:type owl:NamedIndividual ,
+                                :EdgePair ;
+                       :hasEdge :LeftEdgeOf_UpperElectrodeSheet ,
+                                :RightEdgeOf_SealingZone .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SCG_TrailRight_Cathode
+:SCG_TrailRight_Cathode rdf:type owl:NamedIndividual ,
+                                 :EdgePair ;
+                        :hasEdge :LeftEdgeOf_SealingZone ,
+                                 :RightEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SS_1
+:SS_1 rdf:type owl:NamedIndividual ,
+               :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SS_2
+:SS_2 rdf:type owl:NamedIndividual ,
+               :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SW
+:SW rdf:type owl:NamedIndividual ,
+             :MeasurementItem .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SW_1
+:SW_1 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ;
+      :computedFrom :CS_1 ,
+                    :SCG_1 ;
+      :hasComputationRule :CS_Minus_SCG ;
+      :hasMeasurementAxis :XAxis ;
+      :hasRegionSegment :TopSegment ;
+      :producedBy :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SW_2
+:SW_2 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ;
+      :computedFrom :CS_2 ,
+                    :SCG_2 ;
+      :hasComputationRule :CS_Minus_SCG ;
+      :hasMeasurementAxis :XAxis ;
+      :hasRegionSegment :BottomSegment ;
+      :producedBy :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SW_3
+:SW_3 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ;
+      :computedFrom :CS_3 ,
+                    :SCG_3 ;
+      :hasComputationRule :CS_Minus_SCG ;
+      :hasMeasurementAxis :XAxis ;
+      :hasRegionSegment :BottomSegment ;
+      :producedBy :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SW_4
+:SW_4 rdf:type owl:NamedIndividual ,
+               :MeasurementItem ;
+      :computedFrom :CS_4 ,
+                    :SCG_4 ;
+      :hasComputationRule :CS_Minus_SCG ;
+      :hasMeasurementAxis :XAxis ;
+      :hasRegionSegment :TopSegment ;
+      :producedBy :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SameXPosition
+:SameXPosition rdf:type owl:NamedIndividual ,
+                        :AlignmentType .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SameYPosition
+:SameYPosition rdf:type owl:NamedIndividual ,
+                        :AlignmentType .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SealedRegionOnSeparator
+:SealedRegionOnSeparator rdf:type owl:NamedIndividual ,
+                                  :ProductState ;
+                         :partOf :RollSeparatorsWith_SheetElectrodes .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Sealing
+:Sealing rdf:type owl:NamedIndividual ,
+                  :Action ;
+         :actsOn :RollSeparatorsWith_SheetElectrodes ;
+         :actsOnComponent :LowerSeparator ,
+                          :UpperSeparator ;
+         :occursBetween :CenterElectrodeSheet ,
+                        :UpperElectrodeSheet ;
+         :resultIn :SealedRegionOnSeparator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SealingZone
+:SealingZone rdf:type owl:NamedIndividual ,
+                      :Region ;
+             :existsWhenState :SealedRegionOnSeparator ;
+             :locatedOn :LowerSeparatorSheet ,
+                        :UpperSeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Select_ShortestSeparatorEdge_ByLength
+:Select_ShortestSeparatorEdge_ByLength rdf:type owl:NamedIndividual ,
+                                                :EdgeSelectionRule ;
+                                       :comparesLengthOf :BackEdgeOf_LowerSeparatorSheet ,
+                                                         :BackEdgeOf_UpperSeparatorSheet ,
+                                                         :FrontEdgeOf_LowerSeparatorSheet ,
+                                                         :FrontEdgeOf_UpperSeparatorSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Separator
+:Separator rdf:type owl:NamedIndividual ,
+                    :Material ;
+           rdfs:comment "분리막"@ko ;
+           rdfs:label "분리막"@ko .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/SeparatorSheet
+:SeparatorSheet rdf:type owl:NamedIndividual ,
+                         :Product ;
+                :hasProductState :SealedRegionOnSeparator .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Sheet
+:Sheet rdf:type owl:NamedIndividual ,
+                :Form .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ShortestSeparatorEdge
+:ShortestSeparatorEdge rdf:type owl:NamedIndividual ,
+                                :Property .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Subtraction
+:Subtraction rdf:type owl:NamedIndividual ,
+                      :ComputationType .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPA_1
+:TPA_1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPA_RightEdgePair_CenterTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPA_LeftEdgePair_CenterTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPA_2
+:TPA_2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPA_LeftEdgePair_CenterTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPA_RightEdgePair_CenterTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPA_LeftEdgePair_CenterTab
+:TPA_LeftEdgePair_CenterTab rdf:type owl:NamedIndividual ,
+                                     :EdgePair ;
+                            :hasEdge :LeftEdgeOf_CenterElectrodeSheet ,
+                                     :LeftEdgeOf_TabCenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPA_RightEdgePair_CenterTab
+:TPA_RightEdgePair_CenterTab rdf:type owl:NamedIndividual ,
+                                      :EdgePair ;
+                             :hasEdge :RightEdgeOf_CenterElectrodeSheet ,
+                                      :RightEdgeOf_TabCenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPC_1
+:TPC_1 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPC_RightEdgePair_UpperTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPC_LeftEdgePair_UpperTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :hasMeasurementAxis :XAxis ;
+       :measuredAt :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPC_2
+:TPC_2 rdf:type owl:NamedIndividual ,
+                :MeasurementItem ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :LeftToRight_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPC_LeftEdgePair_UpperTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ,
+                [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                         owl:onProperty :appliesWhenFlowDirection ;
+                                         owl:hasValue :RightToLeft_AlongProcessFlow
+                                       ]
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :measuresDistanceOnEdgePair ;
+                                         owl:hasValue :TPC_RightEdgePair_UpperTab
+                                       ]
+                                     ) ;
+                  rdf:type owl:Class
+                ] ;
+       :measuredAt :FinalVision .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPC_LeftEdgePair_UpperTab
+:TPC_LeftEdgePair_UpperTab rdf:type owl:NamedIndividual ,
+                                    :EdgePair ;
+                           :hasEdge :LeftEdgeOf_TabUpperElectrodeSheet ,
+                                    :LeftEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TPC_RightEdgePair_UpperTab
+:TPC_RightEdgePair_UpperTab rdf:type owl:NamedIndividual ,
+                                     :EdgePair ;
+                            :hasEdge :RightEdgeOf_TabUpperElectrodeSheet ,
+                                     :RightEdgeOf_UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TWA
+:TWA rdf:type owl:NamedIndividual ,
+              :MeasurementItem ;
+     :hasMeasurementAxis :XAxis ;
+     :measuredAt :FinalVision ;
+     :measuresWidthOf :Tab_Center_ElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TWC
+:TWC rdf:type owl:NamedIndividual ,
+              :MeasurementItem ;
+     :hasMeasurementAxis :XAxis ;
+     :measuredAt :FinalVision ;
+     :measuresWidthOf :Tab_Upper_ElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Tab_Center_ElectrodeSheet
+:Tab_Center_ElectrodeSheet rdf:type owl:NamedIndividual ,
+                                    :Part ,
+                                    [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                                             owl:onProperty :isLocatedAlong ;
+                                                             owl:hasValue :BackEdgeOf_CenterElectrodeSheet
+                                                           ]
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty :validUnderDirection ;
+                                                             owl:hasValue :RightToLeft_AlongProcessFlow
+                                                           ]
+                                                         ) ;
+                                      rdf:type owl:Class
+                                    ] ,
+                                    [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                                             owl:onProperty :isLocatedAlong ;
+                                                             owl:hasValue :FrontEdgeOf_CenterElectrodeSheet
+                                                           ]
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty :validUnderDirection ;
+                                                             owl:hasValue :LeftToRight_AlongProcessFlow
+                                                           ]
+                                                         ) ;
+                                      rdf:type owl:Class
+                                    ] ;
+                           :hasShape :Rectangle ;
+                           :isAttachedToOneOf :FrontOrBackEdgeOf_CenterElectrodeSheet ;
+                           :isOppositeToAlongAxis :Tab_Upper_ElectrodeSheet ;
+                           :isPartOf :CenterElectrodeSheet ;
+                           :locatedAlong :YAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Tab_Upper_ElectrodeSheet
+:Tab_Upper_ElectrodeSheet rdf:type owl:NamedIndividual ,
+                                   :Part ,
+                                   [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                                            owl:onProperty :isLocatedAlong ;
+                                                            owl:hasValue :BackEdgeOf_UpperElectrodeSheet
+                                                          ]
+                                                          [ rdf:type owl:Restriction ;
+                                                            owl:onProperty :validUnderDirection ;
+                                                            owl:hasValue :LeftToRight_AlongProcessFlow
+                                                          ]
+                                                        ) ;
+                                     rdf:type owl:Class
+                                   ] ,
+                                   [ owl:intersectionOf ( [ rdf:type owl:Restriction ;
+                                                            owl:onProperty :isLocatedAlong ;
+                                                            owl:hasValue :FrontEdgeOf_UpperElectrodeSheet
+                                                          ]
+                                                          [ rdf:type owl:Restriction ;
+                                                            owl:onProperty :validUnderDirection ;
+                                                            owl:hasValue :RightToLeft_AlongProcessFlow
+                                                          ]
+                                                        ) ;
+                                     rdf:type owl:Class
+                                   ] ;
+                          :hasShape :Rectangle ;
+                          :isAttachedToOneOf :FrontOrBackEdgeOf_UpperElectrodeSheet ;
+                          :isOppositeToAlongAxis :Tab_Center_ElectrodeSheet ;
+                          :isPartOf :UpperElectrodeSheet ;
+                          :locatedAlong :YAxis .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TopSegment
+:TopSegment rdf:type owl:NamedIndividual ,
+                     :EdgeSegment .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/TopToBottom_AlongStacking
+:TopToBottom_AlongStacking rdf:type owl:NamedIndividual ,
+                                    :Direction .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/UpperElectrode
+:UpperElectrode rdf:type owl:NamedIndividual ,
+                         :Product ;
+                :hasInitialForm :Roll .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/UpperElectrodeSheet
+:UpperElectrodeSheet rdf:type owl:NamedIndividual ,
+                              :Product ;
+                     :hasForm :Sheet ;
+                     :hasLargerSizeThan :Tab_Upper_ElectrodeSheet ;
+                     :hasShape :Rectangle ;
+                     :isFormStateOf :UpperElectrode ;
+                     :isMadeOf :Cathode ;
+                     :isPlacedAbove :UpperSeparatorSheet ;
+                     :isPlacedOn :UpperSeparator ;
+                     :isSymmetricAlongAxis :XAxis ,
+                                           :YAxis ;
+                     :resultOf :Cutter_Upper .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/UpperSeparator
+:UpperSeparator rdf:type owl:NamedIndividual ,
+                         :Product ;
+                :hasInitialForm :Roll .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/UpperSeparatorSheet
+:UpperSeparatorSheet rdf:type owl:NamedIndividual ,
+                              :Product ;
+                     :hasForm :Sheet ;
+                     :hasLargerSizeThan :CenterElectrodeSheet ;
+                     :hasShape :Rectangle ;
+                     :isATypeOf :SeparatorSheet ;
+                     :isFormStateOf :UpperSeparator ;
+                     :isMadeOf :Separator ;
+                     :isPlacedAbove :CenterElectrodeSheet ;
+                     :isSymmetricAlongAxis :XAxis ,
+                                           :YAxis ;
+                     :resultOf :Cutter_Final ;
+                     :surroundsOnAllEdges :CenterElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/Upper_Center_ElectrodeSheets
+:Upper_Center_ElectrodeSheets rdf:type owl:NamedIndividual ,
+                                       :ProductPair ;
+                              :hasAlignment :SameXPosition ,
+                                            :SameYPosition ;
+                              :hasProduct :CenterElectrodeSheet ,
+                                          :UpperElectrodeSheet .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/XAxis
+:XAxis rdf:type owl:NamedIndividual ,
+                :CoordinateAxis ;
+       :isPerpendicularTo :YAxis ;
+       :isProcessDirectionOf :Lamination ;
+       :representsDirection :LeftToRight_AlongProcessFlow .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/YAxis
+:YAxis rdf:type owl:NamedIndividual ,
+                :CoordinateAxis ;
+       :isPerpendicularTo :XAxis ;
+       :representsDirection :FrontToBack_FromOperatorView .
+
+
+###  http://www.semanticweb.org/jaehu/ontologies/2025/10/untitled-ontology-40/ZAxis
+:ZAxis rdf:type owl:NamedIndividual ,
+                :CoordinateAxis ;
+       :isStackingDerectionOf :MonoCell ;
+       :representsDirection :TopToBottom_AlongStacking .
+
+
+###  Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi
