@@ -1,0 +1,133 @@
+%pip install --upgrade --quiet google-genai
+
+import os
+from google.cloud import bigquery
+from google.cloud import storage
+import pandas as pd
+import io
+
+PROJECT_ID = "pjt-lges-qas-gemini-477902"  # @param {type: "string"}
+REGION = "asia-northeast3" # @param {type: "string"}
+
+if not PROJECT_ID or PROJECT_ID == "pjt-lges-qas-gemini":
+    PROJECT_ID = str(os.environ.get("GOOGLE_CLOUD_PROJECT"))
+
+LOCATION = os.environ.get("GOOGLE_CLOUD_REGION", REGION)
+
+from google import genai
+
+genai_client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+
+MODEL_ID = "gemini-2.5-flash"  # @param {type: "string"}
+
+from IPython.display import Markdown, display
+from google.genai.types import (
+    ApiKeyConfig,
+    AuthConfig,
+    EnterpriseWebSearch,
+    GenerateContentConfig,
+    GenerateContentResponse,
+    GoogleMaps,
+    GoogleSearch,
+    LatLng,
+    Part,
+    Retrieval,
+    RetrievalConfig,
+    Tool,
+    ToolConfig,
+    ToolCodeExecution,
+    VertexAISearch,
+    Blob
+)
+
+# BigQuery 클라이언트 초기화
+bigquery_client = bigquery.Client(project=PROJECT_ID)
+
+# --- BigQuery에서 데이터 가져오기 설정 ---
+# TODO: BigQuery 데이터셋 ID, 테이블 ID를 사용자의 환경에 맞게 수정하세요.
+BIGQUERY_DATASET_ID = "ontology_dataset"
+BIGQUERY_TABLE_ID = "spc_test"
+TABLE_FULL_ID = f"{PROJECT_ID}.{BIGQUERY_DATASET_ID}.{BIGQUERY_TABLE_ID}"
+
+# BigQuery에서 데이터를 읽어 Pandas DataFrame으로 변환
+# 주의: 테이블 크기가 매우 클 경우 메모리 부족 문제가 발생할 수 있습니다.
+# 이 경우, 데이터를 청크 단위로 처리하거나 BigQuery Storage API를 직접 사용하는 것을 고려해야 합니다.
+
+try:
+    # 쿼리를 사용하여 특정 데이터를 가져올 수도 있습니다.
+    query = f"SELECT * FROM `{TABLE_FULL_ID}` WHERE `Dimension Name` IN ( 'TP_A1U1', 'TP_A2U1', 'TP_C1U1', 'TP_C2U1', 'TW_A1U1', 'TW_C1U1' );"
+    df_from_bigquery = bigquery_client.query(query1).to_dataframe()
+
+    # 또는 전체 테이블을 가져옵니다.
+    # query = f"SELECT * FROM `{TABLE_FULL_ID}` LIMIT 10"
+    # df_from_bigquery = bigquery_client.list_rows(TABLE_FULL_ID).to_dataframe()
+    
+    # DataFrame을 CSV 형식의 문자열로 변환합니다.
+    csv_string_from_bigquery = df_from_bigquery.to_csv(index=False)
+    
+    text_csv_from_bigquery = Part(
+        inline_data=Blob(
+            data=csv_string_from_bigquery.encode('utf-8'),
+            mime_type="text/csv"
+        )
+    )
+    print(f"BigQuery에서 테이블 '{TABLE_FULL_ID}'의 데이터를 성공적으로 로드했습니다.")
+
+except Exception as e:
+    print("-------------------- 오류 발생! --------------------")
+    print(f"오류 유형: {type(e)}") # 오류 객체의 타입 출력
+    print(f"오류 메시지: {e}")    # 오류 객체의 문자열 표현 출력
+    print(f"자세한 스택 트레이스:")
+    import traceback
+    traceback.print_exc() # 전체 스택 트레이스 출력
+    print("----------------------------------------------------")
+
+    text_csv_from_bigquery = Part.from_uri(
+        file_uri="gs://example_ontology/LAM_13_1_Case 2.csv",
+        mime_type="text/csv",
+    )
+    print("Cloud Storage의 기본 CSV 파일을 사용합니다.")
+
+text_mapping = Part.from_uri(
+    file_uri="gs://example_ontology/02. Mapping Files/Config.yaml",
+    mime_type="text/yaml",
+)
+
+text_rdf = Part.from_uri(
+    file_uri="gs://example_ontology/00. TTL, JSON Files/master.ttl",
+    mime_type="text/turtle",
+)
+
+text_jsn = Part.from_uri(
+    file_uri="gs://example_ontology/00. TTL, JSON Files/drawing.json",
+    mime_type="text/json",
+)
+
+
+prompt1 = """
+TPC 불량이 발생한 Cell ID 를 파악하여, 해당 불량 유형이 증가한 시점은 언제야?
+
+<output>
+- 불량이 발생하는 시점에 대해서 그래프로도 표현해줘
+"""
+
+prompt2 = """
+불량 Cell 수 몇 개야? Cell 별 불량 조합 알려주고, 주요 불량 유형이 증가한 시점은 언제인가?
+
+<output>
+- 불량이 발생하는 시점에 대해서 그래프로도 표현해줘
+"""
+
+prompt3 = """
+불량이 급격하게 증가한 시점에서 라미네이션 공정 상의 원인 추론해봐
+
+<output>
+- 불량 현상에 따른 원인을 표로 표현해주고, 원인을 추론한 이유도 간단하게 설명해줘
+"""
+
+response = genai_client.models.generate_content(
+    model=MODEL_ID,
+    contents=[text_rdf, prompt1],
+)
+
+print(response.text)
