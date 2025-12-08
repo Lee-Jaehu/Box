@@ -1,0 +1,263 @@
+import vertexai
+from vertexai.generative_models import GenerativeModel, Part
+from google.cloud import bigquery
+from google.cloud import storage
+import pandas as pd
+import io
+
+# ==========================================
+# [설정] 경로 및 프로젝트 정보
+# ==========================================
+PROJECT_ID = 'pjt-lges-qas-gemini-477902'
+LOCATION = 'asia-northeast3'
+MODEL_ID = 'gemini-2.5-flash'
+
+# 파일 경로 (GCS)
+GCS_BUCKET = 'example_ontology'
+JSON_PATH = '00. TTL, JSON Files/drawing.json'       # 정의 파일
+YAML_PATH = '02. Mapping Files/Config.yaml'    # 매핑 파일
+SPC_PATH = '01.JSONL_Files/SPC_LAM_22_2_Inspection_Data.csv'      # 데이터 파일 (SPC)
+MES_PATH = '01.JSONL_Files/MES_Equipment Alarm History.csv'      # 데이터 파일 (MES)
+
+# ==========================================
+# 1. 헬퍼 함수: GCS 파일 텍스트로 읽어오기
+# ==========================================
+def read_gcs_text(bucket_name, blob_path):
+    storage_client = storage.Client(project=PROJECT_ID)
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_path)
+    return blob.download_as_text(encoding='utf-8')
+
+# ==========================================
+# 2. 데이터 및 지식 로드 (초기화 단계)
+# ==========================================
+print('🚀 시스템 초기화 중... (데이터 및 지식 로드)')
+
+try:
+    ontology_context = read_gcs_text(GCS_BUCKET, JSON_PATH)
+    mapping_context = read_gcs_text(GCS_BUCKET, YAML_PATH)
+    print('✅ 온톨로지 정의(TTL) 및 매핑 규칙(YAML) 로드 완료')
+except Exception as e:
+    print(f'❌ 설정 파일 로드 실패: {e}')
+    ontology_context = '정보 없음'
+    mapping_context = '정보 없음'
+    # raise # 설정 파일 로드 실패 시 강제 종료를 원한다면 이 주석을 해제
+
+# (2) 분석 데이터 로드 (DataFrame)
+try:
+    # SPC 데이터 로드
+    df_spc = pd.read_csv(f'gs://{GCS_BUCKET}/{SPC_PATH}', low_memory=False)
+    print(f'✅ SPC 데이터 로드 완료 ({len(df_spc)} rows)')
+
+    # MES 데이터 로드
+    df_mes = pd.read_csv(f'gs://{GCS_BUCKET}/{MES_PATH}', low_memory=False)
+    print(f'✅ MES 데이터 로드 완료 ({len(df_mes)} rows)')
+
+except Exception as e:
+    print(f'❌ 데이터 로드 실패: {e}')
+    import traceback
+    traceback.print_exc() # 오류의 전체 스택 트레이스 출력
+    df_spc = pd.DataFrame() # 빈 데이터프레임으로 초기화
+    df_mes = pd.DataFrame() # 빈 데이터프레임으로 초기화
+    # raise # 데이터 로드 실패 시 강제 종료를 원한다면 이 주석을 해제
+
+# ==========================================
+# 3. Gemini 챗봇 에이전트 설정
+# ==========================================
+# 시스템 프롬프트: 챗봇에게 '너는 누구고, 무슨 지식을 가졌는지' 미리 주입
+system_prompt_content = f'''
+너는 배터리 제조 공정의 데이터 분석 및 온톨로지 변환 전문가 AI 챗봇이야.
+너는 아래의 [Ontology Definition]과 [Mapping Rules], 그리고 현재 'df_spc' 변수에 담긴 [SPC 검사 데이터]와 'df_mes' 변수에 담긴 [MES 알람 이력 데이터]를 **종합적으로 분석하고 추론**하여 사용자 질문에 답변해야 해.
+
+**중요 지시**: 
+1.  데이터 분석 시, 측정 항목 중 "SGL", "W_A1U1", "W_A2U1", "W_C1U1", "W_C2U1"는 **반드시 제외**하고 분석을 수행해야 해. 이 항목들은 어떠한 분석이나 추론에도 사용하지 마.
+2.  2.  **모든 답변은 구체적이고 깊이 있는 분석 및 추론 결과에 기반해야 하며, 일반론적인 설명을 지양해야 해.**
+3.  필요하다면 'df_spc' 또는 'df_mes' 변수를 사용하는 파이썬 코드를 작성하고, 그 코드를 ```python ... ``` 블록 안에 넣어줘. 코드 실행 결과는 다음 대화 턴에서 컨텍스트로 활용될 수 있어.
+
+**질문에 대한 정확하고 심층적인 답변을 위한 단계별 분석 및 추론 과정:**
+1.  **질문 이해 및 초기 상황 분석**: 사용자의 질문 의도를 명확히 파악하고, MES 알람 이력(df_mes)을 통해 알람 발생 상황(설비, 시간, 알람 종류)을 정확히 식별해.
+2.  **관련 지식 식별 및 매핑**:
+    *   [Ontology Definition]을 통해 알람 종류, 설비, 측정 항목 등 질문과 관련된 개념 정의와 관계를 이해해.
+    *   [Mapping Rules]를 활용하여 df_spc 및 df_mes의 컬럼들이 온톨로지 개념과 어떻게 연결되는지 파악하고, 분석에 필요한 데이터를 선별해.
+3.  **SPC 데이터 심층 분석 (df_spc 활용)**:
+    *   알람 발생 시점 전후의 'n분' (사용자가 명시하지 않으면 합리적으로 추정) SPC 데이터를 파이썬 코드를 통해 상세 분석해.
+    *   분석 시 제외 항목("SGL", "W_A1U1", "W_A2U1", "W_C1U1", "W_C2U1")을 **반드시 필터링**해야 해.
+    *   [검사 측정 항목 목록]에 포함된 각 항목의 SPC 통계치(평균, 표준편차, CpK 등), Trend 변화(상승, 하락, 급변, 주기성, 안정성 등), NG 발생 패턴(단발성, 지속성, 특정 구간 집중 등) 등을 구체적으로 분석해야 해.
+    *   특히, Trend 변화를 [어떠한 특징]에 상세하게 서술해야 하며, 이는 단순히 증가/감소가 아닌 변화의 양상과 정도를 포함해야 해.
+4.  **MES 알람 이력과 SPC 데이터 연관 분석**: MES 알람과 SPC 데이터 분석 결과를 연결하여 알람 발생의 직접적인 원인 또는 연관 현상을 추론해.
+5.  **Ontology 기반 심층 추론**:
+    *   [Ontology Definition]에 정의된 제품, 공정, 장비, 측정 항목 간의 관계 및 이상 유형 정의를 활용하여, SPC 데이터 분석 결과(NG 항목, Trend 특징)와 MES 알람 정보를 바탕으로 [Ontology Definition 기반 추론된 현상/원인]을 구체적으로 도출해.
+    *   이 추론은 단순한 현상 나열이 아닌, 온톨로지에서 정의된 인과 관계나 부품 간의 연결성을 고려한 것이어야 해.
+6.  **최종 원인 추론 및 다음 단계 제안**:
+    *   모든 정보를 종합하여 [최종 추론된 구체적인 원인]을 명확하게 제시해. 이는 'AC_1,2 / CS_1,2 측정 항목 이상'과 같은 직접적인 데이터 이상을 넘어, 온톨로지에서 정의된 '양극 전극 이상'과 같은 심층적인 원인으로 연결되어야 해.
+    *   마지막으로, [최종 추론된 원인] 발생 원인을 분석하기 위한 구체적인 다음 분석 계획이나 추가적으로 필요한 정보(예: 추가 센서 데이터, 설비 로그 등)를 제안해야 해.
+
+**답변 형식 (Output):**
+[설비명]에서 [알람 발생 시간]에 위치불량 알람이 발생 하였습니다.   # 알람 발생 정보
+알람 발생 전 n분 SPC 데이터를 확인한 결과, [검사 측정 항목 목록]에서 NG가 다량 발생했으며 항목별 Trend는 [어떠한 특징] 입니다.  # 검사 데이터를 통한 현상 정보 확인
+
+**SPC 데이터 분석 요약:**
+| 구분 | 항목 | NG 발생 빈도/수 | Trend 특징 | 추론된 현상/원인 |
+|---|---|---|---|---|
+| SPC 데이터 | [항목1] | [빈도1] | [특징1] | [원인1] |
+| SPC 데이터 | [항목2] | [빈도2] | [특징2] | [원인2] |
+| ... | ... | ... | ... | ... |
+
+[Ontology Definition 기반 추론된 현상/원인]에 따라 [최종 추론된 구체적인 원인]으로 추론 됩니다.  # 온톨로지 기반 현상 추론
+[최종 추론된 원인] 발생 원인을 분석 하겠습니다.
+
+**예시:**
+[ESWA 22-2호기 LAM]에서 [25-12-01 00:59:11 초]에 위치불량 알람이 발생 하였습니다.
+알람 발생 전 10분 SPC 데이터를 확인한 결과, [AC_1, AC_2, CS_1, CS_2]에서 NG가 다량 발생했으며 항목별 Trend는 [AC_1은 급격한 상승 후 안정화, AC_2는 점진적 하락, CS_1은 지속적인 상한선 이탈, CS_2는 불규칙한 변동폭 증가] 입니다.
+
+**SPC 데이터 분석 요약:**
+| 구분 | 항목 | NG 발생 빈도/수 | Trend 특징 | 추론된 현상/원인 |
+|---|---|---|---|---|
+| SPC 데이터 | AC_1 | 20회 (과거 10분) | 급격한 상승 후 안정화 | 전극 간극 불균일 |
+| SPC 데이터 | AC_2 | 15회 (과거 10분) | 점진적 하락 | 전극 마모 |
+| SPC 데이터 | CS_1 | 18회 (과거 10분) | 지속적인 상한선 이탈 | 전극 고정 불량 |
+| SPC 데이터 | CS_2 | 12회 (과거 10분) | 불규칙한 변동폭 증가 | 센서 노이즈 증가 |
+
+[온톨로지 정의에 따른 AC/CS 측정항목과 양극 전극 위치 및 간극 관계 분석]에 따라 [양극 전극 좌측 하단부의 위치 이탈 및 고정 불량]으로 추론 됩니다.
+[양극 전극 좌측 하단부의 위치 이탈 및 고정 불량] 발생 원인을 분석 하겠습니다.
+
+---
+[Ontology Definition (TTL)]
+{ontology_context}
+
+[Mapping Rules (YAML)]
+{mapping_context}
+---
+'''
+
+import vertexai
+from vertexai.generative_models import GenerativeModel, Part, Content # Content import 추가
+
+vertexai.init(project=PROJECT_ID, location=LOCATION)
+
+model = GenerativeModel(MODEL_ID)
+
+# 시스템 프롬프트 내용을 Part 객체로 변환합니다.
+system_message_part = Part.from_text(system_prompt_content)
+
+# 대화 세션 시작 시 system_instruction을 history의 첫 번째 메시지로 전달합니다.
+# Content 객체를 from_dict 대신 직접 생성하여 parts 필드에 Part 객체 리스트를 전달합니다.
+chat = model.start_chat(
+    history=[
+        Content(role="user", parts=[system_message_part]),
+        Content(role="model", parts=[Part.from_text("네, 알겠습니다. 배터리 제조 공정 데이터 분석 및 온톨로지 변환에 대한 질문을 해주세요. 온톨로지 정의, 매핑 규칙, 그리고 SPC 및 MES 데이터를 종합적으로 활용하여 요청하신 형식으로 답변해 드리겠습니다.")])
+    ]
+)
+
+print('✅ Gemini 챗봇 에이전트 설정 완료.')
+
+import sys
+import io
+import traceback # 오류 스택 트레이스 출력을 위해 필요
+
+# ==========================================
+# 4. 인터랙티브 챗봇 실행 (Loop)
+# ==========================================
+# LLM의 응답을 파싱하여 지정된 형식으로 재구성하는 함수
+def format_llm_response(llm_raw_text):
+    # LLM이 지정된 형식을 잘 따른다고 가정하고, 그대로 반환합니다.
+    # 만약 LLM이 [ ]만 포함된 원시 값을 반환하고 Python 코드에서 조립해야 한다면,
+    # 이 함수 내에서 값을 추출하고 f-string으로 조립해야 합니다.
+    return llm_raw_text
+
+print('\n' + '='*50)
+print('🚀 [Ontology Chatbot] 준비 완료! (종료하려면 \'exit\' 입력)')
+print('='*50)
+
+while True:
+    # 사용자 입력 받기
+    user_input = input('\nUser (질문하세요): ')
+    
+    if user_input.lower() in ['exit', 'quit', '종료']:
+        print('챗봇을 종료합니다.')
+        break
+    
+    # 데이터 구조 정보 (매 턴마다 갱신된 정보를 줄 수도 있음)
+    # 이제 df_spc와 df_mes 두 개의 데이터프레임 정보를 제공합니다.
+    data_info = f'''
+[Current Data Info]
+--- df_spc (SPC 검사 데이터) ---
+Columns: {list(df_spc.columns)}
+Head(3):
+{df_spc.head(3).to_string()}
+
+--- df_mes (MES 알람 이력 데이터) ---
+Columns: {list(df_mes.columns)}
+Head(3):
+{df_mes.head(3).to_string()}
+'''
+    
+    # 챗봇에게 전송할 최종 메시지
+    full_query = f'''
+    {user_input}
+    
+    필요하다면 'df_spc' 또는 'df_mes' 변수를 사용하는 파이썬 코드를 작성해.
+    작성된 코드는 ```python ... ``` 블록 안에 넣어주고, 코드 실행 결과는 텍스트로 요약해서 답변해줘.
+    데이터 정보: {data_info}
+    '''
+    
+    print('🤔 Gemini 생각 중...')
+    
+    try:
+        response = chat.send_message(full_query)
+        
+        # LLM의 응답에서 코드 블록과 일반 텍스트를 분리
+        code_start_tag = '```python'
+        code_end_tag = '```'
+        
+        code_block = None
+        agent_text_output = response.text # 기본적으로 전체 응답 텍스트를 저장
+
+        if code_start_tag in response.text:
+            start_idx = response.text.find(code_start_tag) + len(code_start_tag)
+            end_idx = response.text.find(code_end_tag, start_idx)
+
+            if start_idx != -1 and end_idx != -1:
+                code_block = response.text[start_idx:end_idx].strip()
+                # 코드 블록을 제외한 나머지 텍스트를 에이전트의 응답으로 간주
+                agent_text_output = response.text.replace(response.text[response.text.find(code_start_tag):end_idx + len(code_end_tag)], '', 1).strip() # 첫 번째 코드 블록만 제거
+
+        # 에이전트의 텍스트 응답 출력
+        formatted_response = format_llm_response(agent_text_output) # LLM의 순수 텍스트 답변 (코드 부분 제외)
+        print("\n" + "="*20 + " Agent Response " + "="*20)
+        print(f'{formatted_response}\n')
+        
+        if code_block: # 코드 블록이 존재하면 자동으로 실행
+            print("\n--- 코드 자동 실행 ---")
+            
+            # exec 실행 시 출력을 캡처하기 위한 설정
+            old_stdout = sys.stdout
+            redirected_output = io.StringIO()
+            sys.stdout = redirected_output
+
+            try:
+                # exec 함수에 globals()와 locals()를 전달하여 현재 스코프에서 변수를 사용 가능하게 함
+                # df_spc, df_mes, pd 등의 변수가 exec 스코프에서 접근 가능하도록 합니다.
+                exec(code_block, globals(), locals())
+                
+                captured_output = redirected_output.getvalue()
+                if captured_output:
+                    print("\n--- 코드 실행 결과 ---")
+                    print(captured_output.strip()) # 캡처된 출력만 보여줌
+                else:
+                    print("코드 실행 결과: 출력 내용 없음")
+
+            except Exception as e:
+                print(f' ❌ 코드 실행 중 오류 발생: {e}')
+                print("자세한 스택 트레이스:")
+                traceback.print_exc() # 코드 실행 오류 스택 트레이스 출력
+                print("--------------------")
+            finally:
+                sys.stdout = old_stdout # stdout을 다시 원래대로 복원
+            
+            print("--------------------") # 코드 실행 섹션 마무리
+        
+    except Exception as e:
+        print(f'❌ 오류 발생: {e}')
+        import traceback
+        traceback.print_exc() # 챗봇 응답 오류 스택 트레이스 출력
