@@ -1,0 +1,9 @@
+(base) PS C:\Users\jaehu\CSD\CSD> gh copilot -p "다음 형식으로만 답변하세요, 다른 설명 없이: [{\"id\":\"task-1\",\"test\":\"ok\"}]"
+[{"id":"task-1","test":"ok"}]
+
+
+
+Changes    +0 -0
+AI Credits 3.73 (10s)
+Tokens     ↑ 29.8k (16.3k cached, 13.5k written) • ↓ 20
+Resume     copilot --resume=83223992-bd19-483a-94be-bf19ad31dc88
