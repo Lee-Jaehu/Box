@@ -1,0 +1,15 @@
+{
+  "error": "response_too_large",
+  "message": "첨부된 PPTX는 약 150장의 슬라이드로 구성되어 있으며, 지시한 스키마대로 모든 과제를 추출하여 JSON으로 출력하면 단일 응답의 최대 길이를 초과합니다.",
+  "file": "260730_제조DX솔루션담당 추진현황 주간보고_W31.pptx",
+  "recommendation": [
+    {
+      "method": "team_split",
+      "description": "팀별(PPT 분할)로 실행 후 JSON의 tasks 배열을 병합"
+    },
+    {
+      "method": "range_split",
+      "description": "슬라이드 범위별(예: 1~50, 51~100, 101~150)로 나누어 실행 후 teams/tasks를 병합"
+    }
+  ]
+}
