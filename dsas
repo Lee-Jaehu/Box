@@ -1,0 +1,7 @@
+ai-contest-vote/:1 Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Cannot use import statement outside a module
+    at $ye (transformScriptTags.ts:114:10)
+    at r (transformScriptTags.ts:186:9)
+    at Zye (transformScriptTags.ts:233:3)
+    at transformScriptTags.ts:269:3
+    at mve (index.ts:276:3)
+    at hve (index.ts:260:3)
