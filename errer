@@ -1,46 +1,1584 @@
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=teams&t=1785464753236' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=teams&t=1785464753236:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=criteria&t=1785464753237' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=criteria&t=1785464753237:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785464756058' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785464756058:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785464756058' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785464756058:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785464961808' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785464961808:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785464961808' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785464961808:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785465240974' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785465240974:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785465240974' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785465240974:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785465271042' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785465271042:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785465271043' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=get&key=roster&t=1785465271043:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785465283200' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec?action=list&prefix=vote__&t=1785465283200:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILEDUnderstand this error
-ai-contest-vote/:1 Access to fetch at 'https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec' from origin 'https://github.lgensol.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
-script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec:1  Failed to load resource: net::ERR_FAILED
+{
+  "teams": [
+    {
+      "name": "Save Your Money : GitHub Copilot 멀티에이전트 개발업무 자동화",
+      "manager": "김성태",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "나만의 업무용 Second Brain 만들기 (업무의 온톨로지화)",
+      "manager": "오영택",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "엔지니어 암묵지 자산화를 위한 AI 기반 Ontology 자동 구조화",
+      "manager": "김지송",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "근태 스케줄링/ 개인 업무지원 Agent 자동화",
+      "manager": "홍준혁",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "AI 코딩을 활용한 원클릭 화면 영역 자동 캡처 프로그램 개발 (ContourSnap - 생성형 AI 협업 기반 원클릭 화면 영역 자동 캡처 도구)",
+      "manager": "박세용",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "개인용 이메일 비서 Agent",
+      "manager": "우정주",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "Copilot AI Agent를 활용한 코드 생성 자동화",
+      "manager": "이재준",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "Rollpress 단선 숨은 원인 분석 AI Agent",
+      "manager": "정환식",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "생성형 AI를 활용한 FDC 개소별 동작 유형 분류 자동화 알고리즘 개발",
+      "manager": "이주현",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "생성형 AI 코딩 어시스턴트 기반 믹서 설비 상태 웹(HTML) 진단 리포팅 자동화 체계를 통한 업무 개선",
+      "manager": "천강민",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "주간업무 자료 정리 Agent",
+      "manager": "이재후",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "원통형 In-Line CT 샘플링 Agent 개발",
+      "manager": "윤성렬",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "FDC Alarm 현황 Insight 도출 Agent Work",
+      "manager": "최주영",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "비전 FDC 검사 이미지 밝기 하락 원인 분석 AI 에이전트 개발",
+      "manager": "배수민",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "AI(Claude Code) 활용한 웹 UI 화면설계 및 사내 시스템(ELM) 연동 환경구축",
+      "manager": "문대윤",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "16조",
+      "manager": "",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "17조",
+      "manager": "",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "18조",
+      "manager": "",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "19조",
+      "manager": "",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    },
+    {
+      "name": "20조",
+      "manager": "",
+      "description": "",
+      "images": [],
+      "links": [],
+      "attachments": []
+    }
+  ],
+  "criteria": [
+    {
+      "key": "c1",
+      "label": "업무 개선 효과",
+      "desc": "업무 시간 단축, 비용 절감 등 수치적 효과가 명확한가? 단순 반복 업무가 줄고 핵심 업무 집중도가 향상되었는가?",
+      "unit": 6
+    },
+    {
+      "key": "c2",
+      "label": "지속성",
+      "desc": "일회성이 아닌, 해당 업무에 지속 사용 가능한가?",
+      "unit": 4
+    },
+    {
+      "key": "c3",
+      "label": "확장성",
+      "desc": "유사 업무나 다른 부서에 전파하고 적용할 수 있는가?",
+      "unit": 4
+    },
+    {
+      "key": "cms8g6ktmgx5m",
+      "label": "완성도",
+      "desc": "단순 아이디어 단계를 넘어 실제 실무 환경에서 원활하게 사용되고 안정적으로 작동하는가?",
+      "unit": 2
+    },
+    {
+      "key": "cms8g6ls426i9",
+      "label": "창의성",
+      "desc": "AI를 실무에 적용한 아이디어가 독창적이고 참신한가?",
+      "unit": 2
+    },
+    {
+      "key": "cms8g794un30j",
+      "label": "발전 가능성",
+      "desc": "향후 고도화 계획이 구체적이고 체계적으로 잘 짜여있는가?",
+      "unit": 2
+    }
+  ],
+  "roster": [
+    {
+      "name": "박종석",
+      "dept": "제조DX.기획팀",
+      "team": "",
+      "id": "박종석-제조dx기획팀"
+    },
+    {
+      "name": "김기훈",
+      "dept": "제조DX.기획팀",
+      "team": "",
+      "id": "김기훈-제조dx기획팀"
+    },
+    {
+      "name": "정재호",
+      "dept": "제조DX.기획팀",
+      "team": "",
+      "id": "정재호-제조dx기획팀"
+    },
+    {
+      "name": "김경민",
+      "dept": "제조DX.기획팀",
+      "team": "",
+      "id": "김경민-제조dx기획팀"
+    },
+    {
+      "name": "최수정",
+      "dept": "제조DX.기획팀",
+      "team": "",
+      "id": "최수정-제조dx기획팀"
+    },
+    {
+      "name": "이재후",
+      "dept": "제조DX.기획팀",
+      "team": "",
+      "id": "이재후-제조dx기획팀"
+    },
+    {
+      "name": "정정윤",
+      "dept": "제조DX.제조운영AX전략P",
+      "team": "",
+      "id": "정정윤-제조dx제조운영ax전략p"
+    },
+    {
+      "name": "심민규",
+      "dept": "제조DX.제조운영AX전략P",
+      "team": "",
+      "id": "심민규-제조dx제조운영ax전략p"
+    },
+    {
+      "name": "신낙천",
+      "dept": "제조DX.제조운영AX전략P",
+      "team": "",
+      "id": "신낙천-제조dx제조운영ax전략p"
+    },
+    {
+      "name": "김준희",
+      "dept": "제조DX.제조운영AX전략P",
+      "team": "",
+      "id": "김준희-제조dx제조운영ax전략p"
+    },
+    {
+      "name": "김민수",
+      "dept": "제조DX그룹",
+      "team": "",
+      "id": "김민수-제조dx그룹"
+    },
+    {
+      "name": "백광민",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "백광민-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "박경의",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "박경의-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "안진운",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "안진운-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "박병훈",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "박병훈-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "이주현",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "이주현-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "김종명",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "김종명-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "이재준",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "이재준-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "김재희",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "김재희-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "진민기",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "진민기-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "유정석",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "유정석-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "배수민",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "배수민-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "류태호",
+      "dept": "제조DX.FDC DX.원통형조립FDC팀",
+      "team": "",
+      "id": "류태호-제조dxfdcdx원통형조립fdc팀"
+    },
+    {
+      "name": "황화원",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "황화원-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "천강민",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "천강민-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "박건률",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "박건률-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "윤성환",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "윤성환-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "김시호",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "김시호-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "이종현",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "이종현-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "김진영",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "김진영-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "감미론",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "감미론-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "홍준혁",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "홍준혁-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "변은석",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "변은석-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "김현서",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "김현서-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "이창성",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "이창성-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "최이수",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "최이수-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "서용석",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "서용석-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "유정현",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "유정현-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "홍도현",
+      "dept": "제조DX.FDC DX.전극FDC팀",
+      "team": "",
+      "id": "홍도현-제조dxfdcdx전극fdc팀"
+    },
+    {
+      "name": "이현우",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "이현우-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "안찬수",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "안찬수-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "최두고",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "최두고-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "조호습",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "조호습-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "황석화",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "황석화-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "곽인철",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "곽인철-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "박종찬",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "박종찬-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "최주영",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "최주영-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "황석범",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "황석범-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "김찬호",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "김찬호-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "곽명선",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "곽명선-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "김유진",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "김유진-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "홍유경",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "홍유경-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "정현아",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "정현아-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "김병찬",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "김병찬-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "박재현",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "박재현-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "김나현",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "김나현-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "하윤지",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "하윤지-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "왕주진",
+      "dept": "제조DX.FDC DX.조립FDC팀",
+      "team": "",
+      "id": "왕주진-제조dxfdcdx조립fdc팀"
+    },
+    {
+      "name": "민경춘",
+      "dept": "제조DX.FDC DX담당",
+      "team": "",
+      "id": "민경춘-제조dxfdcdx담당"
+    },
+    {
+      "name": "엄광호",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "엄광호-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "강호종",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "강호종-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "윤숙영",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "윤숙영-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "김형준",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "김형준-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "함경호",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "함경호-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "김종환",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "김종환-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "나영준",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "나영준-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "김용호",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "김용호-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "박신아",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "박신아-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "최창락",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "최창락-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "임성현",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "임성현-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "최가을",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "최가을-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "변승섭",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "변승섭-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "이동규",
+      "dept": "제조DX.자동보정.MC자동보정팀",
+      "team": "",
+      "id": "이동규-제조dx자동보정mc자동보정팀"
+    },
+    {
+      "name": "정돈규",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "정돈규-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "박상하",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "박상하-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "정대영",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "정대영-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "박세용",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "박세용-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "김치완",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "김치완-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "이상용",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "이상용-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "차영은",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "차영은-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "최윤지",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "최윤지-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "정소영",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "정소영-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "백승민",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "백승민-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "박홍준",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "박홍준-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "김하람",
+      "dept": "제조DX.자동보정.RSND자동보정팀",
+      "team": "",
+      "id": "김하람-제조dx자동보정rsnd자동보정팀"
+    },
+    {
+      "name": "김기백",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "김기백-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "김성태",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "김성태-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "박연탁",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "박연탁-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "최문석",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "최문석-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "신재우",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "신재우-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "염지혜",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "염지혜-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "오두섭",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "오두섭-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "고지연",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "고지연-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "김태욱",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "김태욱-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "조동현",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "조동현-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "박지우",
+      "dept": "제조DX.자동보정.자동보정선행개발팀",
+      "team": "",
+      "id": "박지우-제조dx자동보정자동보정선행개발팀"
+    },
+    {
+      "name": "박수종",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "박수종-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "원종래",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "원종래-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "박준오",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "박준오-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "이제희",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "이제희-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "성연욱",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "성연욱-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "서재근",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "서재근-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "이동민",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "이동민-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "강현웅",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "강현웅-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "임인섭",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "임인섭-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "심은찬",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "심은찬-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "황재웅",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "황재웅-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "이기홍",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "이기홍-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "안다현",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "안다현-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "김태승",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "김태승-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "김형원",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "김형원-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "황민주",
+      "dept": "제조DX.자동보정.조립자동보정팀",
+      "team": "",
+      "id": "황민주-제조dx자동보정조립자동보정팀"
+    },
+    {
+      "name": "송무강",
+      "dept": "제조DX.자동보정담당",
+      "team": "",
+      "id": "송무강-제조dx자동보정담당"
+    },
+    {
+      "name": "박위대",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "박위대-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "최이범",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "최이범-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "안태규",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "안태규-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "서동민",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "서동민-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "박태욱",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "박태욱-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "김종우",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "김종우-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "조은지",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "조은지-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "김희재",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "김희재-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "박형식",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "박형식-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "최재호",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "최재호-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "이찬혁",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "이찬혁-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "고광하",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "고광하-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "한종원",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석1팀",
+      "team": "",
+      "id": "한종원-제조dx제조dx솔루션제조빅데이터분석1팀"
+    },
+    {
+      "name": "정환식",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "정환식-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "오현석",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "오현석-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "이상익",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "이상익-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "서준효",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "서준효-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "임성묵",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "임성묵-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "이희원",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "이희원-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "하현수",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "하현수-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "홍진표",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "홍진표-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "강주예",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "강주예-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "김석중",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "김석중-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "김지원",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "김지원-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "김민희",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "김민희-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "허윤서",
+      "dept": "제조DX.제조DX솔루션.제조빅데이터분석2팀",
+      "team": "",
+      "id": "허윤서-제조dx제조dx솔루션제조빅데이터분석2팀"
+    },
+    {
+      "name": "박경찬",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "박경찬-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "최성민",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "최성민-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "박종현",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "박종현-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "김준범",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "김준범-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "김승필",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "김승필-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "조현우",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "조현우-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "박영헌",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "박영헌-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "정성권",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "정성권-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "한기덕",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "한기덕-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "윤병호",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "윤병호-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "이성규",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "이성규-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "임상현",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "임상현-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "이충성",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "이충성-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "윤성렬",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "윤성렬-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "박소영",
+      "dept": "제조DX.제조DX솔루션.추적솔루션개발팀",
+      "team": "",
+      "id": "박소영-제조dx제조dx솔루션추적솔루션개발팀"
+    },
+    {
+      "name": "유연택",
+      "dept": "제조DX.제조DX솔루션담당",
+      "team": "",
+      "id": "유연택-제조dx제조dx솔루션담당"
+    },
+    {
+      "name": "이정원",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "이정원-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "오영택",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "오영택-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "박준규",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "박준규-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "권태영",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "권태영-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "지원경",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "지원경-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "김영선",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "김영선-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "한성원",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "한성원-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "박정환",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "박정환-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "윤석모",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "윤석모-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "곽병욱",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "곽병욱-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "황덕현",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "황덕현-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "김도희",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "김도희-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "김지송",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "김지송-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "함우석",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "함우석-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "조남준",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "조남준-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "정경섭",
+      "dept": "제조DX.품질DX.DAVINCI팀",
+      "team": "",
+      "id": "정경섭-제조dx품질dxdavinci팀"
+    },
+    {
+      "name": "이강국",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "이강국-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "박홍규",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "박홍규-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "박정우",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "박정우-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "이성우",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "이성우-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "박범규",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "박범규-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "추승식",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "추승식-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "심현철",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "심현철-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "이재균",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "이재균-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "김승진",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "김승진-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "이상오",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "이상오-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "이유경",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "이유경-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "권오훈",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "권오훈-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "권영근",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "권영근-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "장주은",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "장주은-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "김태원",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "김태원-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "이주민",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "이주민-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "윤채영",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "윤채영-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "지유하",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "지유하-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "오소영",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "오소영-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "조성우",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "조성우-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "정지훈",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "정지훈-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "김효정",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "김효정-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "김예은",
+      "dept": "제조DX.품질DX.공정DX팀",
+      "team": "",
+      "id": "김예은-제조dx품질dx공정dx팀"
+    },
+    {
+      "name": "황유승",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "황유승-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "신종권",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "신종권-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "양승준",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "양승준-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "김형우",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "김형우-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "강규택",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "강규택-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "문대윤",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "문대윤-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "박재기",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "박재기-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "김정호",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "김정호-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "이형관",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "이형관-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "윤영준",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "윤영준-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "정호식",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "정호식-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "박지수",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "박지수-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "신동진",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "신동진-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "박수완",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "박수완-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "권민준",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "권민준-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "박재완",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "박재완-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "김도원",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "김도원-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "박정민",
+      "dept": "제조DX.품질DX.설비DX팀",
+      "team": "",
+      "id": "박정민-제조dx품질dx설비dx팀"
+    },
+    {
+      "name": "지용진",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "지용진-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "최상준",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "최상준-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "임국빈",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "임국빈-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "서경민",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "서경민-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "연두희",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "연두희-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "박기욱",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "박기욱-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "장대국",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "장대국-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "안희용",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "안희용-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "김홍진",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "김홍진-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "정인규",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "정인규-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "이기랑",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "이기랑-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "원유정",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "원유정-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "이가은",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "이가은-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "이유정",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "이유정-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "이만기",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "이만기-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "유종훈",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "유종훈-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "우정주",
+      "dept": "제조DX.품질DX.품질DX팀",
+      "team": "",
+      "id": "우정주-제조dx품질dx품질dx팀"
+    },
+    {
+      "name": "송영민",
+      "dept": "제조DX.품질DX담당",
+      "team": "",
+      "id": "송영민-제조dx품질dx담당"
+    }
+  ]
+}
