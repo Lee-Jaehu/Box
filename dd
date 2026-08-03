@@ -99,17 +99,11 @@
         "이재준"
       ],
       "description": "",
-      "images": [],
-      "links": [
-        {
-          "label": "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/07.%20%EC%9B%90%ED%86%B5%ED%98%95%EC%A1%B0%EB%A6%BDFDC%ED%8C%80_%EC%9D%B4%EC%9E%AC%EC%A4%80_1.PNG?d=w3fce0abfba3249c9bd10fa043bc6904c&csf=1&web=1&e=x2ELa2",
-          "url": "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/07.%20%EC%9B%90%ED%86%B5%ED%98%95%EC%A1%B0%EB%A6%BDFDC%ED%8C%80_%EC%9D%B4%EC%9E%AC%EC%A4%80_1.PNG?d=w3fce0abfba3249c9bd10fa043bc6904c&csf=1&web=1&e=x2ELa2"
-        },
-        {
-          "label": "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/07.%20%EC%9B%90%ED%86%B5%ED%98%95%EC%A1%B0%EB%A6%BDFDC%ED%8C%80_%EC%9D%B4%EC%9E%AC%EC%A4%80_2.PNG?d=wb872cd6ab20e48ed9aadd8da728fe41f&csf=1&web=1&e=GafdNW",
-          "url": "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/07.%20%EC%9B%90%ED%86%B5%ED%98%95%EC%A1%B0%EB%A6%BDFDC%ED%8C%80_%EC%9D%B4%EC%9E%AC%EC%A4%80_2.PNG?d=wb872cd6ab20e48ed9aadd8da728fe41f&csf=1&web=1&e=GafdNW"
-        }
+      "images": [
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/07.%20%EC%9B%90%ED%86%B5%ED%98%95%EC%A1%B0%EB%A6%BDFDC%ED%8C%80_%EC%9D%B4%EC%9E%AC%EC%A4%80_1.PNG?d=w3fce0abfba3249c9bd10fa043bc6904c&csf=1&web=1&e=x2ELa2",
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/07.%20%EC%9B%90%ED%86%B5%ED%98%95%EC%A1%B0%EB%A6%BDFDC%ED%8C%80_%EC%9D%B4%EC%9E%AC%EC%A4%80_2.PNG?d=wb872cd6ab20e48ed9aadd8da728fe41f&csf=1&web=1&e=GafdNW"
       ],
+      "links": [],
       "attachments": []
     },
     {
@@ -213,7 +207,11 @@
         "박소영"
       ],
       "description": "",
-      "images": [],
+      "images": [
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/12.%20%EC%B6%94%EC%A0%81%EC%86%94%EB%A3%A8%EC%85%98%EA%B0%9C%EB%B0%9C%ED%8C%80_%EC%9C%A4%EC%84%B1%EB%A0%AC,%EB%B0%95%EC%86%8C%EC%98%81_1.PNG?d=w46b7393e70f749f8aa0b1b664d7ed303&csf=1&web=1&e=05C3f8",
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/12.%20%EC%B6%94%EC%A0%81%EC%86%94%EB%A3%A8%EC%85%98%EA%B0%9C%EB%B0%9C%ED%8C%80_%EC%9C%A4%EC%84%B1%EB%A0%AC,%EB%B0%95%EC%86%8C%EC%98%81_2.PNG?d=w09c76f841d32461f9a6cfbb6917ae5bf&csf=1&web=1&e=jC62Yo",
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/12.%20%EC%B6%94%EC%A0%81%EC%86%94%EB%A3%A8%EC%85%98%EA%B0%9C%EB%B0%9C%ED%8C%80_%EC%9C%A4%EC%84%B1%EB%A0%AC,%EB%B0%95%EC%86%8C%EC%98%81_3.PNG?d=w003577cb0c7c45108f1c5bbb88178337&csf=1&web=1&e=SzfQNR"
+      ],
       "links": [],
       "attachments": []
     },
@@ -328,6 +326,23 @@
       ],
       "links": [],
       "attachments": []
+    },
+    {
+      "name": "주요인자 도출 자동화 AI Agent 연계",
+      "managers": [
+        "홍준혁",
+        "이종현",
+        "유정현"
+      ],
+      "description": "",
+      "images": [
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/19.%20%EC%A0%84%EA%B7%B9FDC%ED%8C%80_%ED%99%8D%EC%A4%80%ED%98%81,%EC%9D%B4%EC%A2%85%ED%98%84,%EC%9C%A0%EC%A0%95%ED%98%84_1.PNG?d=w1aeb132501454547a619dc04c8a7203c&csf=1&web=1&e=WHKQ1P",
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/19.%20%EC%A0%84%EA%B7%B9FDC%ED%8C%80_%ED%99%8D%EC%A4%80%ED%98%81,%EC%9D%B4%EC%A2%85%ED%98%84,%EC%9C%A0%EC%A0%95%ED%98%84_2.PNG?d=wc2a73559a5214c0ba4ef09c722b7b7b2&csf=1&web=1&e=bdePoI",
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/19.%20%EC%A0%84%EA%B7%B9FDC%ED%8C%80_%ED%99%8D%EC%A4%80%ED%98%81,%EC%9D%B4%EC%A2%85%ED%98%84,%EC%9C%A0%EC%A0%95%ED%98%84_3.PNG?d=wd70150c334744be7bd21057406b63064&csf=1&web=1&e=8otueI",
+        "https://lgensol365.sharepoint.com/:i:/r/sites/23915/Shared%20Documents/General/AI%20Contest%20%EC%B6%9C%ED%92%88/19.%20%EC%A0%84%EA%B7%B9FDC%ED%8C%80_%ED%99%8D%EC%A4%80%ED%98%81,%EC%9D%B4%EC%A2%85%ED%98%84,%EC%9C%A0%EC%A0%95%ED%98%84_4.PNG?d=w7c9438529b0241afbf3ac4cab4786666&csf=1&web=1&e=gd206a"
+      ],
+      "links": [],
+      "attachments": []
     }
   ],
   "criteria": [
@@ -386,12 +401,6 @@
       "dept": "제조DX.기획팀",
       "team": "",
       "id": "정재호-제조dx기획팀"
-    },
-    {
-      "name": "김경민",
-      "dept": "제조DX.기획팀",
-      "team": "",
-      "id": "김경민-제조dx기획팀"
     },
     {
       "name": "최수정",
@@ -518,12 +527,6 @@
       "dept": "제조DX.FDC DX.전극FDC팀",
       "team": "",
       "id": "천강민-제조dxfdcdx전극fdc팀"
-    },
-    {
-      "name": "박건률",
-      "dept": "제조DX.FDC DX.전극FDC팀",
-      "team": "",
-      "id": "박건률-제조dxfdcdx전극fdc팀"
     },
     {
       "name": "윤성환",
@@ -668,12 +671,6 @@
       "dept": "제조DX.FDC DX.조립FDC팀",
       "team": "",
       "id": "곽명선-제조dxfdcdx조립fdc팀"
-    },
-    {
-      "name": "김유진",
-      "dept": "제조DX.FDC DX.조립FDC팀",
-      "team": "",
-      "id": "김유진-제조dxfdcdx조립fdc팀"
     },
     {
       "name": "홍유경",
@@ -850,12 +847,6 @@
       "id": "차영은-제조dx자동보정rsnd자동보정팀"
     },
     {
-      "name": "최윤지",
-      "dept": "제조DX.자동보정.RSND자동보정팀",
-      "team": "",
-      "id": "최윤지-제조dx자동보정rsnd자동보정팀"
-    },
-    {
       "name": "정소영",
       "dept": "제조DX.자동보정.RSND자동보정팀",
       "team": "",
@@ -908,12 +899,6 @@
       "dept": "제조DX.자동보정.자동보정선행개발팀",
       "team": "",
       "id": "신재우-제조dx자동보정자동보정선행개발팀"
-    },
-    {
-      "name": "염지혜",
-      "dept": "제조DX.자동보정.자동보정선행개발팀",
-      "team": "",
-      "id": "염지혜-제조dx자동보정자동보정선행개발팀"
     },
     {
       "name": "오두섭",
@@ -1420,18 +1405,6 @@
       "id": "이성우-제조dx품질dx공정dx팀"
     },
     {
-      "name": "박범규",
-      "dept": "제조DX.품질DX.공정DX팀",
-      "team": "",
-      "id": "박범규-제조dx품질dx공정dx팀"
-    },
-    {
-      "name": "추승식",
-      "dept": "제조DX.품질DX.공정DX팀",
-      "team": "",
-      "id": "추승식-제조dx품질dx공정dx팀"
-    },
-    {
       "name": "심현철",
       "dept": "제조DX.품질DX.공정DX팀",
       "team": "",
@@ -1448,12 +1421,6 @@
       "dept": "제조DX.품질DX.공정DX팀",
       "team": "",
       "id": "김승진-제조dx품질dx공정dx팀"
-    },
-    {
-      "name": "이상오",
-      "dept": "제조DX.품질DX.공정DX팀",
-      "team": "",
-      "id": "이상오-제조dx품질dx공정dx팀"
     },
     {
       "name": "이유경",
@@ -1682,12 +1649,6 @@
       "dept": "제조DX.품질DX.품질DX팀",
       "team": "",
       "id": "장대국-제조dx품질dx품질dx팀"
-    },
-    {
-      "name": "안희용",
-      "dept": "제조DX.품질DX.품질DX팀",
-      "team": "",
-      "id": "안희용-제조dx품질dx품질dx팀"
     },
     {
       "name": "김홍진",
