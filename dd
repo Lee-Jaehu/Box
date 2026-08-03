@@ -1,16 +1,1 @@
-ai-contest-vote/:387  POST https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec net::ERR_ABORTED 403 (Forbidden)
-set @ ai-contest-vote/:387
-handleSubmitScore @ ai-contest-vote/:902
-onClick @ ai-contest-vote/:1562
-kj @ ai-contest-vote/:272
-jj @ ai-contest-vote/:83
-mj @ ai-contest-vote/:83
-gh @ ai-contest-vote/:111
-Xg @ ai-contest-vote/:112
-(anonymous) @ ai-contest-vote/:121
-Tf @ ai-contest-vote/:238
-wg @ ai-contest-vote/:81
-Ce @ ai-contest-vote/:114
-Be @ ai-contest-vote/:96
-zj @ ai-contest-vote/:95Understand this error
-ai-contest-vote/:387  POST https://script.google.com/macros/s/AKfycby33SIKjzcMhzsipUKeu7PhQgSS-XDybadA60cI1gk0Gg1lxfgB4B9HH4l6gzInIzj3/exec net::ERR_ABORTED 403 (Forbidden)
+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
