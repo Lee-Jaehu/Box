@@ -1,1 +1,67 @@
 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
+
+VM2417:12 
+ GET https://github.lgensol.com/api/v3/repos/jaehu@lgensol.com/ai-contest-data 404 (Not Found)
+(anonymous)	@	VM2417:12
+(anonymous)	@	VM2417:36
+VM2417:13    상태코드: 404
+VM2417:15    응답: 
+{message: 'Not Found', documentation_url: 'https://docs.github.com/enterprise-server@3.12/rest/repos/repos#get-a-repository'}
+VM2417:19 2) 쓰기 테스트: 테스트 파일 생성...
+VM2417:22 
+ PUT https://github.lgensol.com/api/v3/repos/jaehu@lgensol.com/ai-contest-data/contents/test-write.txt 404 (Not Found)
+VM2417:30    상태코드: 404
+VM2417:32    응답: 
+{message: 'Not Found', documentation_url: 'https://docs.github.com/enterprise-server@3.12/rest/repos/contents#create-or-update-file-contents'}
+documentation_url
+: 
+"https://docs.github.com/enterprise-server@3.12/rest/repos/contents#create-or-update-file-contents"
+message
+: 
+"Not Found"
+[[Prototype]]
+: 
+Object
+constructor
+: 
+ƒ Object()
+hasOwnProperty
+: 
+ƒ hasOwnProperty()
+isPrototypeOf
+: 
+ƒ isPrototypeOf()
+propertyIsEnumerable
+: 
+ƒ propertyIsEnumerable()
+toLocaleString
+: 
+ƒ toLocaleString()
+toString
+: 
+ƒ toString()
+valueOf
+: 
+ƒ valueOf()
+__defineGetter__
+: 
+ƒ __defineGetter__()
+__defineSetter__
+: 
+ƒ __defineSetter__()
+__lookupGetter__
+: 
+ƒ __lookupGetter__()
+__lookupSetter__
+: 
+ƒ __lookupSetter__()
+__proto__
+: 
+(...)
+get __proto__
+: 
+ƒ __proto__()
+set __proto__
+: 
+ƒ __proto__()
+﻿
