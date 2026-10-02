@@ -1,0 +1,122 @@
+[
+  {
+    "check": "P-APC-101 Daily 필터",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-APC-101 스키마 및 mock 실행",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-APC-101 템플릿 누락 감지",
+    "status": "PASS",
+    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+  },
+  {
+    "check": "P-ROL-102 Daily 필터",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-ROL-102 스키마 및 mock 실행",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "일정 변경 overlay와 baseline 보존",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "완료 하위행 접기",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "접기 불가능한 12행의 초과 대응",
+    "status": "FAIL",
+    "detail": "현재 12행 그대로 반환. PPT 생성기는 표 행 수만큼 잘라서 사용함."
+  },
+  {
+    "check": "P-ROL-102 템플릿 누락 감지",
+    "status": "PASS",
+    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+  },
+  {
+    "check": "P-INV-103 Daily 필터",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-INV-103 스키마 및 mock 실행",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-INV-103 템플릿 누락 감지",
+    "status": "PASS",
+    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+  },
+  {
+    "check": "P-SYS-104 Daily 필터",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-SYS-104 스키마 및 mock 실행",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-SYS-104 템플릿 누락 감지",
+    "status": "PASS",
+    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+  },
+  {
+    "check": "P-DAT-105 Daily 필터",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-DAT-105 스키마 및 mock 실행",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-DAT-105 템플릿 누락 감지",
+    "status": "PASS",
+    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+  },
+  {
+    "check": "재실행 revision 증가",
+    "status": "PASS",
+    "detail": "현재 재실행해도 revision=1"
+  },
+  {
+    "check": "메모 없는 주 AI 호출 생략",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "이전 pinned_facts 누락 방지",
+    "status": "FAIL",
+    "detail": "mock이 이전 고정 사실을 반환하지 않으면 코드에서도 보존하지 않음"
+  },
+  {
+    "check": "입력에 없는 4 수치 검출",
+    "status": "FAIL",
+    "detail": "현재 숫자 4와 39는 예외 처리되어 누락됨"
+  },
+  {
+    "check": "미존재 source ID 검출",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "원본 master/raw 보존",
+    "status": "PASS",
+    "detail": ""
+  }
+]

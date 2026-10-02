@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "text": "WA 적용 일정 9/25 → 9/30 변경",
+      "source_ids": [
+        "D-260922-tester-02"
+      ]
+    }
+  ],
+  "pinned_facts": [],
+  "new_pinned_facts": [
+    {
+      "text": "WA 적용 일정 9/25 → 9/30 변경",
+      "source_ids": [
+        "D-260922-tester-02"
+      ]
+    }
+  ]
+}

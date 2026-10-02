@@ -1,0 +1,289 @@
+{
+  "meta": {
+    "schema": "project",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-09-21T09:00:00+09:00",
+    "updated_at": "2026-09-21T09:00:00+09:00",
+    "updated_by": "tester"
+  },
+  "project_id": "P-ROL-102",
+  "name": "[합성 예시] 검증 로직 수평전개",
+  "org": {
+    "group": "검증그룹",
+    "dept": "검증담당",
+    "team": "검증팀"
+  },
+  "owner": "tester",
+  "members": [
+    "tester"
+  ],
+  "reporters": [
+    "tester"
+  ],
+  "period": {
+    "start": "2026-09-01",
+    "target": "2026-09-30",
+    "target_text": "'26.09"
+  },
+  "status": "진행",
+  "health": "주의",
+  "type": {
+    "template_id": "TPL-ROLL",
+    "template_version": 1
+  },
+  "target": [
+    {
+      "site": "WA",
+      "line": "MEB",
+      "process": "AS"
+    }
+  ],
+  "background": "보고 자동화 검증을 위한 합성 과제",
+  "purpose": "실제 업무 데이터 없이 파이프라인 검증",
+  "kpis": [],
+  "milestones": [
+    {
+      "milestone_id": "M4-1",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "WA",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": "2026-09-22",
+      "status": "완료",
+      "note": null,
+      "order": 1
+    },
+    {
+      "milestone_id": "M4-2",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "MI_HL",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": "2026-09-22",
+      "status": "완료",
+      "note": null,
+      "order": 2
+    },
+    {
+      "milestone_id": "M4-3",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "HD",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": "2026-09-22",
+      "status": "완료",
+      "note": null,
+      "order": 3
+    },
+    {
+      "milestone_id": "M4-4",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "OT",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": "2026-09-22",
+      "status": "완료",
+      "note": null,
+      "order": 4
+    },
+    {
+      "milestone_id": "M4-5",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "NB",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 5
+    },
+    {
+      "milestone_id": "M4-6",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "PW",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 6
+    },
+    {
+      "milestone_id": "M4-7",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "HG",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 7
+    },
+    {
+      "milestone_id": "M4-8",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "AZ",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 8
+    },
+    {
+      "milestone_id": "M4-9",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "EP2",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 9
+    },
+    {
+      "milestone_id": "M4-10",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "OC",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 10
+    },
+    {
+      "milestone_id": "M4-11",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "MI_LS",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 11
+    },
+    {
+      "milestone_id": "M4-12",
+      "parent_id": "M4",
+      "stage_code": "S4",
+      "phase": "APPLY",
+      "name": "사이트 적용",
+      "scope": [
+        {
+          "site": "GM_TN",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 12
+    }
+  ],
+  "change_log": [],
+  "retrospective": null
+}

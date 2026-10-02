@@ -1,0 +1,139 @@
+{
+  "meta": {
+    "schema": "project",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-09-21T09:00:00+09:00",
+    "updated_at": "2026-09-21T09:00:00+09:00",
+    "updated_by": "tester"
+  },
+  "project_id": "P-DAT-105",
+  "name": "[합성 예시] 수율 개선 분석",
+  "org": {
+    "group": "검증그룹",
+    "dept": "검증담당",
+    "team": "검증팀"
+  },
+  "owner": "tester",
+  "members": [
+    "tester"
+  ],
+  "reporters": [
+    "tester"
+  ],
+  "period": {
+    "start": "2026-09-01",
+    "target": "2026-09-30",
+    "target_text": "'26.09"
+  },
+  "status": "진행",
+  "health": "주의",
+  "type": {
+    "template_id": "TPL-DATA",
+    "template_version": 1
+  },
+  "target": [
+    {
+      "site": "WA",
+      "line": "MEB",
+      "process": "AS"
+    }
+  ],
+  "background": "보고 자동화 검증을 위한 합성 과제",
+  "purpose": "실제 업무 데이터 없이 파이프라인 검증",
+  "kpis": [],
+  "milestones": [
+    {
+      "milestone_id": "M1",
+      "parent_id": null,
+      "stage_code": "S1",
+      "phase": "PLAN",
+      "name": "문제 정의",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 1
+    },
+    {
+      "milestone_id": "M2",
+      "parent_id": null,
+      "stage_code": "S2",
+      "phase": "EXEC",
+      "name": "데이터 수집·정제",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 2
+    },
+    {
+      "milestone_id": "M3",
+      "parent_id": null,
+      "stage_code": "S3",
+      "phase": "EXEC",
+      "name": "분석",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 3
+    },
+    {
+      "milestone_id": "M4",
+      "parent_id": null,
+      "stage_code": "S4",
+      "phase": "EXEC",
+      "name": "개선안 도출",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 4
+    },
+    {
+      "milestone_id": "M5",
+      "parent_id": null,
+      "stage_code": "S5",
+      "phase": "VERIFY",
+      "name": "효과 검증",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 5
+    },
+    {
+      "milestone_id": "M6",
+      "parent_id": null,
+      "stage_code": "S6",
+      "phase": "CLOSE",
+      "name": "결과 공유",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 6
+    }
+  ],
+  "change_log": [],
+  "retrospective": null
+}

@@ -1,0 +1,325 @@
+{
+  "meta": {
+    "name": "법인·공정 코드표",
+    "version": "0.4-draft",
+    "updated": "2026-10-02",
+    "naming_rule": "대문자 영문·숫자·언더스코어. 신규 입력은 code만 허용, aliases는 기존 자료·AI 입력 매칭용",
+    "hierarchy": [
+      "site",
+      "plant",
+      "line",
+      "unit"
+    ],
+    "alias_rules": [
+      {
+        "rule": "company_prefix",
+        "prefix": "ES",
+        "desc": "사명 접두어 ES를 떼고 남은 값이 등록된 법인·사업장 코드(또는 별칭)와 일치할 때만 변환 (예: ESWA→WA, ESMI1→MI1). ESS처럼 일치하지 않는 값은 변환하지 않음"
+      }
+    ]
+  },
+  "sites": [
+    {
+      "code": "MI_HL",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "MI_HL",
+        "MI",
+        "MI2",
+        "ESMI"
+      ],
+      "active": true
+    },
+    {
+      "code": "MI_LS",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "MI_LS",
+        "MIL"
+      ],
+      "active": true
+    },
+    {
+      "code": "OT",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "OT"
+      ],
+      "active": true
+    },
+    {
+      "code": "WA",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "WA",
+        "ESWA"
+      ],
+      "active": true
+    },
+    {
+      "code": "HD",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "HD"
+      ],
+      "active": true
+    },
+    {
+      "code": "GM_TN",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "GM_TN"
+      ],
+      "active": true
+    },
+    {
+      "code": "NB",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "NB"
+      ],
+      "active": true
+    },
+    {
+      "code": "PW",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "PW"
+      ],
+      "active": true
+    },
+    {
+      "code": "HG",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "HG"
+      ],
+      "active": true
+    },
+    {
+      "code": "AZ",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "AZ"
+      ],
+      "active": true
+    },
+    {
+      "code": "EP2",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "EP2"
+      ],
+      "active": true
+    },
+    {
+      "code": "OC",
+      "name": null,
+      "region": null,
+      "aliases": [
+        "OC",
+        "OC2"
+      ],
+      "active": true
+    }
+  ],
+  "plants": [
+    {
+      "code": "WA2",
+      "site": "WA",
+      "aliases": [
+        "WA2"
+      ],
+      "active": true
+    },
+    {
+      "code": "WA4",
+      "site": "WA",
+      "aliases": [
+        "WA4"
+      ],
+      "active": true
+    },
+    {
+      "code": "WA8",
+      "site": "WA",
+      "aliases": [
+        "WA8"
+      ],
+      "active": true
+    },
+    {
+      "code": "WA_B11",
+      "site": "WA",
+      "aliases": [
+        "11동"
+      ],
+      "active": true
+    },
+    {
+      "code": "WA_B12",
+      "site": "WA",
+      "aliases": [
+        "12동"
+      ],
+      "active": true
+    }
+  ],
+  "lines": [
+    {
+      "code": "MEB",
+      "label": "MEB",
+      "type": "고객 플랫폼 라인",
+      "active": true
+    },
+    {
+      "code": "NORMAL",
+      "label": "Normal",
+      "type": "일반 라인",
+      "active": true
+    }
+  ],
+  "regions": [
+    {
+      "code": "NA",
+      "label": "북미",
+      "sites": [],
+      "active": true
+    }
+  ],
+  "processes": [
+    {
+      "code": "MX",
+      "name": "믹싱",
+      "aliases": [
+        "믹싱",
+        "Mixing"
+      ],
+      "active": true
+    },
+    {
+      "code": "CT",
+      "name": "코팅",
+      "aliases": [
+        "코팅",
+        "코터",
+        "Coater"
+      ],
+      "active": true
+    },
+    {
+      "code": "RP",
+      "name": "롤프레스",
+      "aliases": [
+        "롤프레스",
+        "R/P"
+      ],
+      "active": true
+    },
+    {
+      "code": "SL",
+      "name": "슬리팅",
+      "aliases": [
+        "슬리팅",
+        "Slitting"
+      ],
+      "active": true
+    },
+    {
+      "code": "NT",
+      "name": "노칭",
+      "aliases": [
+        "노칭",
+        "Notching"
+      ],
+      "active": true
+    },
+    {
+      "code": "NND",
+      "name": "NND",
+      "aliases": [
+        "NND"
+      ],
+      "active": true
+    },
+    {
+      "code": "AS",
+      "name": "조립",
+      "aliases": [
+        "조립",
+        "Assembly"
+      ],
+      "active": true
+    },
+    {
+      "code": "FM",
+      "name": "화성",
+      "aliases": [
+        "화성",
+        "Formation"
+      ],
+      "active": true
+    },
+    {
+      "code": "PK",
+      "name": "모듈·팩",
+      "aliases": [
+        "Pack",
+        "Module",
+        "CTP"
+      ],
+      "active": true
+    }
+  ],
+  "product": {
+    "usage": [
+      {
+        "code": "EV",
+        "label": "자동차"
+      },
+      {
+        "code": "ESS",
+        "label": "ESS"
+      }
+    ],
+    "form": [
+      {
+        "code": "CELL",
+        "label": "Cell"
+      },
+      {
+        "code": "MODULE",
+        "label": "Module"
+      },
+      {
+        "code": "PACK",
+        "label": "Pack"
+      },
+      {
+        "code": "CTP",
+        "label": "Cell to Pack"
+      }
+    ],
+    "chemistry": [
+      {
+        "code": "LFP",
+        "label": "LFP"
+      },
+      {
+        "code": "NCM",
+        "label": "NCM"
+      }
+    ]
+  }
+}

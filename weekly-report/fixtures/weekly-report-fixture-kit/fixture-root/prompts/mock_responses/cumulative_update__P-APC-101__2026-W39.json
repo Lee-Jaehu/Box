@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "text": "불량률 0.180% → 0.150% 확인",
+      "source_ids": [
+        "D-260922-tester-01"
+      ]
+    }
+  ],
+  "pinned_facts": [],
+  "new_pinned_facts": [
+    {
+      "text": "불량률 0.180% → 0.150% 확인",
+      "source_ids": [
+        "D-260922-tester-01"
+      ]
+    }
+  ]
+}

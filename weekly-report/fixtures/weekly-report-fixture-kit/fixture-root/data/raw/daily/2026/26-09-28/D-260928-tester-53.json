@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "schema": "daily",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-09-21T09:00:00+09:00",
+    "updated_at": "2026-09-21T09:00:00+09:00",
+    "updated_by": "tester"
+  },
+  "daily_id": "D-260928-tester-53",
+  "date": "2026-09-28",
+  "tag": "26-09-28",
+  "author": "tester",
+  "project_id": "P-DAT-105",
+  "category": "DATA",
+  "visibility": "project",
+  "raw_text": "제외 대상 메모: 보고서에 포함하면 실패",
+  "tables": [],
+  "pics": [],
+  "links": [],
+  "deleted": false
+}

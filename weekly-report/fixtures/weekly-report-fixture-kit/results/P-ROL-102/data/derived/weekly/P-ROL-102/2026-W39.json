@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "schema": "weekly",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-10-02T22:47:27+09:00",
+    "updated_at": "2026-10-02T22:47:27+09:00",
+    "updated_by": "pipeline"
+  },
+  "project_id": "P-ROL-102",
+  "week": "2026-W39",
+  "range": {
+    "from": "2026-09-21",
+    "to": "2026-09-27"
+  },
+  "source_daily_ids": [
+    "D-260922-tester-02"
+  ],
+  "headline": {
+    "text": "WA 적용 일정 9/25 → 9/30 변경",
+    "source_ids": [
+      "D-260922-tester-02"
+    ],
+    "changed": true,
+    "kind": "fact"
+  },
+  "progress": [
+    {
+      "text": "WA 적용 일정 9/25 → 9/30 변경",
+      "source_ids": [
+        "D-260922-tester-02"
+      ],
+      "changed": true,
+      "kind": "fact"
+    }
+  ],
+  "next_plan": [],
+  "issues": [],
+  "milestone_updates": [
+    {
+      "milestone_id": "M4-5",
+      "field": "plan",
+      "to": "2026-09-30",
+      "source_ids": [
+        "D-260922-tester-02"
+      ],
+      "reason": "합성 일정 변경"
+    }
+  ],
+  "no_change": false,
+  "budget": {
+    "max_chars_per_line": 50,
+    "lines": {
+      "progress": 7,
+      "next_plan": 3,
+      "issues": 2
+    }
+  },
+  "review_state": "draft",
+  "ai": {
+    "model": "mock",
+    "prompt_id": "weekly_rollup",
+    "prompt_version": "v0.2",
+    "generated_at": "2026-10-02T22:47:27+09:00",
+    "input_revisions": {
+      "D-260922-tester-02": 1
+    }
+  }
+}

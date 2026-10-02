@@ -1,0 +1,21 @@
+{
+  "headline": {
+    "text": "불량률 0.180% → 0.150% 확인",
+    "source_ids": [
+      "D-260922-tester-01"
+    ],
+    "changed": true
+  },
+  "progress": [
+    {
+      "text": "불량률 0.180% → 0.150% 확인",
+      "source_ids": [
+        "D-260922-tester-01"
+      ],
+      "changed": true
+    }
+  ],
+  "next_plan": [],
+  "issues": [],
+  "milestone_updates": []
+}

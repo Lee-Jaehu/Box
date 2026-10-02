@@ -1,0 +1,12 @@
+[과제]
+- 과제 ID / 과제명: {{project_id}} / {{project_name}}
+- 주차: {{week_label}} ({{range_from}} ~ {{range_to}})
+- 마일스톤 목록:
+{{milestone_lines}}
+
+[지난주 주간 정리본] (changed 판정용)
+{{prev_weekly_lines}}
+
+[이번 주 업무 메모 원문]
+{{daily_blocks}}
+

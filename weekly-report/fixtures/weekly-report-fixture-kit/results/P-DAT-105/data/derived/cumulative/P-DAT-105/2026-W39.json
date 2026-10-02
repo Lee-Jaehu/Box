@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "schema": "cumulative",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-10-02T22:47:27+09:00",
+    "updated_at": "2026-10-02T22:47:27+09:00",
+    "updated_by": "pipeline"
+  },
+  "project_id": "P-DAT-105",
+  "as_of_week": "2026-W39",
+  "prev_ref": "data/derived/cumulative/P-DAT-105/2026-W38.json",
+  "items": [
+    {
+      "text": "수율 95.0% → 96.0% 확인",
+      "source_ids": [
+        "D-260922-tester-05"
+      ],
+      "kind": "fact",
+      "changed": false
+    }
+  ],
+  "pinned_facts": [
+    {
+      "text": "수율 95.0% → 96.0% 확인",
+      "source_ids": [
+        "D-260922-tester-05"
+      ],
+      "kind": "fact",
+      "changed": false
+    }
+  ],
+  "mode": "incremental",
+  "ai": {
+    "model": "mock",
+    "prompt_id": "cumulative_update",
+    "prompt_version": "v0.2",
+    "generated_at": "2026-10-02T22:47:27+09:00",
+    "input_revisions": {
+      "P-DAT-105": 1,
+      "D-260922-tester-05": 1
+    }
+  }
+}

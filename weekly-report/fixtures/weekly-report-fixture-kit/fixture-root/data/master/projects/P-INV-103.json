@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "schema": "project",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-09-21T09:00:00+09:00",
+    "updated_at": "2026-09-21T09:00:00+09:00",
+    "updated_by": "tester"
+  },
+  "project_id": "P-INV-103",
+  "name": "[합성 예시] 설비 투자",
+  "org": {
+    "group": "검증그룹",
+    "dept": "검증담당",
+    "team": "검증팀"
+  },
+  "owner": "tester",
+  "members": [
+    "tester"
+  ],
+  "reporters": [
+    "tester"
+  ],
+  "period": {
+    "start": "2026-09-01",
+    "target": "2026-09-30",
+    "target_text": "'26.09"
+  },
+  "status": "진행",
+  "health": "주의",
+  "type": {
+    "template_id": "TPL-INV",
+    "template_version": 1
+  },
+  "target": [
+    {
+      "site": "WA",
+      "line": "MEB",
+      "process": "AS"
+    }
+  ],
+  "background": "보고 자동화 검증을 위한 합성 과제",
+  "purpose": "실제 업무 데이터 없이 파이프라인 검증",
+  "kpis": [],
+  "milestones": [
+    {
+      "milestone_id": "M1",
+      "parent_id": null,
+      "stage_code": "S1",
+      "phase": "PLAN",
+      "name": "투자 기획",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 1
+    },
+    {
+      "milestone_id": "M2",
+      "parent_id": null,
+      "stage_code": "S2",
+      "phase": "PLAN",
+      "name": "투자비 검토",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 2
+    },
+    {
+      "milestone_id": "M3",
+      "parent_id": null,
+      "stage_code": "S3",
+      "phase": "PLAN",
+      "name": "심의",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 3
+    },
+    {
+      "milestone_id": "M4",
+      "parent_id": null,
+      "stage_code": "S4",
+      "phase": "PLAN",
+      "name": "승인·품의",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 4
+    },
+    {
+      "milestone_id": "M5",
+      "parent_id": null,
+      "stage_code": "S5",
+      "phase": "EXEC",
+      "name": "발주·계약",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 5
+    },
+    {
+      "milestone_id": "M6",
+      "parent_id": null,
+      "stage_code": "S6",
+      "phase": "EXEC",
+      "name": "설치·시운전",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 6
+    },
+    {
+      "milestone_id": "M7",
+      "parent_id": null,
+      "stage_code": "S7",
+      "phase": "VERIFY",
+      "name": "검수",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 7
+    },
+    {
+      "milestone_id": "M8",
+      "parent_id": null,
+      "stage_code": "S8",
+      "phase": "CLOSE",
+      "name": "완료·정산",
+      "scope": "common",
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 8
+    }
+  ],
+  "change_log": [],
+  "retrospective": null
+}

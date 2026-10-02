@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "schema": "daily",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-09-21T09:00:00+09:00",
+    "updated_at": "2026-09-21T09:00:00+09:00",
+    "updated_by": "tester"
+  },
+  "daily_id": "D-260922-tester-03",
+  "date": "2026-09-22",
+  "tag": "26-09-22",
+  "author": "tester",
+  "project_id": "P-INV-103",
+  "category": "INV",
+  "visibility": "project",
+  "raw_text": "심의 9/22 완료. 승인 품의 9/25 예정.",
+  "tables": [],
+  "pics": [],
+  "links": [],
+  "deleted": false
+}

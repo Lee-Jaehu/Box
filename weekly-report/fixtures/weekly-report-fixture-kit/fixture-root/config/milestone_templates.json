@@ -1,0 +1,751 @@
+{
+  "meta": {
+    "name": "업무 유형별 마일스톤 템플릿",
+    "version": "0.1-draft",
+    "status": "draft",
+    "note": "표 구조(열)는 모든 유형 공통, 단계 목록만 유형별로 다름. 운영·상시 유형만 실적형 표 사용"
+  },
+  "phases": [
+    {
+      "code": "PLAN",
+      "label": "기획",
+      "desc": "현황 분석, 요구사항, 기획·심의 등 착수 전 단계"
+    },
+    {
+      "code": "EXEC",
+      "label": "개발·실행",
+      "desc": "로직·시스템 개발, 발주·설치, 분석 수행"
+    },
+    {
+      "code": "VERIFY",
+      "label": "검증",
+      "desc": "기능 검증, 테스트, 검수, 효과 검증"
+    },
+    {
+      "code": "APPLY",
+      "label": "적용",
+      "desc": "양산·운영 적용, 배포"
+    },
+    {
+      "code": "EXPAND",
+      "label": "확산",
+      "desc": "타 법인·라인·호기 수평전개"
+    },
+    {
+      "code": "CLOSE",
+      "label": "종료",
+      "desc": "최종 효과 산출, 운영 인계, 정산, 회고"
+    }
+  ],
+  "status_codes": [
+    "예정",
+    "진행",
+    "지연",
+    "완료",
+    "보류",
+    "취소"
+  ],
+  "table_columns": {
+    "milestone": [
+      "단계",
+      "적용 범위",
+      "Baseline",
+      "계획",
+      "실적",
+      "상태",
+      "비고"
+    ],
+    "performance": [
+      "기간",
+      "접수",
+      "완료",
+      "잔여",
+      "주요 내용"
+    ]
+  },
+  "rules": {
+    "scope": {
+      "common": "법인과 무관한 단계. 적용 범위에 \"공통\" 표시",
+      "per_site": "과제 대상(법인·공정) 중에서 선택. 선택한 사이트 수만큼 하위 행 자동 생성 (예: 6-1, 6-2)"
+    },
+    "repeatable": "같은 단계를 회차로 반복 (예: 로직 개발 1차·2차, 심의 1차·2차). 회차마다 하위 행 생성",
+    "date_allocation": "시작일~목표일 사이를 단계 weight 비율로 나눠 계획일 자동 배분, 주말이면 직전 평일로 당김, 마지막 단계 계획일 = 과제 목표일",
+    "baseline": "팀장이 마일스톤을 확정하는 시점의 계획일을 Baseline으로 고정. 이후 변경은 계획일만 수정하고 변경 이력 기록",
+    "customize": "단계 추가·삭제·이름 변경 허용. 추가 단계는 phase 지정 필수, 단계 code는 템플릿 code 유지 또는 S#-x 형식",
+    "blue_text": "이번 주에 바뀐 계획·실적·비고 값은 RGB(0,0,255), 계획이 Baseline과 다르면 차이 일수 표시 (+n)",
+    "max_rows": 9,
+    "collapse": "9행 초과 시 완료된 하위 행부터 \"OO 완료 n개 사이트\" 한 행으로 접기",
+    "versioning": "진행 중인 과제는 등록 당시 템플릿 버전 유지. 템플릿 개정은 신규 과제부터 적용"
+  },
+  "templates": [
+    {
+      "template_id": "TPL-APC",
+      "name": "자동보정 개발",
+      "version": 1,
+      "table_type": "milestone",
+      "applies_to": "자동보정 로직 신규 개발·개선 과제 (MC·RSND·조립·선행개발)",
+      "stages": [
+        {
+          "code": "S1",
+          "name": "현황 분석",
+          "phase": "PLAN",
+          "weight": 10,
+          "done_criteria": "불량·편차 현상 정의서와 원인 분석 결과 확정",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "분석 보고서"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S2",
+          "name": "개선 방안 도출",
+          "phase": "PLAN",
+          "weight": 10,
+          "done_criteria": "개선 로직(안) 팀장 승인",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "로직 설계안"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S3",
+          "name": "로직 개발",
+          "phase": "EXEC",
+          "weight": 20,
+          "done_criteria": "검증서버 또는 시뮬레이션 시나리오 통과",
+          "scope": "common",
+          "repeatable": true,
+          "required": true,
+          "evidence": [
+            "코드 버전",
+            "시나리오 결과"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S4",
+          "name": "기능 검증",
+          "phase": "VERIFY",
+          "weight": 20,
+          "done_criteria": "대표호기 적용 후 개선 효과 확인 (전·후 비교)",
+          "scope": "per_site",
+          "repeatable": true,
+          "required": true,
+          "evidence": [
+            "전·후 비교 데이터"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S5",
+          "name": "양산 적용",
+          "phase": "APPLY",
+          "weight": 15,
+          "done_criteria": "대상 법인 양산 적용 완료 및 법인 확인",
+          "scope": "per_site",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "적용 통보"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S6",
+          "name": "수평전개",
+          "phase": "EXPAND",
+          "weight": 20,
+          "done_criteria": "전개 대상 사이트 적용 완료",
+          "scope": "per_site",
+          "repeatable": true,
+          "required": false,
+          "evidence": [
+            "사이트별 적용 현황"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S7",
+          "name": "효과 산출·종료",
+          "phase": "CLOSE",
+          "weight": 5,
+          "done_criteria": "최종 효과 산출과 완료 회고 확정",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "효과 산출서"
+          ],
+          "owner_role": "책임자"
+        }
+      ]
+    },
+    {
+      "template_id": "TPL-ROLL",
+      "name": "수평전개",
+      "version": 1,
+      "table_type": "milestone",
+      "applies_to": "검증된 로직·기능을 다른 법인·라인·호기로 확산하는 과제",
+      "stages": [
+        {
+          "code": "S1",
+          "name": "대상 선정",
+          "phase": "PLAN",
+          "weight": 10,
+          "done_criteria": "전개 대상 사이트·호기 목록과 일정 확정",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "대상 목록"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S2",
+          "name": "코드 표준화",
+          "phase": "EXEC",
+          "weight": 20,
+          "done_criteria": "공통 코드·Config 표준 버전 확정",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "표준 버전"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S3",
+          "name": "사이트 검증",
+          "phase": "VERIFY",
+          "weight": 20,
+          "done_criteria": "사이트별 검증 기준 충족",
+          "scope": "per_site",
+          "repeatable": true,
+          "required": true,
+          "evidence": [
+            "검증 결과"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S4",
+          "name": "사이트 적용",
+          "phase": "APPLY",
+          "weight": 40,
+          "done_criteria": "사이트별 양산 적용 완료",
+          "scope": "per_site",
+          "repeatable": true,
+          "required": true,
+          "evidence": [
+            "적용 통보"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S5",
+          "name": "효과 확인",
+          "phase": "CLOSE",
+          "weight": 10,
+          "done_criteria": "전개 사이트 효과 집계 완료",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "효과 집계"
+          ],
+          "owner_role": "담당자"
+        }
+      ]
+    },
+    {
+      "template_id": "TPL-INV",
+      "name": "투자",
+      "version": 1,
+      "table_type": "milestone",
+      "applies_to": "설비·SW 투자 기획, 심의, 집행, 투자비 검토 과제",
+      "stages": [
+        {
+          "code": "S1",
+          "name": "투자 기획",
+          "phase": "PLAN",
+          "weight": 15,
+          "done_criteria": "투자 목적·범위·기대 효과 정리",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "기획안"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S2",
+          "name": "투자비 검토",
+          "phase": "PLAN",
+          "weight": 10,
+          "done_criteria": "견적·투자비 산출 근거 확정",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "견적서"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S3",
+          "name": "심의",
+          "phase": "PLAN",
+          "weight": 10,
+          "done_criteria": "투자심의 통과",
+          "scope": "common",
+          "repeatable": true,
+          "required": true,
+          "evidence": [
+            "심의 결과"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S4",
+          "name": "승인·품의",
+          "phase": "PLAN",
+          "weight": 5,
+          "done_criteria": "품의 결재 완료",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "결재 번호"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S5",
+          "name": "발주·계약",
+          "phase": "EXEC",
+          "weight": 15,
+          "done_criteria": "발주·계약 완료",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "발주 번호"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S6",
+          "name": "설치·시운전",
+          "phase": "EXEC",
+          "weight": 20,
+          "done_criteria": "설치와 시운전 완료",
+          "scope": "per_site",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "시운전 결과"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S7",
+          "name": "검수",
+          "phase": "VERIFY",
+          "weight": 15,
+          "done_criteria": "검수 기준 충족·검수 완료",
+          "scope": "per_site",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "검수서"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S8",
+          "name": "완료·정산",
+          "phase": "CLOSE",
+          "weight": 10,
+          "done_criteria": "정산과 효과 확인 완료",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "정산 내역"
+          ],
+          "owner_role": "책임자"
+        }
+      ]
+    },
+    {
+      "template_id": "TPL-SYS",
+      "name": "시스템 구축",
+      "version": 1,
+      "table_type": "milestone",
+      "applies_to": "IT 시스템·대시보드·데이터 파이프라인 구축 과제",
+      "stages": [
+        {
+          "code": "S1",
+          "name": "요구사항 정의",
+          "phase": "PLAN",
+          "weight": 15,
+          "done_criteria": "요구사항 정의서 사용 부서 확인",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "요구사항 정의서"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S2",
+          "name": "설계",
+          "phase": "PLAN",
+          "weight": 15,
+          "done_criteria": "설계서 검토 완료",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "설계서"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S3",
+          "name": "개발",
+          "phase": "EXEC",
+          "weight": 25,
+          "done_criteria": "기능 개발 완료",
+          "scope": "common",
+          "repeatable": true,
+          "required": true,
+          "evidence": [
+            "배포 버전"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S4",
+          "name": "테스트",
+          "phase": "VERIFY",
+          "weight": 15,
+          "done_criteria": "사용자 테스트 통과",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "테스트 결과"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S5",
+          "name": "배포",
+          "phase": "APPLY",
+          "weight": 10,
+          "done_criteria": "운영 환경 배포 완료",
+          "scope": "per_site",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "배포 기록"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S6",
+          "name": "안정화·운영 인계",
+          "phase": "CLOSE",
+          "weight": 20,
+          "done_criteria": "안정화 기간 종료 후 운영 조직 인계",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "인계서"
+          ],
+          "owner_role": "책임자"
+        }
+      ]
+    },
+    {
+      "template_id": "TPL-DATA",
+      "name": "데이터 분석·개선",
+      "version": 1,
+      "table_type": "milestone",
+      "applies_to": "효과 산출, 원인 분석, PD Loss·수율 개선 분석 과제",
+      "stages": [
+        {
+          "code": "S1",
+          "name": "문제 정의",
+          "phase": "PLAN",
+          "weight": 10,
+          "done_criteria": "분석 질문과 성공 기준 확정",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "분석 계획"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S2",
+          "name": "데이터 수집·정제",
+          "phase": "EXEC",
+          "weight": 25,
+          "done_criteria": "분석 데이터셋 확정 (기간·범위 명시)",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "데이터셋 정의"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S3",
+          "name": "분석",
+          "phase": "EXEC",
+          "weight": 25,
+          "done_criteria": "분석 결과 도출",
+          "scope": "common",
+          "repeatable": true,
+          "required": true,
+          "evidence": [
+            "분석 결과"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S4",
+          "name": "개선안 도출",
+          "phase": "EXEC",
+          "weight": 15,
+          "done_criteria": "개선안 팀장 승인",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "개선안"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S5",
+          "name": "효과 검증",
+          "phase": "VERIFY",
+          "weight": 15,
+          "done_criteria": "개선 전·후 효과 확인",
+          "scope": "per_site",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "전·후 비교"
+          ],
+          "owner_role": "담당자"
+        },
+        {
+          "code": "S6",
+          "name": "결과 공유",
+          "phase": "CLOSE",
+          "weight": 10,
+          "done_criteria": "결과 보고·공유 완료",
+          "scope": "common",
+          "repeatable": false,
+          "required": true,
+          "evidence": [
+            "보고 자료"
+          ],
+          "owner_role": "책임자"
+        }
+      ]
+    },
+    {
+      "template_id": "TPL-OPS",
+      "name": "운영·상시",
+      "version": 1,
+      "table_type": "performance",
+      "applies_to": "운영·유지보수·문의 대응처럼 종료 시점이 없는 상시 업무",
+      "performance_columns": [
+        {
+          "key": "period",
+          "label": "기간",
+          "type": "week"
+        },
+        {
+          "key": "received",
+          "label": "접수",
+          "type": "int"
+        },
+        {
+          "key": "closed",
+          "label": "완료",
+          "type": "int"
+        },
+        {
+          "key": "open",
+          "label": "잔여",
+          "type": "int",
+          "formula": "prev.open + received - closed"
+        },
+        {
+          "key": "note",
+          "label": "주요 내용",
+          "type": "text"
+        }
+      ],
+      "performance_rows": 6,
+      "stages": []
+    }
+  ],
+  "example_instance": {
+    "description": "조립자동보정팀 ESWA 재료교체 불량 개선 과제를 TPL-APC로 등록했을 때의 마일스톤 (W39 기준). 원본에 실적일이 없는 단계는 null",
+    "project_id": "P-ASM-001",
+    "template_id": "TPL-APC",
+    "template_version": 1,
+    "milestones": [
+      {
+        "milestone_id": "M1",
+        "stage_code": "S1",
+        "name": "현황 분석",
+        "scope": "common",
+        "baseline": "2026-07-24",
+        "plan": "2026-07-24",
+        "actual": "2026-07-24",
+        "status": "완료"
+      },
+      {
+        "milestone_id": "M2",
+        "stage_code": "S2",
+        "name": "개선 방안 도출",
+        "scope": "common",
+        "baseline": "2026-08-07",
+        "plan": "2026-08-07",
+        "actual": null,
+        "status": "완료",
+        "note": "실적일 미기재"
+      },
+      {
+        "milestone_id": "M3-1",
+        "stage_code": "S3",
+        "name": "로직 개발 (1차)",
+        "scope": [
+          {
+            "site": "WA",
+            "line": "MEB",
+            "process": "AS"
+          }
+        ],
+        "baseline": "2026-08-31",
+        "plan": "2026-08-31",
+        "actual": "2026-08-23",
+        "status": "완료"
+      },
+      {
+        "milestone_id": "M3-2",
+        "stage_code": "S3",
+        "name": "로직 개발·검증 (2차)",
+        "scope": [
+          {
+            "site": "WA",
+            "line": "MEB",
+            "process": "AS",
+            "units": [
+              "#13-1",
+              "#13-2",
+              "#21-1",
+              "#21-2"
+            ]
+          }
+        ],
+        "baseline": "2026-09-18",
+        "plan": "2026-09-18",
+        "actual": "2026-09-16",
+        "status": "완료",
+        "note": "대표호기 4대"
+      },
+      {
+        "milestone_id": "M6-1",
+        "stage_code": "S6",
+        "name": "수평전개",
+        "scope": [
+          {
+            "site": "WA",
+            "line": "MEB",
+            "process": "AS",
+            "units_count": 18
+          }
+        ],
+        "baseline": "2026-09-25",
+        "plan": "2026-09-25",
+        "actual": "2026-09-16",
+        "status": "완료"
+      },
+      {
+        "milestone_id": "M6-2",
+        "stage_code": "S6",
+        "name": "수평전개",
+        "scope": [
+          {
+            "site": "MI_HL",
+            "process": "AS",
+            "units": [
+              "#2-2",
+              "#2-3"
+            ]
+          }
+        ],
+        "baseline": "2026-09-25",
+        "plan": "2026-09-25",
+        "actual": "2026-09-16",
+        "status": "완료",
+        "note": "기존 표기 ESMI1 (사업장 코드 MI1 확정 후 plant 추가)"
+      },
+      {
+        "milestone_id": "M6-3",
+        "stage_code": "S6",
+        "name": "수평전개",
+        "scope": [
+          {
+            "line": "NORMAL",
+            "process": "AS"
+          }
+        ],
+        "baseline": "2026-09-25",
+        "plan": "2026-09-30",
+        "actual": null,
+        "status": "진행",
+        "note": "WA·MI_HL Normal Line"
+      },
+      {
+        "milestone_id": "M6-4",
+        "stage_code": "S6",
+        "name": "수평전개",
+        "scope": [
+          {
+            "region": "NA",
+            "process": "AS"
+          }
+        ],
+        "baseline": "2026-09-25",
+        "plan": null,
+        "plan_text": "10월초",
+        "actual": null,
+        "status": "예정",
+        "note": "과제 기한('26.09) 초과"
+      }
+    ]
+  }
+}

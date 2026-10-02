@@ -1,0 +1,42 @@
+[
+  {
+    "project_id": "P-APC-101",
+    "template_id": "TPL-APC",
+    "case": "자동보정 로직 개선",
+    "expected_selected_daily_ids": [
+      "D-260922-tester-01"
+    ]
+  },
+  {
+    "project_id": "P-ROL-102",
+    "template_id": "TPL-ROLL",
+    "case": "검증 로직 수평전개",
+    "expected_selected_daily_ids": [
+      "D-260922-tester-02"
+    ]
+  },
+  {
+    "project_id": "P-INV-103",
+    "template_id": "TPL-INV",
+    "case": "설비 투자",
+    "expected_selected_daily_ids": [
+      "D-260922-tester-03"
+    ]
+  },
+  {
+    "project_id": "P-SYS-104",
+    "template_id": "TPL-SYS",
+    "case": "대시보드 시스템 구축",
+    "expected_selected_daily_ids": [
+      "D-260922-tester-04"
+    ]
+  },
+  {
+    "project_id": "P-DAT-105",
+    "template_id": "TPL-DATA",
+    "case": "수율 개선 분석",
+    "expected_selected_daily_ids": [
+      "D-260922-tester-05"
+    ]
+  }
+]
