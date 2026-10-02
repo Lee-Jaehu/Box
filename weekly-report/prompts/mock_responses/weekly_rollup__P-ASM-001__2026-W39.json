@@ -1,0 +1,89 @@
+{
+  "headline": {
+    "text": "금주(W39)에는 로직 개선 효과 모니터링 – ESWA 0.144%, ESMI1 0.230%로 단기 개선 확인",
+    "source_ids": [
+      "D-260922-ljh-01"
+    ],
+    "changed": true
+  },
+  "progress": [
+    {
+      "text": "ESWA(MEB E77 전호기) 0.171% → 0.144% (적용 전·후 4일, 단기)",
+      "source_ids": [
+        "D-260922-ljh-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "ESMI1 #2-2·3 0.367% → 0.230% (단기, 장기 모니터링 필요)",
+      "source_ids": [
+        "D-260922-ljh-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "Normal Line(WA·MI_HL) 수평전개 진행 중",
+      "source_ids": [
+        "D-260922-ljh-01",
+        "CP-260922-001"
+      ],
+      "changed": true
+    }
+  ],
+  "next_plan": [
+    {
+      "text": "Normal Line 수평전개 완료(~9/30), 북미 Site 수평전개(~10월초)",
+      "source_ids": [
+        "D-260922-ljh-01"
+      ],
+      "changed": true
+    }
+  ],
+  "issues": [
+    {
+      "text": "효과 수치가 4일 단기 기준 → 장기 모니터링 결과로 재확인 필요",
+      "source_ids": [
+        "D-260922-ljh-01"
+      ],
+      "changed": true
+    }
+  ],
+  "milestone_updates": [
+    {
+      "milestone_id": "M6-3",
+      "field": "plan",
+      "to": "2026-09-30",
+      "reason": "Normal Line 수평전개 9/30 완료 예정",
+      "source_ids": [
+        "D-260922-ljh-01"
+      ]
+    },
+    {
+      "milestone_id": "M6-3",
+      "field": "note",
+      "to": "WA·MI_HL Normal Line",
+      "reason": null,
+      "source_ids": [
+        "D-260922-ljh-01"
+      ]
+    },
+    {
+      "milestone_id": "M6-4",
+      "field": "plan_text",
+      "to": "10월초",
+      "reason": "북미 Site 10월초 예정",
+      "source_ids": [
+        "D-260922-ljh-01"
+      ]
+    },
+    {
+      "milestone_id": "M6-4",
+      "field": "note",
+      "to": "과제 기한('26.09) 초과",
+      "reason": null,
+      "source_ids": [
+        "D-260922-ljh-01"
+      ]
+    }
+  ]
+}

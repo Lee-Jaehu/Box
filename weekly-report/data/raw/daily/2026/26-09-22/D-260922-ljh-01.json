@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "schema": "daily",
+    "schema_version": "0.1",
+    "revision": 2,
+    "created_at": "2026-09-22T10:30:00+09:00",
+    "updated_at": "2026-09-22T10:55:00+09:00",
+    "updated_by": "ljh"
+  },
+  "daily_id": "D-260922-ljh-01",
+  "date": "2026-09-22",
+  "tag": "26-09-22",
+  "author": "ljh",
+  "project_id": "P-ASM-001",
+  "category": "DATA",
+  "visibility": "project",
+  "raw_text": "재료교체 로직 개선 후 모니터링. ESWA MEB E77 전호기 적용 전후 4일 비교하니 0.171%에서 0.144%로 줄었음. ESMI1 #2-2,3은 0.367% -> 0.230%. 단기라 장기 모니터링 필요할 듯. Normal line 수평전개 진행중이고 9/30까지 완료 예정, 북미는 10월초 예정.",
+  "tables": [
+    {
+      "table_id": "T1",
+      "title": "재료교체 위치 불량률 적용 전·후",
+      "columns": [
+        "구분",
+        "적용 전(%)",
+        "적용 후(%)"
+      ],
+      "rows": [
+        [
+          "ESWA MEB",
+          0.171,
+          0.144
+        ],
+        [
+          "ESMI1 #2-2,3",
+          0.367,
+          0.23
+        ]
+      ]
+    }
+  ],
+  "pics": [
+    {
+      "pic_id": "PIC1",
+      "path": "raw/pics/2026/26-09-22/D-260922-ljh-01_T1.png",
+      "from_table_id": "T1",
+      "caption": null
+    }
+  ],
+  "links": [],
+  "deleted": false
+}

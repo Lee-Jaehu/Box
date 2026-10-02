@@ -1,0 +1,257 @@
+{
+  "meta": {
+    "schema": "project",
+    "schema_version": "0.1",
+    "revision": 6,
+    "created_at": "2026-07-20T09:00:00+09:00",
+    "updated_at": "2026-09-16T17:00:00+09:00",
+    "updated_by": "ljh"
+  },
+  "project_id": "P-ASM-001",
+  "name": "ESWA 재료교체 불량 개선",
+  "org": {
+    "group": "제조DX그룹",
+    "dept": "자동보정담당",
+    "team": "조립자동보정팀"
+  },
+  "owner": "ljh",
+  "members": [
+    "ljh",
+    "khw"
+  ],
+  "reporters": [
+    "ljh"
+  ],
+  "period": {
+    "start": "2026-07-20",
+    "target": "2026-09-30",
+    "target_text": "'26.09"
+  },
+  "status": "진행",
+  "health": "주의",
+  "type": {
+    "template_id": "TPL-APC",
+    "template_version": 1
+  },
+  "target": [
+    {
+      "site": "WA",
+      "line": "MEB",
+      "process": "AS",
+      "model": "E77",
+      "units_count": 18,
+      "usage": "EV"
+    },
+    {
+      "site": "MI_HL",
+      "process": "AS",
+      "units": [
+        "#2-2",
+        "#2-3"
+      ],
+      "usage": "EV"
+    }
+  ],
+  "background": "호기·모델별 품질 편차와 이상 발생에 대한 선제 대응 미흡으로 수율 손실 지속",
+  "purpose": "재료교체 구간 Y축 불량(사행·이음매)을 EPC 보정·예측 보정 로직으로 개선",
+  "kpis": [
+    {
+      "kpi_id": "K1",
+      "name": "E77 재료교체 위치 불량률",
+      "unit": "%",
+      "baseline": 0.189,
+      "target": null,
+      "direction": "down",
+      "actuals": [
+        {
+          "period": "2026-W36",
+          "value": 0.164,
+          "source_ids": []
+        },
+        {
+          "period": "2026-W39",
+          "value": 0.144,
+          "source_ids": [
+            "D-260922-ljh-01"
+          ]
+        }
+      ]
+    }
+  ],
+  "milestones": [
+    {
+      "milestone_id": "M1",
+      "parent_id": null,
+      "stage_code": "S1",
+      "phase": "PLAN",
+      "name": "현황 분석",
+      "scope": "common",
+      "baseline": "2026-07-24",
+      "plan": "2026-07-24",
+      "plan_text": null,
+      "actual": "2026-07-24",
+      "status": "완료",
+      "note": null,
+      "order": 1
+    },
+    {
+      "milestone_id": "M2",
+      "parent_id": null,
+      "stage_code": "S1",
+      "phase": "PLAN",
+      "name": "현황 분석(상세)",
+      "scope": "common",
+      "baseline": "2026-07-31",
+      "plan": "2026-07-31",
+      "plan_text": null,
+      "actual": null,
+      "status": "완료",
+      "note": "실적일 미기재",
+      "order": 2
+    },
+    {
+      "milestone_id": "M3",
+      "parent_id": null,
+      "stage_code": "S2",
+      "phase": "PLAN",
+      "name": "개선 방안 도출",
+      "scope": "common",
+      "baseline": "2026-08-07",
+      "plan": "2026-08-07",
+      "plan_text": null,
+      "actual": null,
+      "status": "완료",
+      "note": "실적일 미기재",
+      "order": 3
+    },
+    {
+      "milestone_id": "M4",
+      "parent_id": null,
+      "stage_code": "S3",
+      "phase": "EXEC",
+      "name": "로직 보완 (1차)",
+      "scope": [
+        {
+          "site": "WA",
+          "line": "MEB",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-08-31",
+      "plan": "2026-08-31",
+      "plan_text": null,
+      "actual": "2026-08-23",
+      "status": "완료",
+      "note": null,
+      "order": 4
+    },
+    {
+      "milestone_id": "M5",
+      "parent_id": null,
+      "stage_code": "S3",
+      "phase": "EXEC",
+      "name": "로직 보완·검증 (2차)",
+      "scope": [
+        {
+          "site": "WA",
+          "line": "MEB",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-18",
+      "plan": "2026-09-18",
+      "plan_text": null,
+      "actual": "2026-09-16",
+      "status": "완료",
+      "note": "대표호기 4대",
+      "order": 5
+    },
+    {
+      "milestone_id": "M6-1",
+      "parent_id": "M6",
+      "stage_code": "S6",
+      "phase": "EXPAND",
+      "name": "수평전개",
+      "scope": [
+        {
+          "site": "WA",
+          "line": "MEB",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": "2026-09-16",
+      "status": "완료",
+      "note": "E77 18대",
+      "order": 6
+    },
+    {
+      "milestone_id": "M6-2",
+      "parent_id": "M6",
+      "stage_code": "S6",
+      "phase": "EXPAND",
+      "name": "수평전개",
+      "scope": [
+        {
+          "site": "MI_HL",
+          "process": "AS",
+          "units": [
+            "#2-2",
+            "#2-3"
+          ]
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": "2026-09-16",
+      "status": "완료",
+      "note": "#2-2·3 (2대)",
+      "order": 7
+    },
+    {
+      "milestone_id": "M6-3",
+      "parent_id": "M6",
+      "stage_code": "S6",
+      "phase": "EXPAND",
+      "name": "수평전개",
+      "scope": [
+        {
+          "line": "NORMAL",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "진행",
+      "note": null,
+      "order": 8
+    },
+    {
+      "milestone_id": "M6-4",
+      "parent_id": "M6",
+      "stage_code": "S6",
+      "phase": "EXPAND",
+      "name": "수평전개",
+      "scope": [
+        {
+          "region": "NA",
+          "process": "AS"
+        }
+      ],
+      "baseline": "2026-09-25",
+      "plan": "2026-09-25",
+      "plan_text": null,
+      "actual": null,
+      "status": "예정",
+      "note": null,
+      "order": 9
+    }
+  ],
+  "change_log": [],
+  "retrospective": null
+}

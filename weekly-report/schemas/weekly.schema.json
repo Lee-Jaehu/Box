@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "weekly.schema.json",
+  "title": "주간 정리본",
+  "description": "과제 × 주차 1건 (derived/weekly/{project_id}/{week}.json). PPT 본문의 금주 변경·향후 계획·이슈 원천.",
+  "type": "object",
+  "required": [
+    "meta",
+    "project_id",
+    "week",
+    "range",
+    "source_daily_ids",
+    "headline",
+    "progress",
+    "next_plan",
+    "issues",
+    "no_change",
+    "review_state",
+    "ai"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "week": {
+      "type": "string",
+      "pattern": "^\\d{4}-W\\d{2}$",
+      "description": "ISO 주차 (월~일), 예: 2026-W39"
+    },
+    "range": {
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_daily_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "headline": {
+      "$ref": "#/$defs/item"
+    },
+    "progress": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "next_plan": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "no_change": {
+      "type": "boolean",
+      "description": "이번 주 확정 Daily 없음 → 헤드라인 \"금주 변경 없음\""
+    },
+    "milestone_updates": {
+      "type": "array",
+      "description": "이번 주 Daily에서 찾은 일정 변화. 시연에서는 기준정보에 쓰지 않고 PPT 생성 시 덧씌움",
+      "items": {
+        "type": "object",
+        "required": [
+          "milestone_id",
+          "field",
+          "to",
+          "source_ids"
+        ],
+        "properties": {
+          "milestone_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "enum": [
+              "plan",
+              "plan_text",
+              "actual",
+              "status",
+              "note"
+            ]
+          },
+          "to": {},
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_ids": {
+            "$ref": "#/$defs/source_ids"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "max_chars_per_line": {
+          "type": "integer"
+        },
+        "lines": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "review_state": {
+      "enum": [
+        "draft",
+        "approved",
+        "edited",
+        "rejected"
+      ]
+    },
+    "ai": {
+      "$ref": "#/$defs/ai"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "schema",
+        "schema_version",
+        "revision",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "파일이 다시 저장될 때마다 +1. 하류 처리는 이 값으로 변경을 감지"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_by": {
+          "type": "string",
+          "description": "사용자 ID (사번 권장)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "text",
+        "source_ids"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        },
+        "kind": {
+          "enum": [
+            "fact",
+            "judgement",
+            "plan",
+            "issue"
+          ]
+        },
+        "changed": {
+          "type": "boolean",
+          "description": "이번 주 신규·변경 여부 (파란색 판정용)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(D|P|CP|R)-"
+      },
+      "description": "근거 레코드 ID (Daily, 기준정보, 변경 제안 등)"
+    },
+    "ai": {
+      "type": "object",
+      "required": [
+        "model",
+        "prompt_id",
+        "prompt_version",
+        "generated_at"
+      ],
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "prompt_id": {
+          "type": "string"
+        },
+        "prompt_version": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "input_revisions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "요약에 쓴 원본 레코드별 revision"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
