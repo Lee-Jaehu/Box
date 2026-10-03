@@ -280,3 +280,39 @@ def test_prior_week_milestone_updates_accumulate_in_black(tmp_path):
     assert cell[(8, 3)] == ("09/30 (+5)", ["000000"])  # W39 변경 → 검정
     assert cell[(8, 6)] == ("WA·MI_HL Normal Line", ["000000"])
     assert cell[(9, 3)] == ("10/13 (+18)", ["0000FF"])  # W40 변경 → 파랑
+
+
+def test_cumulative_limit_shrinks_with_long_milestone_table(tmp_path):
+    """마일스톤 표가 9행으로 길면 누적 요약 한도가 남는 줄 수로 줄고, 넘는 누적 항목은 (계속)으로 간다."""
+    weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
+    item = lambda text: {"text": text, "source_ids": ["D-260922-ljh-01"], "kind": "fact", "changed": True}
+    weekly["progress"] = [item(f"금주 진행 {i}") for i in range(6)]
+    weekly["next_plan"] = [item(f"향후 계획 {i}") for i in range(3)]
+    weekly["issues"] = [item(f"이슈 {i}") for i in range(2)]
+    out, notes = build(ROOT, tmp_path, weekly=weekly)  # 누적 요약은 W39 예시 6개 + 고정 사실 1개
+    limit_note = next(n for n in notes if "누적 요약 한도" in n)
+    assert "마일스톤 표 9행" in limit_note
+    assert not [n for n in notes if n.startswith("PPT 검사 문제")], notes
+    # 한도를 넘는 누적 항목은 (계속)으로 간다 (mock fit_to_budget 응답이 없으므로 원문 유지)
+    prs = Presentation(str(out))
+    assert len(prs.slides) == 2 and "누적 요약 (계속)" in shapes(prs.slides[1])["body_main"].text_frame.text
+
+
+def test_estimate_cumulative_items_uses_layout():
+    from weekly_report.pptgen import estimate_cumulative_items
+
+    project = read(ROOT / "data/master/projects/P-ASM-001.json")
+    weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
+    limit, note = estimate_cumulative_items(ROOT, project, [], weekly)
+    assert 3 <= limit <= 7 and "마일스톤 표 9행" in note
+    few = copy.deepcopy(project)
+    few["milestones"] = few["milestones"][:3]
+    assert estimate_cumulative_items(ROOT, few, [], {**weekly, "milestone_updates": []})[0] == 7  # 표가 짧으면 기본 7
+
+
+def test_estimate_cumulative_items_without_template(tmp_path):
+    from weekly_report.pptgen import estimate_cumulative_items
+
+    project = read(ROOT / "data/master/projects/P-ASM-001.json")
+    weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
+    assert estimate_cumulative_items(tmp_path, project, [], weekly)[0] == 7

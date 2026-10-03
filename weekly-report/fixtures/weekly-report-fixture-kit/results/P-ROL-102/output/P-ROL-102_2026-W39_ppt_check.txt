@@ -6,7 +6,7 @@ PPT: P-ROL-102_2026-W39.pptx
 - 완료 하위 행 접기: M4-1, M4-2, M4-3, M4-4 → '사이트 적용 완료 4개 사이트'
 - 고정 사실은 누적 요약 항목에 이미 반영됨: WA 적용 일정 9/25 → 9/30 변경
 - config/people.json에 없는 사용자 ID는 그대로 표시: tester
-- 1장: 본문 11/20줄 사용 (36줄 규칙 기준 총 23줄)
+- 1장: 본문 11/21줄 사용 (36줄 규칙 기준 총 23줄)
 - 테마 majorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
 - 테마 minorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
 

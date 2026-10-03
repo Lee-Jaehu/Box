@@ -73,7 +73,8 @@ def read_geometry(slide) -> Geometry:
     tc_pr = ms.cell(1, 0)._tc.tcPr
     margin = int(tc_pr.get("marL", 91440)) + int(tc_pr.get("marR", 91440)) if tc_pr is not None else 2 * 91440
     return Geometry(area_top=area_top, area_bottom=area_top + rows[2].height,
-                    ms_col_widths=[c.width for c in ms.columns], ms_row_height=ms.rows[1].height, ms_cell_margin=margin)
+                    ms_col_widths=[c.width for c in ms.columns], ms_row_height=ms.rows[1].height, ms_cell_margin=margin,
+                    body_width=shapes["body_main"].width)
 
 
 def duplicate_slide(prs, source):
@@ -253,7 +254,7 @@ def fill_slide(slide, page: PageModel, content: SlideContent, geom: Geometry) ->
     y = geom.area_top + INSET_EMU
     top = shapes["body_top"]
     write_shape(top, page.body_top)
-    top_lines = sum(para_lines(p) for p in page.body_top) if page.body_top else 0
+    top_lines = sum(para_lines(p, geom.body_chars) for p in page.body_top) if page.body_top else 0
     top.top, top.height = y, max(top_lines, 1) * geom.line_emu
     if page.body_top:
         y += top.height + GAP_EMU

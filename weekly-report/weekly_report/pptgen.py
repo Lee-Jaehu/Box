@@ -12,7 +12,7 @@ from .ai import ExaoneClient
 from .codes import CodeTable, PeopleTable
 from .fonts import load_fonts
 from .core import ValidationError, load_json, validate_schema
-from .ppt.budget import fit_sections, paginate
+from .ppt.budget import LINE_FACTOR_LG, MIN_CUMULATIVE, cumulative_room, fit_cumulative_limit, fit_sections, paginate
 from .ppt.compose import build_content
 from .ppt.inspect import inspect_pptx
 from .ppt.milestones import apply_history, apply_updates, collapse_milestones, layout_milestones, load_prior_weeklies  # noqa: F401
@@ -32,6 +32,29 @@ def find_template(root: Path, explicit: Path | None = None) -> Path:
     )
 
 
+def estimate_cumulative_items(root: Path, project: dict, prior_weeklies: list[dict], weekly: dict,
+                              default: int = 7) -> tuple[int, str]:
+    """주간 정리 단계에서 누적 요약 최대 항목 수를 PPT 첫 장에 남는 줄 수로 정한다.
+
+    마일스톤 표가 길수록 누적 요약 자리가 줄어든다. 템플릿이 없으면 기본값을 쓴다.
+    """
+    try:
+        prs = open_template(find_template(root))
+    except (FileNotFoundError, ValidationError) as exc:
+        return default, f"템플릿 없음 → 누적 요약 최대 {default}개 기본값 ({exc.__class__.__name__})"
+    geom = read_geometry(prs.slides[0])
+    fonts = load_fonts(root.resolve())
+    geom.hangul_em = fonts.hangul_em
+    if fonts.regular:
+        geom.line_factor = LINE_FACTOR_LG
+    overlaid, _, changed = apply_history(project, prior_weeklies, weekly)
+    stub = {"items": [], "pinned_facts": []}
+    content = build_content(overlaid, weekly, stub, CodeTable.load(root), changed, people=PeopleTable.load(root))
+    room = cumulative_room(content, geom)
+    limit = max(MIN_CUMULATIVE, min(default, room))
+    return limit, f"PPT 첫 장 기준 누적 요약 자리 {room}줄 (마일스톤 표 {len(content.ms_rows)}행) → 최대 {limit}개"
+
+
 def generate_ppt(root: Path, project_path: Path, weekly_path: Path, cumulative_path: Path, template: Path, output: Path,
                  *, client: ExaoneClient | None = None, mode: str = "mock", report_path: Path | None = None,
                  project_index: int = 1, project_total: int = 1) -> list[str]:
@@ -39,7 +62,9 @@ def generate_ppt(root: Path, project_path: Path, weekly_path: Path, cumulative_p
     prs = open_template(template)  # 템플릿 누락·필수 도형 누락은 가장 먼저 보고
     geom = read_geometry(prs.slides[0])
     fonts = load_fonts(root.resolve())
-    geom.hangul_em = fonts.hangul_em  # LG스마트체 실측 한글 폭으로 표 칸 줄 수 계산
+    geom.hangul_em = fonts.hangul_em  # LG스마트체 실측 한글 폭으로 줄 수 계산
+    if fonts.regular:
+        geom.line_factor = LINE_FACTOR_LG  # LG스마트체 실측 줄 높이
 
     project, weekly, cumulative = load_json(project_path), load_json(weekly_path), load_json(cumulative_path)
     validate_schema(project, root / "schemas/project.schema.json")
@@ -59,6 +84,7 @@ def generate_ppt(root: Path, project_path: Path, weekly_path: Path, cumulative_p
     content = build_content(overlaid, weekly, cumulative, codes, changed,
                             project_index=project_index, project_total=project_total, people=PeopleTable.load(root))
     notes = list(warnings) + content.notes
+    notes += fit_cumulative_limit(content, geom)
     notes += fit_sections(content, client if client is not None else ExaoneClient(root, mode), root)
     pages, page_notes = paginate(content, geom)
     notes += page_notes

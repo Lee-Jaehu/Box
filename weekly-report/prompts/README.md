@@ -1,4 +1,6 @@
-# EXAONE 프롬프트 (시연용 v0.2)
+# EXAONE 프롬프트 (시연용 v0.3)
+
+> v0.3 (2026-10-03): cumulative_update의 max_items를 PPT 첫 장에 남는 줄 수로 정하고, 고정 사실의 핵심 수치를 items에 포함하도록 규칙 추가.
 
 | prompt_id | 파일 | 언제 호출 | 결과 저장 |
 |---|---|---|---|
@@ -9,7 +11,7 @@
 - 모든 system 파일의 `{{common_rules}}` 자리에 `common_rules.txt` 내용을 넣는다.
 - 호출 설정: temperature 0.1, 응답은 JSON만. 앞뒤 ```json 표시는 제거 후 파싱.
 - 파싱 실패 시 1회 재요청: "직전 응답이 JSON 형식이 아닙니다. 같은 내용을 JSON으로만 다시 출력하세요."
-- 결과 JSON의 `ai.prompt_id`, `ai.prompt_version`(v0.2)을 함께 저장한다.
+- 결과 JSON의 `ai.prompt_id`, `ai.prompt_version`(v0.3)을 함께 저장한다.
 
 ## 변수
 
@@ -37,7 +39,7 @@ daily_blocks 형식:
 ### cumulative_update
 | 변수 | 내용 |
 |---|---|
-| max_items | 누적 요약 최대 항목 수 (기본 7) |
+| max_items | 누적 요약 최대 항목 수 (기본 7, PPT 첫 장에 남는 줄 수가 더 적으면 그 값, 최소 3) |
 | background, purpose | 기준정보 배경·목적 |
 | completed_milestones | 상태=완료인 마일스톤 "이름(완료일)" 목록 |
 | prev_items, pinned_facts | 지난주 누적 요약 파일의 items, pinned_facts (첫 주면 "없음") |

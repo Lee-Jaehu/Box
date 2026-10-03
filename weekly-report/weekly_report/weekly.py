@@ -228,7 +228,11 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
         items, pinned = prev_items, [_cum_item(v) for v in prev_pinned]
         cum_ai_model = "AI 호출 없음 (Daily 없음, 이전 누적 유지)"
     else:
-        variables = {"max_items": MAX_CUMULATIVE_ITEMS, "project_id": project_id, "project_name": project["name"],
+        from .pptgen import estimate_cumulative_items
+
+        max_items, budget_note = estimate_cumulative_items(root, project, prior_weeklies, weekly, MAX_CUMULATIVE_ITEMS)
+        cum_notes.append(Issue("items", "정보", budget_note))
+        variables = {"max_items": max_items, "project_id": project_id, "project_name": project["name"],
                      "background": project["background"], "purpose": project["purpose"],
                      "completed_milestones": pv.completed_milestones(apply_history(project, prior_weeklies, weekly)[0]["milestones"]),
                      "prev_items": pv.cumulative_lines(prev_items), "pinned_facts": pv.cumulative_lines(prev_pinned),
@@ -240,8 +244,8 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
         items = []
         for index, value in enumerate(cpayload["items"]):
             items.append(_cum_item(_normalize_item(value, f"items[{index}]", cum_notes, "fact")))
-        if len(items) > MAX_CUMULATIVE_ITEMS:
-            cum_notes.append(Issue("items", "주의", f"{len(items)}개 > 최대 {MAX_CUMULATIVE_ITEMS}개"))
+        if len(items) > max_items:
+            cum_notes.append(Issue("items", "주의", f"{len(items)}개 > 최대 {max_items}개 (PPT 생성 시 한도 초과분은 fit_to_budget/(계속) 처리)"))
         pinned = merge_pinned(prev_pinned, cpayload.get("pinned_facts", []) or [], cpayload.get("new_pinned_facts", []) or [], cum_notes)
         cum_ai_model = client.model_label
 

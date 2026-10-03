@@ -2,9 +2,9 @@
   "meta": {
     "schema": "cumulative",
     "schema_version": "0.1",
-    "revision": 2,
+    "revision": 6,
     "created_at": "2026-10-03T21:36:00+09:00",
-    "updated_at": "2026-10-03T21:36:48+09:00",
+    "updated_at": "2026-10-03T21:47:43+09:00",
     "updated_by": "pipeline"
   },
   "project_id": "P-ASM-001",
@@ -12,7 +12,7 @@
   "prev_ref": "data/derived/cumulative/P-ASM-001/2026-W39.json",
   "items": [
     {
-      "text": "1차 로직(8/13): EPC 미보정·보정량 부족 개선, 이음매 예측 보정 세분화(2→3회)",
+      "text": "1차 로직(8/13) 적용: E77 0.189% → 0.164%, 18대 중 12대 감소",
       "source_ids": [
         "P-ASM-001"
       ],
@@ -20,7 +20,7 @@
       "changed": false
     },
     {
-      "text": "1차 적용 결과 E77 18대 중 12대 감소, 6대 증가(#13-1·2 등)",
+      "text": "2차 로직(9/4~): Limit ±0.35mm, 대표 4대 0.270% → 0.185%",
       "source_ids": [
         "P-ASM-001"
       ],
@@ -28,42 +28,19 @@
       "changed": false
     },
     {
-      "text": "2차 로직(9/4~): 예측 보정 Limit ±0.35mm, 이음매 이후 즉시 Feedback",
+      "text": "수평전개 완료: MEB·ESMI1 #2-2·3(9/16), Normal Line(9/30), 누적 26대",
       "source_ids": [
-        "P-ASM-001"
+        "P-ASM-001",
+        "D-260930-khw-01"
       ],
       "kind": "fact",
       "changed": false
     },
     {
-      "text": "2차 대표 4대 0.270% → 0.185%, 결과 법인 공유(9/15)",
-      "source_ids": [
-        "P-ASM-001"
-      ],
-      "kind": "fact",
-      "changed": false
-    },
-    {
-      "text": "MEB 전 라인·ESMI1 #2-2·3 수평전개 완료(9/16)",
-      "source_ids": [
-        "P-ASM-001"
-      ],
-      "kind": "fact",
-      "changed": false
-    },
-    {
-      "text": "ESWA 0.171% → 0.144%(4일) → 0.139%(2주), ESMI1 0.367% → 0.221%(2주)",
+      "text": "ESWA 0.171% → 0.144%(4일) → 0.139%(2주), ESMI1 0.367% → 0.221%",
       "source_ids": [
         "D-260922-ljh-01",
         "D-260928-ljh-01"
-      ],
-      "kind": "fact",
-      "changed": false
-    },
-    {
-      "text": "Normal Line 수평전개 완료(9/30), 누적 적용 호기 26대",
-      "source_ids": [
-        "D-260930-khw-01"
       ],
       "kind": "fact",
       "changed": false
@@ -99,8 +76,8 @@
   "ai": {
     "model": "mock",
     "prompt_id": "cumulative_update",
-    "prompt_version": "v0.2",
-    "generated_at": "2026-10-03T21:36:48+09:00",
+    "prompt_version": "v0.3",
+    "generated_at": "2026-10-03T21:47:43+09:00",
     "input_revisions": {
       "P-ASM-001": 6,
       "D-260928-ljh-01": 2,

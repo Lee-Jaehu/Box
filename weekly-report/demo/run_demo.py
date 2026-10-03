@@ -53,8 +53,8 @@ def build_root(demo: Path, tmp: Path) -> Path:
             shutil.copy(path, root / "prompts/mock_responses" / path.name)
     if (demo / "raw").is_dir():
         shutil.copytree(demo / "raw", root / "data/raw", dirs_exist_ok=True)
-    for path in REPO.glob("LGSM*.[tT][tT][fF]"):
-        (root / path.name).symlink_to(path)
+    for path in [*REPO.glob("LGSM*.[tT][tT][fF]"), find_template(REPO)]:
+        (root / path.name).symlink_to(path)  # 글꼴·템플릿 (누적 요약 한도 계산과 PPT 생성에 사용)
     return root
 
 

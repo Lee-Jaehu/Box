@@ -24,11 +24,13 @@ from .model import BodyItem, PageModel, Para, Run, Section, SlideContent
 EMU_PER_PT = 12700
 EMU_PER_IN = 914400
 BODY_PT = 9
-LINE_PT = BODY_PT * 1.2  # 9pt 글꼴 100% 줄 간격의 한 줄 높이
-MAX_CHARS = 50.0
+LINE_FACTOR_DEFAULT = 1.2  # 글꼴 실측이 없을 때 9pt 한 줄 높이 = 1.2em (보수적)
+LINE_FACTOR_LG = 1.17  # LG스마트체 실측: LibreOffice 렌더링 1.156em(22줄 = 3.18in), 완성 예시 1.10em → 넘침 방지로 1.17
+BODY_WIDTH_SAFETY = 0.92  # 실제 줄 폭 대비 8% 여유 (영문 글꼴 차이·단어 단위 줄바꿈 대비)
+MAX_CHARS = 50.0  # 항목 문장 길이 규칙 (AI 작성·fit_to_budget 기준). 줄 수 계산은 실제 폭(body_chars)으로 한다
 RULE_LINES = 36  # CLAUDE.md: 본문 전체 36줄 (배경/목표 + 마일스톤 표 행 + 진행 현황·계획·이슈)
 BODY_TOP_MAX_LINES = 4  # "[배경/목표]" 제목 1줄 + 내용 최대 3줄
-GAP_EMU = int(0.06 * EMU_PER_IN)
+GAP_EMU = int(0.03 * EMU_PER_IN)  # 완성 예시는 간격 0, 테두리 겹침만 피할 정도로 둔다
 INSET_EMU = int(0.04 * EMU_PER_IN)
 
 
@@ -46,10 +48,19 @@ class Geometry:
     ms_row_height: int
     ms_cell_margin: int  # 좌우 여백 합
     hangul_em: float = 1.0  # 한글 한 글자 폭/em (LG스마트체 실측 0.891, 글꼴 파일이 없으면 1.0)
+    line_factor: float = LINE_FACTOR_DEFAULT  # 한 줄 높이/글자 크기
+    body_width: int = 0  # body_main 너비(EMU), 0이면 MAX_CHARS로 줄 수 계산
 
     @property
     def line_emu(self) -> int:
-        return int(LINE_PT * EMU_PER_PT)
+        return int(BODY_PT * self.line_factor * EMU_PER_PT)
+
+    @property
+    def body_chars(self) -> float:
+        """본문 한 줄에 실제로 들어가는 가중 글자 수 (여유분 반영, 50자 규칙보다 작아지지 않음)."""
+        if not self.body_width:
+            return MAX_CHARS
+        return max(MAX_CHARS, cell_width_chars(self.body_width, 2 * 18288, self.hangul_em) * BODY_WIDTH_SAFETY)
 
 
 def para_lines(para: Para, width: float = MAX_CHARS) -> int:
@@ -85,6 +96,35 @@ def body_capacity(geom: Geometry, top_lines: int, ms_rows: list[MsRow]) -> tuple
     physical = (geom.area_bottom - geom.area_top - used) // geom.line_emu
     rule = RULE_LINES - top_lines - (len(ms_rows) + 1)
     return int(physical), rule
+
+
+# ---------------------------------------------------------------- 누적 요약 한도 (표 길이에 맞춤)
+
+MIN_CUMULATIVE = 3
+
+
+def cumulative_room(content: SlideContent, geom: Geometry) -> int:
+    """첫 장에서 금주·계획·이슈·제목·빈 줄을 놓고 누적 요약 항목에 남는 줄 수."""
+    width = geom.body_chars
+    top = sum(para_lines(p, width) for p in content.body_top)
+    physical, rule = body_capacity(geom, top, content.ms_rows)
+    used = len(content.sections) - 1  # 섹션 사이 빈 줄
+    for section in content.sections:
+        used += 1  # 섹션 제목
+        if section.key != "cumulative":
+            used += sum(para_lines(_item(i), width) for i in section.items[:section.limit])
+    return min(physical, rule) - used
+
+
+def fit_cumulative_limit(content: SlideContent, geom: Geometry) -> list[str]:
+    """누적 요약 한도를 남는 줄 수로 낮춘다 (기본 8, 최소 3). 넘치는 누적 항목은 fit_to_budget 대상이 된다."""
+    section = next(s for s in content.sections if s.key == "cumulative")
+    room = cumulative_room(content, geom)
+    limit = max(MIN_CUMULATIVE, min(section.limit, room))
+    if limit < section.limit:
+        section.limit = limit
+        return [f"cumulative: 마일스톤 표 {len(content.ms_rows)}행 기준 남는 줄 {room}줄 → 누적 요약 한도 {limit}개"]
+    return []
 
 
 # ---------------------------------------------------------------- 슬롯 분량 검사·fit_to_budget
@@ -189,7 +229,8 @@ def _item(item: BodyItem) -> Para:
     return Para([Run(f"- {item.text}", blue=item.blue)], "item")
 
 
-def _layout_body(sections: list[tuple[Section, list[BodyItem], bool]], capacity: int) -> tuple[list[Para], list[tuple[Section, list[BodyItem], bool]], int]:
+def _layout_body(sections: list[tuple[Section, list[BodyItem], bool]], capacity: int,
+                 width: float = MAX_CHARS) -> tuple[list[Para], list[tuple[Section, list[BodyItem], bool]], int]:
     """capacity 줄 안에 섹션을 순서대로 채운다. (문단, 남은 섹션, 사용 줄 수)"""
     paras: list[Para] = []
     used = 0
@@ -200,13 +241,13 @@ def _layout_body(sections: list[tuple[Section, list[BodyItem], bool]], capacity:
             continue
         lead = ([Para([Run("")], "blank")] if paras else [])
         head = lead + [_heading(section, continued)]
-        head_lines = sum(para_lines(p) for p in head)
+        head_lines = sum(para_lines(p, width) for p in head)
         placed = 0
         block: list[Para] = []
         block_lines = head_lines
         for item in items:
             para = _item(item)
-            lines = para_lines(para)  # 실제로 쓰는 "- " 접두 문장 기준으로 센다
+            lines = para_lines(para, width)  # 실제로 쓰는 "- " 접두 문장 기준으로 센다
             if used + block_lines + lines > capacity:
                 break
             block.append(para)
@@ -224,7 +265,7 @@ def _layout_body(sections: list[tuple[Section, list[BodyItem], bool]], capacity:
 
 def paginate(content: SlideContent, geom: Geometry) -> tuple[list[PageModel], list[str]]:
     notes: list[str] = []
-    top_lines = sum(para_lines(p) for p in content.body_top)
+    top_lines = sum(para_lines(p, geom.body_chars) for p in content.body_top)
     if top_lines > BODY_TOP_MAX_LINES:
         notes.append(f"배경/목표 {top_lines}줄 > {BODY_TOP_MAX_LINES}줄 (기준정보 문장이라 자동으로 줄이지 않음)")
 
@@ -233,7 +274,7 @@ def paginate(content: SlideContent, geom: Geometry) -> tuple[list[PageModel], li
 
     physical, rule = body_capacity(geom, top_lines, content.ms_rows)
     capacity = min(physical, rule)
-    paras, rest, used = _layout_body(first, capacity)
+    paras, rest, used = _layout_body(first, capacity, geom.body_chars)
     pages = [PageModel(False, content.pjt_name, content.body_top, content.ms_rows, paras, used, capacity,
                        top_lines + len(content.ms_rows) + 1 + used)]
 
@@ -249,7 +290,7 @@ def paginate(content: SlideContent, geom: Geometry) -> tuple[list[PageModel], li
     if remaining or content.ms_overflow:
         physical2, rule2 = body_capacity(geom, 0, content.ms_overflow)
         capacity2 = min(physical2, rule2)
-        paras2, rest2, used2 = _layout_body(remaining, capacity2)
+        paras2, rest2, used2 = _layout_body(remaining, capacity2, geom.body_chars)
         if rest2:
             left = sum(len(items) for _, items, _ in rest2)
             raise BudgetError(f"{content.project_id}: (계속) 장까지 써도 본문 {left}개 항목이 넘침 (과제당 최대 2장)")
