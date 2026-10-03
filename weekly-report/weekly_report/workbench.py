@@ -36,8 +36,9 @@ class WorkbenchError(ValueError):
 # ---------------------------------------------------------------- 작업공간
 
 # 작업공간이 쓸 수 있는 상태인지 확인할 때 보는 파일
-REQUIRED = ("schemas/daily.schema.json", "schemas/weekly.schema.json", "config/code_table_site_process.json",
-            "prompts/weekly_rollup.system.txt", "data/master/projects", TEMPLATE_NAME)
+# 실행에 필요한 저장소 파일 (사용자가 고치거나 지우는 data/raw·data/derived·prompts/mock_responses는 제외)
+RUNTIME_TREES = ("config", "schemas", "prompts", "data/master")
+USER_MANAGED = ("prompts/mock_responses",)
 # 초기화 전에 백업하는 사용자 입력·결과
 BACKUP_ITEMS = ("data/raw", "data/derived", "prompts/mock_responses", "output")
 
@@ -55,8 +56,23 @@ def _copy_tree(src: Path, dst: Path, *, overwrite: bool) -> None:
             _copy(path, dst / path.relative_to(src), overwrite=overwrite)
 
 
-def workspace_ok(ws: Path) -> bool:
-    return (ws / MARKER).exists() and all((ws / rel).exists() for rel in REQUIRED)
+def runtime_files(repo: Path = REPO) -> list[str]:
+    """작업공간에 반드시 있어야 하는 파일 목록 (저장소 기준 상대 경로)."""
+    files = [TEMPLATE_NAME, *(p.name for p in repo.glob("LGSM*.[tT][tT][fF]"))]
+    for tree in RUNTIME_TREES:
+        for path in (repo / tree).rglob("*"):
+            rel = path.relative_to(repo).as_posix()
+            if path.is_file() and not rel.startswith(USER_MANAGED):
+                files.append(rel)
+    return files
+
+
+def missing_files(ws: Path, repo: Path = REPO) -> list[str]:
+    return [rel for rel in runtime_files(repo) if not (ws / rel).exists()]
+
+
+def workspace_ok(ws: Path, repo: Path = REPO) -> bool:
+    return (ws / MARKER).exists() and not missing_files(ws, repo)
 
 
 def _remove_tree(path: Path) -> list[str]:
@@ -77,16 +93,37 @@ def _remove_tree(path: Path) -> list[str]:
 
 
 def _backup(ws: Path) -> Path | None:
-    """초기화 전 사용자 입력·결과를 workspace_backups/날짜시각/ 에 복사한다."""
+    """초기화 전 사용자 입력·결과를 workspace_backups/날짜시각[-n]/ 에 복사한다.
+
+    백업 폴더는 매번 새로 만든다(같은 초에 두 번 초기화해도 덮어쓰지 않음).
+    하나라도 복사하지 못하면 WorkbenchError → 호출한 쪽은 아무것도 지우지 않는다.
+    """
     items = [rel for rel in BACKUP_ITEMS if (ws / rel).exists()]
     if not items:
         return None
-    target = ws.parent / "workspace_backups" / datetime.now(KST).strftime("%Y%m%d-%H%M%S")
+    root = ws.parent / "workspace_backups"
+    root.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(KST).strftime("%Y%m%d-%H%M%S")
+    for n in range(1000):
+        target = root / (stamp if n == 0 else f"{stamp}-{n}")
+        try:
+            target.mkdir()
+            break
+        except FileExistsError:
+            continue
+    else:
+        raise WorkbenchError("백업 폴더를 만들 수 없습니다")
+    failed: list[str] = []
     for rel in items:
         try:
-            shutil.copytree(ws / rel, target / rel, dirs_exist_ok=True)
-        except (OSError, shutil.Error):
-            continue  # 백업은 최선 노력 (잠긴 파일 하나 때문에 초기화를 막지 않음)
+            shutil.copytree(ws / rel, target / rel)
+        except shutil.Error as exc:
+            failed += [str(err[0]) for err in exc.args[0]]
+        except OSError as exc:
+            failed.append(f"{rel} ({exc.strerror or exc})")
+    if failed:
+        raise WorkbenchError(f"백업에 실패해 초기화를 중단했습니다 (지운 파일 없음). 실패: {', '.join(failed[:5])}"
+                             + (f" 외 {len(failed) - 5}건" if len(failed) > 5 else "") + f" / 백업 위치: {target}")
     return target
 
 
@@ -98,13 +135,14 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
       Windows에서 열려 있어 지우지 못한 파일은 건너뛰고 결과에 알린다.
     """
     result: dict[str, Any] = {"restored": False, "backup": None, "locked": []}
-    if workspace_ok(ws) and not force:
+    if workspace_ok(ws, repo) and not force:
         return result
     ws.mkdir(parents=True, exist_ok=True)
-    (ws / MARKER).unlink(missing_ok=True)  # 표시 파일은 먼저 지우고 마지막에 다시 쓴다
     if force:
-        backup = _backup(ws)
+        backup = _backup(ws)  # 실패하면 여기서 중단 (아무것도 지우지 않음)
         result["backup"] = str(backup) if backup else None
+    (ws / MARKER).unlink(missing_ok=True)  # 표시 파일은 지우기 전에 없애고 마지막에 다시 쓴다
+    if force:
         for name in ("config", "schemas", "prompts", "data", "output"):
             result["locked"] += [f"{name}/{rel}" for rel in _remove_tree(ws / name)]
     # 초기화(force)는 저장소 상태로 덮어쓰고, 복구(빠진 파일 채우기)는 있는 파일을 그대로 둔다

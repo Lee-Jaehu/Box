@@ -165,3 +165,43 @@ def test_no_workspace_files_left_open_after_run(ws):
         if target.startswith(str(ws.resolve())):
             still_open.append(target)
     assert still_open == []
+
+
+def test_backup_failure_aborts_reset_without_deleting(ws, monkeypatch):
+    memo = wb.save_daily(ws, {"date": "2026-10-06", "author": "khw", "visibility": "project", "project_id": "P-ASM-001", "raw_text": "지켜야 할 메모"})
+
+    def broken_copytree(src, dst, *args, **kwargs):
+        raise OSError(28, "디스크 공간 부족")
+
+    monkeypatch.setattr(wb.shutil, "copytree", broken_copytree)
+    with pytest.raises(wb.WorkbenchError, match="백업에 실패해 초기화를 중단"):
+        wb.init_workspace(ws, force=True)
+    monkeypatch.undo()
+    assert wb.workspace_ok(ws)
+    assert any(d["daily_id"] == memo["daily_id"] for d in wb.list_dailies(ws, "P-ASM-001", "2026-W41"))
+
+
+def test_each_reset_gets_its_own_backup(ws, monkeypatch):
+    class FixedClock:
+        @staticmethod
+        def now(tz=None):
+            from datetime import datetime as real
+
+            return real(2026, 10, 4, 9, 0, 0, tzinfo=tz)
+
+    monkeypatch.setattr(wb, "datetime", FixedClock)  # 같은 초에 두 번 초기화
+    first = wb.init_workspace(ws, force=True)["backup"]
+    second = wb.init_workspace(ws, force=True)["backup"]
+    assert first != second and Path(first).exists() and Path(second).exists()
+
+
+def test_any_missing_runtime_file_triggers_repair(ws):
+    for rel in ("schemas/cumulative.schema.json", "schemas/project.schema.json", "prompts/fit_to_budget.user.txt"):
+        (ws / rel).unlink()
+        assert not wb.workspace_ok(ws) and rel in wb.missing_files(ws)
+        wb.init_workspace(ws)
+        assert wb.workspace_ok(ws)
+    # 사용자가 지운 AI 응답은 '빠진 파일'이 아니다 → 복구 때 되살리지 않는다
+    wb.clear_responses(ws, "P-ASM-001", "2026-W40")
+    assert wb.workspace_ok(ws)
+    assert not (ws / "prompts/mock_responses/weekly_rollup__P-ASM-001__2026-W40.json").exists()
