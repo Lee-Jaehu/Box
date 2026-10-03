@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "schema": "daily",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-09-29T18:05:00+09:00",
+    "updated_at": "2026-09-29T18:05:00+09:00",
+    "updated_by": "khw"
+  },
+  "daily_id": "D-260929-khw-01",
+  "date": "2026-09-29",
+  "tag": "26-09-29",
+  "author": "khw",
+  "project_id": "P-ASM-001",
+  "category": "ROLL",
+  "visibility": "project",
+  "raw_text": "Normal line 수평전개 WA 쪽 4대(#21~#24) 적용 끝남. 적용 후 첫날 알람 없음. MI_HL Normal line은 내일 2대 적용 예정.",
+  "tables": [],
+  "pics": [],
+  "links": [],
+  "deleted": false
+}

@@ -1,0 +1,18 @@
+과제 P-APC-101 / 2026-W39 (2026-09-21 ~ 2026-09-27)
+AI 모드: mock / 프롬프트 v0.2
+선택 Daily: D-260922-tester-01
+지난주 weekly: 없음
+지난주 cumulative: data/derived/cumulative/P-APC-101/2026-W38.json
+
+[구조 검증]
+- weekly·cumulative JSON Schema 통과 (저장 완료)
+
+[의미 검증 – weekly]
+- 오류 0건, 주의 0건, 정보 1건
+- [정보] changed: 지난주 정리본 없음 → 모든 항목 changed=true
+
+[의미 검증 – cumulative]
+- 오류 0건, 주의 0건, 정보 1건
+- [정보] items: 템플릿 없음 → 누적 요약 최대 7개 기본값 (FileNotFoundError)
+
+※ 출처 태그: 원문=이번 주 Daily·표, 기준정보=master, 이전요약=지난주 누적/정리본(원문 미확인), 계산값=코드 계산

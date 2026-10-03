@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "schema": "cumulative",
+    "schema_version": "0.1",
+    "revision": 7,
+    "created_at": "2026-10-03T21:36:00+09:00",
+    "updated_at": "2026-10-03T21:48:53+09:00",
+    "updated_by": "pipeline"
+  },
+  "project_id": "P-ASM-001",
+  "as_of_week": "2026-W40",
+  "prev_ref": "data/derived/cumulative/P-ASM-001/2026-W39.json",
+  "items": [
+    {
+      "text": "1차 로직(8/13) 적용: E77 0.189% → 0.164%, 18대 중 12대 감소",
+      "source_ids": [
+        "P-ASM-001"
+      ],
+      "kind": "fact",
+      "changed": false
+    },
+    {
+      "text": "2차 로직(9/4~): Limit ±0.35mm, 대표 4대 0.270% → 0.185%",
+      "source_ids": [
+        "P-ASM-001"
+      ],
+      "kind": "fact",
+      "changed": false
+    },
+    {
+      "text": "수평전개 완료: MEB·ESMI1 #2-2·3(9/16), Normal Line(9/30), 누적 26대",
+      "source_ids": [
+        "P-ASM-001",
+        "D-260930-khw-01"
+      ],
+      "kind": "fact",
+      "changed": false
+    },
+    {
+      "text": "ESWA 0.171% → 0.144%(4일) → 0.139%(2주), ESMI1 0.367% → 0.221%",
+      "source_ids": [
+        "D-260922-ljh-01",
+        "D-260928-ljh-01"
+      ],
+      "kind": "fact",
+      "changed": false
+    }
+  ],
+  "pinned_facts": [
+    {
+      "text": "1차 적용 E77 위치 불량률 0.189% → 0.164%",
+      "source_ids": [
+        "P-ASM-001"
+      ],
+      "kind": "fact",
+      "changed": false
+    },
+    {
+      "text": "ESWA 2차 로직 적용 후 0.171% → 0.144% (4일 단기)",
+      "source_ids": [
+        "D-260922-ljh-01"
+      ],
+      "kind": "fact",
+      "changed": false
+    },
+    {
+      "text": "ESWA 2주 평균 0.171% → 0.139%",
+      "source_ids": [
+        "D-260928-ljh-01"
+      ],
+      "kind": "fact",
+      "changed": false
+    }
+  ],
+  "mode": "incremental",
+  "ai": {
+    "model": "mock",
+    "prompt_id": "cumulative_update",
+    "prompt_version": "v0.3",
+    "generated_at": "2026-10-03T21:48:53+09:00",
+    "input_revisions": {
+      "P-ASM-001": 6,
+      "D-260928-ljh-01": 2,
+      "D-260929-khw-01": 1,
+      "D-260930-khw-01": 1,
+      "D-261001-ljh-01": 3,
+      "D-261002-ljh-01": 1
+    }
+  }
+}
