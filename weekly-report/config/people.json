@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "name": "사용자 표시명",
+    "note": "사용자 ID → 이름·직급 (PPT 작성자·담당자 칸 표시용). 시연 예시 값이며 Worklog 사용자 체계가 정해지면 교체한다."
+  },
+  "people": {
+    "ljh": {"name": "이제희", "title": "P"},
+    "khw": {"name": "김형원", "title": null}
+  }
+}

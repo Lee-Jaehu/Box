@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "schema": "daily",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-10-02T17:40:00+09:00",
+    "updated_at": "2026-10-02T17:40:00+09:00",
+    "updated_by": "ljh"
+  },
+  "daily_id": "D-261002-ljh-01",
+  "date": "2026-10-02",
+  "tag": "26-10-02",
+  "author": "ljh",
+  "project_id": "P-ASM-001",
+  "category": "RPT",
+  "visibility": "project",
+  "raw_text": "그룹장 보고용 최종 효과 산출은 10/16까지 하기로 함. 완료 회고 초안 쓰기 시작했음.",
+  "tables": [],
+  "pics": [],
+  "links": [],
+  "deleted": false
+}

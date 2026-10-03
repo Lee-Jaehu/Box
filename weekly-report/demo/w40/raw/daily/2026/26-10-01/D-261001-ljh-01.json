@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "schema": "daily",
+    "schema_version": "0.1",
+    "revision": 3,
+    "created_at": "2026-10-01T14:00:00+09:00",
+    "updated_at": "2026-10-01T16:30:00+09:00",
+    "updated_by": "ljh"
+  },
+  "daily_id": "D-261001-ljh-01",
+  "date": "2026-10-01",
+  "tag": "26-10-01",
+  "author": "ljh",
+  "project_id": "P-ASM-001",
+  "category": "ROLL",
+  "visibility": "project",
+  "raw_text": "북미 법인이랑 통화함. 현지 라인 가동 일정 때문에 북미 수평전개는 10/13 적용으로 확정. 그런데 현지 PLC 펌웨어 버전이 우리랑 달라서 보정 파라미터 옮기기 전에 검증이 필요함. 원격 접속 지원되는지 IT팀에 확인 요청해야 함.",
+  "tables": [],
+  "pics": [],
+  "links": [],
+  "deleted": false
+}

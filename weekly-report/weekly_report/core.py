@@ -11,6 +11,9 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
+# 하위 호환: 분량 계산은 textmetrics 모듈로 이동했다.
+from .textmetrics import weighted_length, wrapped_lines  # noqa: F401
+
 KST = timezone(timedelta(hours=9))
 WEEK_RE = re.compile(r"^(\d{4})-W(\d{2})$")
 
@@ -30,7 +33,8 @@ def atomic_json(path: Path, value: dict[str, Any], *, updated_by: str = "pipelin
     old = load_json(path) if path.exists() else None
     meta = value.setdefault("meta", {})
     meta["revision"] = (old.get("meta", {}).get("revision", 0) + 1) if old else max(meta.get("revision", 1), 1)
-    meta.setdefault("created_at", old.get("meta", {}).get("created_at", now) if old else now)
+    # 기존 파일이 있으면 최초 생성 시각을 보존한다.
+    meta["created_at"] = old.get("meta", {}).get("created_at", now) if old else meta.get("created_at", now)
     meta["updated_at"] = now
     meta["updated_by"] = updated_by
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -72,12 +76,6 @@ def previous_week(week: str) -> str:
     return f"{iso.year}-W{iso.week:02d}"
 
 
-def weighted_length(text: str) -> float:
-    return sum(1.0 if "\uac00" <= ch <= "\ud7a3" else 0.55 for ch in text)
-
-
-def wrapped_lines(text: str, width: float = 50) -> int:
-    return max(1, int((weighted_length(text) + width - 0.000001) // width))
 
 
 def render_prompt(root: Path, prompt_id: str, variables: dict[str, Any]) -> tuple[str, str]:

@@ -16,7 +16,7 @@
 - `docs/` : 설계 문서 (INTERFACE_SPEC.md, 결정사항_요약.md, CLAUDE_CODE_작업순서.md)
 - `schemas/` : 모든 JSON 형식. 출력 JSON은 반드시 스키마 검증 통과
 - `config/` : 법인·공정 코드표, 업무 유형별 마일스톤 템플릿
-- `templates/` : PPT 양식 v2, 완성 예시 (주간업무_예시_조립자동보정팀_W39.pptx = 결과물 기준)
+- `templates/` : PPT 양식 v2, 완성 예시 (현재 실제 위치: weekly-report/주간업무PPT_Template_v2.pptx, weekly-report/완성 예시 PPT.pptx)
 - `prompts/` : EXAONE 프롬프트 원문(.txt)과 mock 응답 (prompts/README.md 참고)
 - `data/master/projects/` : 기준정보 (예시 P-ASM-001)
 - `data/raw/daily/{yyyy}/{yy-mm-dd}/` : Daily 원문
@@ -35,8 +35,15 @@
   `slide_title, pjt_header, author, updated_at, main_table, body_top, ms_table, body_main`
 - main_table 칸: r1c0 과제명, r1c1 대상, r0c2 머리글(주차), r1c2 한 줄 요약, r1c3 완료 목표 일정, r1c4 담당자, r2c2는 비워 둠
 - 본문 9pt, 한 줄 최대 50자(한글 1, 영문·숫자·기호 0.55로 계산), 본문 전체 36줄
-- 본문 순서·분량: 배경·목표 3줄 → 마일스톤 표 → 진행 현황(누적 6~8 + 금주 5~7) → 향후 계획 3 → 이슈 2
-- 폰트: 국문 LG Smart Regular(ea), 영문 Arial Narrow(latin). 다른 폰트 금지
+- 본문 순서·분량: 배경·목표 3줄 → 마일스톤 표 → 진행 현황(누적 최대 8 + 금주 5~7) → 향후 계획 3 → 이슈 2
+  - 누적 요약 한도는 마일스톤 표 길이에 따라 줄어든다: 금주·계획·이슈를 먼저 놓고 첫 장에 남는 줄 수(최소 3, 최대 8).
+    이 값을 cumulative_update 프롬프트의 max_items로 넘겨 AI가 오래된 항목을 합치게 한다 (2026-10-03 결정)
+  - 줄 수 계산: LG스마트체 실측 줄 높이 1.17em, 본문 한 줄 폭은 실제 너비의 92% (항목 문장 50자 규칙은 그대로)
+- 폰트: 국문 `LG스마트체 Regular`(ea, TTF 이름과 정확히 일치해야 함), 영문 Arial Narrow(latin). 다른 폰트 금지
+  - 글꼴 파일: `fonts/` 또는 weekly-report 폴더의 `LGSM*.TTF`. 템플릿 테마 ea("LG Smart Regular")는 출력 파일에서 보정
+- 배경/목표: "[배경/목표]" 굵은 제목 줄 + "- 배경. 목적" 한 문단 (내용 최대 3줄)
+- 일정 칸(r1c3): 목표 일정 + 목표일을 넘는 미완료 단계 병기 "(북미 10월초)", 이번 주 바뀐 병기는 파란색
+- 작성자·담당자: `config/people.json`(ID → 이름·직급), 담당자 = owner + members
 - 변경 표시: 파란색 RGB(0,0,255). 그 외 검정.
   파란색 대상 = weekly 항목 중 changed=true, 이번 주 바뀐 마일스톤 값(milestone_updates), 한 줄 요약
 - 마일스톤 표 열: 단계 | 적용 범위 | Baseline | 계획 | 실적 | 상태 | 비고
@@ -45,7 +52,7 @@
   - 최대 9행, 넘치면 완료된 하위 행(같은 parent_id)부터 "OO 완료 n개 사이트" 한 행으로 접기
   - 적용 범위: config/code_table_site_process.json 코드를 표시명으로 변환, 공통 단계는 "공통",
     표시 형식 "{법인} {라인}·{공정명}" (예: "WA MEB·조립")
-- 단계 이름 앞 번호: 상위 단계는 "4.", 하위 단계는 "6-1." 형식
+- 단계 이름 앞 번호는 붙이지 않는다 (완성 예시 기준, 2026-10-03 결정. 근거: docs/디자인_기준_비교.md)
 
 ## 주간 정리 규칙
 - EXAONE 호출은 주간 정리(weekly_rollup), 누적 요약(cumulative_update), 분량 줄이기(fit_to_budget, 넘칠 때만) 3가지
