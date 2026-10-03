@@ -4,8 +4,13 @@ PPT: P-DAT-105_2026-W39.pptx
 
 [처리 내역]
 - 고정 사실은 누적 요약 항목에 이미 반영됨: 수율 95.0% → 96.0% 확인
-- 작성자 이름·직급은 기준정보에 없어 사용자 ID로 표시
+- config/people.json에 없는 사용자 ID는 그대로 표시: tester
 - 1장: 본문 11/25줄 사용 (36줄 규칙 기준 총 20줄)
+- 테마 majorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+- 테마 minorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+
+[글꼴]
+- LG스마트체 글꼴 파일 없음 → 한글 폭 1.0em 가정 (ea 이름 'LG스마트체 Regular'은 그대로 지정)
 
 [코드 계산값 (AI 수치 아님)]
 - 없음

@@ -5,8 +5,13 @@ PPT: P-ROL-102_2026-W39.pptx
 [처리 내역]
 - 완료 하위 행 접기: M4-1, M4-2, M4-3, M4-4 → '사이트 적용 완료 4개 사이트'
 - 고정 사실은 누적 요약 항목에 이미 반영됨: WA 적용 일정 9/25 → 9/30 변경
-- 작성자 이름·직급은 기준정보에 없어 사용자 ID로 표시
+- config/people.json에 없는 사용자 ID는 그대로 표시: tester
 - 1장: 본문 11/20줄 사용 (36줄 규칙 기준 총 23줄)
+- 테마 majorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+- 테마 minorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+
+[글꼴]
+- LG스마트체 글꼴 파일 없음 → 한글 폭 1.0em 가정 (ea 이름 'LG스마트체 Regular'은 그대로 지정)
 
 [코드 계산값 (AI 수치 아님)]
 - M4-5 지연 일수 +5 (계획-Baseline 계산값)

@@ -3,6 +3,7 @@
 python -m weekly_report weekly   P-ASM-001 2026-W39 [--mode mock|live] [--out-root DIR]
 python -m weekly_report pptgen   P-ASM-001 2026-W39 [--mode mock|live] [--out-root DIR] [--template PATH] [--output PATH]
 python -m weekly_report pipeline P-ASM-001 2026-W39 [--mode mock|live] [--out-root DIR] [--template PATH]
+python -m weekly_report preview  output/P-ASM-001_2026-W39.pptx [--out-dir DIR]   (LG스마트체로 PNG 렌더링)
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from .ai import AIError
 from .core import ValidationError
 from .ppt.budget import BudgetError
 from .pptgen import find_template, generate_ppt
+from .preview import PreviewError, render_preview
 from .weekly import run_weekly
 
 
@@ -41,8 +43,19 @@ def main(argv: list[str] | None = None) -> int:
             cmd.add_argument("--template", type=Path, help="기본: templates/ → weekly-report/ 의 주간업무PPT_Template_v2.pptx")
         if name == "pptgen":
             cmd.add_argument("--output", type=Path)
+    preview = sub.add_parser("preview", help="PPT → PNG 미리보기 (LG스마트체 사용, LibreOffice 필요)")
+    preview.add_argument("pptx", type=Path)
+    preview.add_argument("--out-dir", type=Path, help="기본: PPT 옆 preview/ 폴더")
     args = parser.parse_args(argv)
     root = args.root.resolve()
+    if args.command == "preview":
+        try:
+            images, notes = render_preview(root, args.pptx, args.out_dir or args.pptx.parent / "preview")
+        except (PreviewError, FileNotFoundError) as exc:
+            print(f"오류: {exc}", file=sys.stderr)
+            return 1
+        print(*notes, *(f"미리보기: {p}" for p in images), sep="\n")
+        return 0
     out_root = (args.out_root or root).resolve()
     try:
         if args.command in {"weekly", "pipeline"}:

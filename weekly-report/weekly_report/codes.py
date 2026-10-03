@@ -101,3 +101,37 @@ class CodeTable:
             if self.resolve_site_alias(token) is None and token not in found:
                 found.append(token)
         return found
+
+
+@dataclass
+class PeopleTable:
+    """config/people.json: 사용자 ID → 이름·직급 (PPT 작성자·담당자 표시용)."""
+
+    data: dict[str, Any]
+
+    @classmethod
+    def load(cls, root: Path) -> "PeopleTable":
+        path = root / "config/people.json"
+        if not path.exists():
+            return cls({"people": {}})
+        data = load_json(path)
+        if not isinstance(data.get("people"), dict):
+            raise ValueError("config/people.json: people 객체가 필요합니다")
+        return cls(data)
+
+    def _entry(self, user_id: str) -> dict[str, Any] | None:
+        entry = self.data["people"].get(user_id)
+        return entry if isinstance(entry, dict) and entry.get("name") else None
+
+    def name(self, user_id: str) -> str:
+        entry = self._entry(user_id)
+        return entry["name"] if entry else user_id
+
+    def name_with_title(self, user_id: str) -> str:
+        entry = self._entry(user_id)
+        if not entry:
+            return user_id
+        return " ".join(filter(None, [entry["name"], entry.get("title") or ""]))
+
+    def missing(self, user_ids: list[str]) -> list[str]:
+        return [u for u in dict.fromkeys(user_ids) if not self._entry(u)]

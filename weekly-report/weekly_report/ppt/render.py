@@ -14,20 +14,21 @@ from pathlib import Path
 
 from lxml import etree
 from pptx import Presentation
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.util import Inches
 
 from ..core import ValidationError
+from ..fonts import EA_REGULAR, LATIN_FONT
 from .budget import GAP_EMU, INSET_EMU, Geometry, ms_row_height, para_lines
 from .milestones import MsRow
-from .model import PageModel, Para, Run, SlideContent
+from .model import PageModel, Para, Run, SlideContent, cell_paras
 
 A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 REQUIRED_SHAPES = ("slide_title", "pjt_header", "author", "updated_at", "main_table", "body_top", "ms_table", "body_main")
 SLIDE_SIZE_IN = (10.83, 7.5)
 BLUE, BLACK = "0000FF", "000000"
-LATIN_FONT = "Arial Narrow"
-EA_FONT = "LG스마트체 Regular"
+EA_FONT = EA_REGULAR  # TTF nameID 1과 같은 이름이어야 PowerPoint가 LG스마트체를 쓴다
 
 
 def a(tag: str) -> str:
@@ -179,12 +180,8 @@ def write_paras(tx_body, paras: list[Para], *, recolor: bool = True, proto: Prot
         p.append(end)
 
 
-def lines_to_paras(run: Run) -> list[Para]:
-    return [Para([Run(line, run.blue, run.bold)]) for line in run.text.split("\n")]
-
-
-def write_cell(cell, run: Run, *, recolor: bool = True) -> None:
-    write_paras(cell._tc.txBody, lines_to_paras(run), recolor=recolor)
+def write_cell(cell, value: "Run | list[Para]", *, recolor: bool = True) -> None:
+    write_paras(cell._tc.txBody, cell_paras(value), recolor=recolor)
 
 
 def write_shape(shape, paras: list[Para], *, recolor: bool = True) -> None:
@@ -274,9 +271,38 @@ def fill_slide(slide, page: PageModel, content: SlideContent, geom: Geometry) ->
     body.height = max(geom.area_bottom - INSET_EMU - y, geom.line_emu)
 
 
-def render(template: Path, content: SlideContent, pages: list[PageModel], output: Path) -> None:
+def theme_parts(prs):
+    return [master.part.part_related_by(RT.THEME) for master in prs.slide_masters]
+
+
+def fix_theme_fonts(prs) -> list[str]:
+    """테마 글꼴 체계의 ea를 실제 글꼴 이름으로 맞춘다 (출력 파일만, 원본 템플릿은 그대로).
+
+    v2 템플릿 테마는 ea가 'LG Smart Regular'인데 실제 TTF 이름은 'LG스마트체 Regular'라
+    ea를 지정하지 않은 글자(상속 텍스트)는 대체 글꼴로 표시된다.
+    """
+    fixed = []
+    for part in theme_parts(prs):
+        root = etree.fromstring(part.blob)
+        changed = False
+        for scheme in ("majorFont", "minorFont"):
+            for ea in root.iter(a(scheme)):
+                node = ea.find(a("ea"))
+                if node is not None and node.get("typeface") != EA_FONT:
+                    fixed.append(f"테마 {scheme} ea '{node.get('typeface')}' → '{EA_FONT}'")
+                    node.set("typeface", EA_FONT)
+                    changed = True
+        if changed:
+            part._blob = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
+    return fixed
+
+
+def render(template: Path, content: SlideContent, pages: list[PageModel], output: Path,
+           geom: Geometry | None = None) -> list[str]:
+    """geom은 페이지 나누기에 쓴 것과 같은 값을 넘긴다 (표 행 높이 계산 일치)."""
     prs = open_template(template)
-    geom = read_geometry(prs.slides[0])
+    notes = fix_theme_fonts(prs)
+    geom = geom or read_geometry(prs.slides[0])
     slides = [prs.slides[0]] + [duplicate_slide(prs, prs.slides[0]) for _ in pages[1:]]
     for slide, page in zip(slides, pages):
         fill_slide(slide, page, content, geom)
@@ -284,3 +310,4 @@ def render(template: Path, content: SlideContent, pages: list[PageModel], output
     tmp = output.with_name(f".{output.name}.tmp")
     prs.save(str(tmp))
     tmp.replace(output)
+    return notes

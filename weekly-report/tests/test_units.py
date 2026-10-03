@@ -107,3 +107,20 @@ def test_live_requires_env(monkeypatch):
 def test_mock_missing_file():
     with pytest.raises(MockResponseMissing):
         ExaoneClient(ROOT).complete("weekly_rollup", "P-NONE-999", "2026-W39", "s", "u")
+
+
+def test_lg_smart_font_files_match_ea_name():
+    from weekly_report.fonts import EA_BOLD, EA_REGULAR, load_fonts
+
+    fonts = load_fonts(ROOT)
+    assert fonts.regular is not None and fonts.regular.path.name == "LGSMHAR_V1.4_151215.TTF"
+    assert EA_BOLD in fonts.fonts  # 굵은 글꼴 파일도 이름 확인
+    assert fonts.hangul_em == pytest.approx(0.891, abs=0.001)
+    assert fonts.regular.embeddable
+
+
+def test_fonts_fallback_without_files(tmp_path):
+    from weekly_report.fonts import load_fonts
+
+    fonts = load_fonts(tmp_path)
+    assert fonts.regular is None and fonts.hangul_em == 1.0 and "글꼴 파일 없음" in fonts.summary()[0]

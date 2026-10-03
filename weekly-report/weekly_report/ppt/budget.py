@@ -27,7 +27,7 @@ BODY_PT = 9
 LINE_PT = BODY_PT * 1.2  # 9pt 글꼴 100% 줄 간격의 한 줄 높이
 MAX_CHARS = 50.0
 RULE_LINES = 36  # CLAUDE.md: 본문 전체 36줄 (배경/목표 + 마일스톤 표 행 + 진행 현황·계획·이슈)
-BODY_TOP_MAX_LINES = 3
+BODY_TOP_MAX_LINES = 4  # "[배경/목표]" 제목 1줄 + 내용 최대 3줄
 GAP_EMU = int(0.06 * EMU_PER_IN)
 INSET_EMU = int(0.04 * EMU_PER_IN)
 
@@ -45,6 +45,7 @@ class Geometry:
     ms_col_widths: list[int]
     ms_row_height: int
     ms_cell_margin: int  # 좌우 여백 합
+    hangul_em: float = 1.0  # 한글 한 글자 폭/em (LG스마트체 실측 0.891, 글꼴 파일이 없으면 1.0)
 
     @property
     def line_emu(self) -> int:
@@ -57,13 +58,13 @@ def para_lines(para: Para, width: float = MAX_CHARS) -> int:
     return line_count(para.text, width)
 
 
-def cell_width_chars(width_emu: int, margin_emu: int) -> float:
-    """셀 너비 → 가중 글자 수 (한글 1자 ≈ 9pt 폭)."""
-    return max(1.0, (width_emu - margin_emu) / EMU_PER_PT / BODY_PT)
+def cell_width_chars(width_emu: int, margin_emu: int, hangul_em: float = 1.0) -> float:
+    """셀 너비 → 가중 글자 수 (한글 1자 폭 = 9pt × 한글 폭 실측값)."""
+    return max(1.0, (width_emu - margin_emu) / EMU_PER_PT / (BODY_PT * hangul_em))
 
 
 def ms_row_lines(row: MsRow, geom: Geometry) -> int:
-    return max(line_count(text or " ", cell_width_chars(w, geom.ms_cell_margin)) for text, w in zip(row.cells, geom.ms_col_widths))
+    return max(line_count(text or " ", cell_width_chars(w, geom.ms_cell_margin, geom.hangul_em)) for text, w in zip(row.cells, geom.ms_col_widths))
 
 
 def ms_row_height(row: MsRow, geom: Geometry) -> int:
@@ -185,7 +186,7 @@ def _heading(section: Section, continued: bool) -> Para:
 
 
 def _item(item: BodyItem) -> Para:
-    return Para([Run(f" - {item.text}", blue=item.blue)], "item")
+    return Para([Run(f"- {item.text}", blue=item.blue)], "item")
 
 
 def _layout_body(sections: list[tuple[Section, list[BodyItem], bool]], capacity: int) -> tuple[list[Para], list[tuple[Section, list[BodyItem], bool]], int]:

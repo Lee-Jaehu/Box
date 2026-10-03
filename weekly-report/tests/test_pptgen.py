@@ -5,6 +5,7 @@ import hashlib
 
 import pytest
 from pptx import Presentation
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 
 from conftest import ROOT, TEMPLATE, read, write
 from weekly_report.ai import ExaoneClient
@@ -59,31 +60,37 @@ def test_w39_example_full_slide(tmp_path):
     s = shapes(prs.slides[0])
     main = s["main_table"].table
     assert main.cell(0, 2).text == "금주 진행사항 (W39)  (9/21~9/27)"
-    assert main.cell(1, 0).text == "ESWA 재료교체 불량 개선" and main.cell(1, 3).text == "'26.09"
+    assert main.cell(1, 0).text == "ESWA 재료교체 불량 개선"
+    assert main.cell(1, 3).text == "'26.09 /\n(북미 10월초)"  # 목표일 초과 단계 병기 (완성 예시)
+    assert main.cell(1, 4).text == "이제희\n김형원"  # config/people.json
     assert "E77 18대" in main.cell(1, 1).text and main.cell(2, 2).text == ""
     assert s["pjt_header"].text_frame.text == "■ ESWA 재료교체 불량 개선 (1/1)"
     assert s["slide_title"].text_frame.text == "1. 과제 진행 현황_조립자동보정팀"
     assert s["updated_at"].text_frame.text == "업데이트 시간 : 9/25 18시"
+    assert s["author"].text_frame.text == "작성자 : 이제희 P"
+    top = s["body_top"].text_frame.paragraphs
+    assert top[0].text == "[배경/목표]" and top[1].text.startswith("- 호기·모델별 품질 편차") and "EPC 보정" in top[1].text
 
     ms = s["ms_table"].table
     rows = [[ms.cell(r, c).text for c in range(7)] for r in range(1, len(ms.rows))]
     assert len(rows) == 9  # 9개 마일스톤 모두 표시
-    assert rows[0] == ["1. 현황 분석", "공통", "07/24", "07/24", "07/24", "완료", ""]
-    assert rows[7] == ["6-3. 수평전개", "Normal·조립", "09/25", "09/30 (+5)", "–", "진행", "WA·MI_HL Normal Line"]
-    assert rows[8][:4] == ["6-4. 수평전개", "북미·조립", "09/25", "10월초"]
+    # 단계명은 완성 예시처럼 번호 없이 표시
+    assert rows[0] == ["현황 분석", "공통", "07/24", "07/24", "07/24", "완료", ""]
+    assert rows[7] == ["수평전개", "Normal·조립", "09/25", "09/30 (+5)", "–", "진행", "WA·MI_HL Normal Line"]
+    assert rows[8][:4] == ["수평전개", "북미·조립", "09/25", "10월초"]
     fill = lambda r: ms.cell(r, 5)._tc.find(f"{A}tcPr/{A}solidFill/{A}srgbClr").get("val")
     assert fill(1) == "E7E7E7" and fill(8) == "DDEBF7" and fill(9) == "FFFFFF"
 
     blue = [t for name in ("body_main",) for t, *_, color in runs(s[name]) if color == "0000FF"]
     blue += [t for r in range(1, len(ms.rows)) for c in range(7) for t, *_, color in runs(ms.cell(r, c)) if color == "0000FF"]
-    blue += [t for t, *_, color in runs(main.cell(1, 2)) if color == "0000FF"]
+    blue += [t for c in (2, 3) for t, *_, color in runs(main.cell(1, c)) if color == "0000FF"]
     assert sorted(blue) == sorted([
-        " - ESWA(MEB E77 전호기) 0.171% → 0.144% (적용 전·후 4일, 단기)",
-        " - ESMI1 #2-2·3 0.367% → 0.230% (단기, 장기 모니터링 필요)",
-        " - Normal Line(WA·MI_HL) 수평전개 진행 중",
-        " - Normal Line 수평전개 완료(~9/30), 북미 Site 수평전개(~10월초)",
-        " - 효과 수치가 4일 단기 기준 → 장기 모니터링 결과로 재확인 필요",
-        "09/30 (+5)", "WA·MI_HL Normal Line", "10월초", "과제 기한('26.09) 초과",
+        "- ESWA(MEB E77 전호기) 0.171% → 0.144% (적용 전·후 4일, 단기)",
+        "- ESMI1 #2-2·3 0.367% → 0.230% (단기, 장기 모니터링 필요)",
+        "- Normal Line(WA·MI_HL) 수평전개 진행 중",
+        "- Normal Line 수평전개 완료(~9/30), 북미 Site 수평전개(~10월초)",
+        "- 효과 수치가 4일 단기 기준 → 장기 모니터링 결과로 재확인 필요",
+        "09/30 (+5)", "WA·MI_HL Normal Line", "10월초", "과제 기한('26.09) 초과", "(북미 10월초)",
         "금주(W39)에는 로직 개선 효과 모니터링 – ESWA 0.144%, ESMI1 0.230%로 단기 개선 확인",
     ])
     body_text = s["body_main"].text_frame.text
@@ -91,6 +98,14 @@ def test_w39_example_full_slide(tmp_path):
     for name in ("body_top", "body_main"):
         for text, size, latin, ea, color in runs(s[name]):
             assert (size, latin, ea) == ("900", LATIN_FONT, EA_FONT) and color in {"000000", "0000FF"}
+    # 제목·머리글을 포함한 모든 글자가 LG스마트체, 테마 ea도 실제 글꼴 이름으로 보정
+    for shape in prs.slides[0].shapes:
+        if shape.has_text_frame:
+            assert all(ea == EA_FONT for t, _, _, ea, _ in runs(shape) if t and t.strip())
+    theme = prs.slide_masters[0].part.part_related_by(RT.THEME).blob.decode("utf-8")
+    assert "LG Smart Regular" not in theme and theme.count('<a:ea typeface="LG스마트체 Regular"') == 2
+    report = (tmp_path / "output/out_ppt_check.txt").read_text(encoding="utf-8")
+    assert "LG스마트체 Regular: LGSMHAR_V1.4_151215.TTF" in report
     assert before == {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths(ROOT)}
 
 
@@ -229,4 +244,18 @@ def test_milestone_rows_beyond_nine_go_to_continued_slide(tmp_path):
     first = shapes(prs.slides[0])["ms_table"].table
     second = shapes(prs.slides[1])["ms_table"].table
     assert len(first.rows) - 1 == 9 and len(second.rows) - 1 == 3
-    assert first.cell(6, 0).text == "6. 수평전개 완료 2개 사이트"
+    assert first.cell(6, 0).text == "수평전개 완료 2개 사이트"
+
+
+def test_template_file_itself_is_not_modified(tmp_path):
+    before = TEMPLATE.read_bytes()
+    build(ROOT, tmp_path)
+    assert TEMPLATE.read_bytes() == before  # 테마 글꼴 보정은 출력 파일에만
+
+
+def test_missing_people_mapping_falls_back_to_id(repo, tmp_path):
+    (repo / "config/people.json").unlink(missing_ok=True)
+    out, notes = build(repo, tmp_path)
+    s = shapes(Presentation(str(out)).slides[0])
+    assert s["author"].text_frame.text == "작성자 : ljh"
+    assert any("config/people.json에 없는 사용자 ID" in n for n in notes)

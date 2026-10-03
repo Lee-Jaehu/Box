@@ -47,11 +47,6 @@ def mmdd(iso: str | None) -> str:
     return f"{iso[5:7]}/{iso[8:10]}"
 
 
-def stage_label(milestone_id: str) -> str:
-    """M4 → "4.", M6-1 → "6-1." """
-    return milestone_id.lstrip("M") + "."
-
-
 def delay_days(baseline: str, plan: str) -> int:
     return (date.fromisoformat(plan) - date.fromisoformat(baseline)).days
 
@@ -85,7 +80,7 @@ def format_row(m: dict[str, Any], codes: CodeTable, changed: set[tuple[str, str]
     mid = m["milestone_id"]
     plan, computed = plan_cell(m)
     cells = [
-        f"{stage_label(mid)} {m['name']}",
+        m["name"],  # 완성 예시 기준: 단계 번호 없이 이름만 (2026-10 결정)
         m.get("scope_label") or codes.scope_label(m["scope"]),
         mmdd(m.get("baseline")),
         plan,

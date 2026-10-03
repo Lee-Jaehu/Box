@@ -32,7 +32,10 @@ python -m weekly_report pptgen P-ASM-001 2026-W39 --out-root "$OUT"
 템플릿은 `--template` → `templates/주간업무PPT_Template_v2.pptx` → `weekly-report/주간업무PPT_Template_v2.pptx` 순서로 찾습니다.
 저장소 루트의 `../주간업무PPT_Template.pptx`(구 양식)는 v2로 간주하지 않습니다.
 
-테스트: `pip install pytest && python -m pytest -q` (모든 출력은 임시 디렉터리).
+미리보기: `python -m weekly_report preview "$OUT/output/P-ASM-001_2026-W39.pptx"` → LG스마트체로 렌더링한 PNG
+(LibreOffice Impress·poppler 필요, 시스템 글꼴은 바꾸지 않고 임시 fontconfig 사용).
+
+테스트: `python -m pytest -q` (모든 출력은 임시 디렉터리).
 합성 5과제 검증: `python fixtures/weekly-report-fixture-kit/verify_fixtures.py "$PWD"` (현재 34/34 PASS).
 
 ## Rule과 AI의 역할 분리
@@ -53,6 +56,16 @@ python -m weekly_report pptgen P-ASM-001 2026-W39 --out-root "$OUT"
 - `budget.py`: 한글 1 / 영문·숫자·기호 0.55 가중 길이로 **실제 줄 수**를 계산하고 **항목 수**와 따로 검사합니다. 본문 가용 줄 = min(템플릿 영역의 물리 높이, 36줄 규칙 − 배경/목표 − 표 행). 글꼴을 줄이거나 도형 밖으로 넘기지 않고, fit_to_budget → (계속) 장 순서로 처리합니다. 과제당 2장을 넘으면 오류입니다.
 - `inspect.py`: 저장한 PPT를 다시 열어 슬라이드 수, 모든 글자의 9pt·글꼴, 허용 색, **파란 글자 집합 = 기대 집합**, 표 값·상태 배경, 영역 경계를 확인합니다.
 - 파란색: headline, changed=true 항목, 이번 주 milestone_updates로 실제 바뀐 칸(같은 값으로의 "변경"은 제외). 누적 요약·고정 사실·기준정보는 검정.
+
+### LG스마트체 (`weekly_report/fonts.py`)
+
+- 글꼴 파일: `fonts/` 또는 이 폴더의 `LGSM*.TTF`(Regular·Bold·SemiBold·Light). fontTools로 이름과 실측값을 읽는다.
+- 모든 글자의 ea = `LG스마트체 Regular`(TTF nameID 1과 같은 이름). 템플릿 테마의 잘못된 ea(`LG Smart Regular`)는 **출력 파일에서만** 보정한다.
+- 표 칸 줄 수는 실측 한글 폭(0.891em)으로 계산한다. 글꼴 파일이 없으면 1.0em으로 보수적으로 계산한다.
+- PPT 재검사에서 모든 글자·테마의 ea를 확인하고, check 보고서 `[글꼴]` 절에 사용한 파일을 남긴다.
+- PPTX에 글꼴을 임베드하지 않는다. 열어 보는 PC에 LG스마트체가 설치되어 있어야 한다(사내 표준 글꼴 전제).
+  글꼴 파일은 "All rights reserved"이므로 저장소 공개 범위를 확인해야 한다.
+- 완성 예시와 비교한 디자인 기준은 [docs/디자인_기준_비교.md](docs/디자인_기준_비교.md)에 정리했다.
 
 ### 의미 검증 (`weekly_report/validate.py`)
 
@@ -75,7 +88,7 @@ python -m weekly_report pptgen P-ASM-001 2026-W39 --out-root "$OUT"
 | config 위치 | 인터페이스 문서는 `data/master/codes`, 실제는 `config/` | 실제 `config/`를 읽기 전용으로 사용 |
 | PPT 출력 위치 | CLAUDE.md `output/`, 인터페이스 트리 `derived/ppt` | `output/` 사용 |
 | 템플릿 위치 | CLAUDE.md는 `templates/주간업무PPT_Template_v2.pptx`, 실제 파일은 `weekly-report/` 바로 아래 | 두 위치를 순서대로 탐색 (파일 이동 안 함) |
-| 완성 예시 | `templates/주간업무_예시_조립자동보정팀_W39.pptx` 없음 | 시각 기준 비교 불가 → 규칙 기반 재검사로 대체, 차단 요인으로 기록 |
+| 완성 예시 | CLAUDE.md는 `templates/주간업무_예시_…W39.pptx`, 실제는 `weekly-report/완성 예시 PPT.pptx` | 비교 결과와 반영 사항은 docs/디자인_기준_비교.md |
 | validation 파일명 | CLAUDE.md `output/validation_{week}.txt`는 과제끼리 덮어씀 | `output/{과제}/validation_{week}.txt` |
 | prompt 버전 | 예시 W39 JSON·mock은 v0.1 표기, 프롬프트 문서는 v0.2 | 새 결과는 실제 읽은 버전(v0.2) 기록. 예시 파일은 수정하지 않음 |
 | 예시 mock 근거 | weekly mock이 존재하지 않는 `CP-260922-001`을 근거로 사용 | 수정하지 않고 저장, 보고서에 `오류`로 표시 |
@@ -83,13 +96,14 @@ python -m weekly_report pptgen P-ASM-001 2026-W39 --out-root "$OUT"
 | 0.230 / 0.23 | Daily 본문 0.230, 표 값 0.23 | 숫자 동등·표시 정밀도 차이로 `정보` 기록 |
 | 이전 누적 근거 | W38 누적 항목 근거가 과제 ID뿐 | `이전요약` 태그로 원문 확인 사실과 구분, 검증됐다고 주장하지 않음 |
 | 고정 사실 표시 | 템플릿은 누적 요약에 고정 사실의 핵심 수치 포함을 요구, cumulative는 items/pinned_facts를 분리 | items에 핵심 수치가 이미 있으면 생략, 없으면 누적 요약 끝에 검정으로 추가 |
-| 작성자 | 템플릿은 "이름 직급", 기준정보에는 사용자 ID만 있음 | ID 표시, 처리 내역에 기록 |
+| 작성자 | 템플릿은 "이름 직급", 기준정보에는 사용자 ID만 있음 | `config/people.json` 매핑(예시 값), 없으면 ID 표시 + 경고 |
 | 과제 번호 (n/N) | 의미 미정의 | 덱 안의 과제 순번/전체 수로 해석(단일 과제 = 1/1), 2장째는 "(계속)" |
-| 기간 변경 파란색 | 템플릿 r1c3 "(변경 시 파란색)", weekly 계약에는 기간 변경 필드 없음 | 검정 고정 (계약 확장 시 반영) |
+| 일정 칸 | 템플릿 r1c3 "(변경 시 파란색)", weekly 계약에는 기간 변경 필드 없음 | 목표 일정은 검정, 목표일을 넘는 단계 병기는 이번 주 바뀌었으면 파랑 |
+| 단계 번호 | CLAUDE.md는 "6-1." 형식, 완성 예시는 번호 없음 | 완성 예시를 따라 번호 없음 (CLAUDE.md 갱신) |
+| 테마 글꼴 | 템플릿 테마 ea `LG Smart Regular` ≠ 실제 TTF 이름 `LG스마트체 Regular` | 출력 파일에서 보정 |
 
 ## 남은 차단 요인
 
-1. 완성 예시 PPT가 없어 디자인 기준과의 시각 비교를 하지 못했습니다(LibreOffice 렌더링으로 겹침·넘침만 확인).
-2. EXAONE live API 계약(요청/응답 형식, 인증)이 없어 live 연결은 검증되지 않았습니다.
-3. LG스마트체가 없는 환경에서는 렌더 이미지의 한글 글꼴이 대체됩니다. 글꼴 지정은 XML 재검사로 확인합니다.
-4. 줄 수 계산은 한글 1자=9pt 폭 가정의 보수적 추정입니다. 실제 PowerPoint 줄바꿈보다 적게 담길 수는 있어도 넘치지는 않도록 설계했습니다.
+1. EXAONE live API 계약(요청/응답 형식, 인증)이 없어 live 연결은 검증되지 않았습니다.
+2. 미리보기의 영문은 Arial Narrow 대신 같은 폭 비율의 Liberation Sans로 렌더링합니다. 실제 PowerPoint 화면과 줄바꿈이 조금 다를 수 있습니다.
+3. 줄 수 계산은 한글 1자=9pt 폭 가정의 보수적 추정입니다. 실제 PowerPoint 줄바꿈보다 적게 담길 수는 있어도 넘치지는 않도록 설계했습니다.

@@ -24,6 +24,17 @@ class Para:
         return "".join(r.text for r in self.runs)
 
 
+def cell_paras(value: "Run | list[Para]") -> list[Para]:
+    """main_table 칸 값 → 문단 목록 (Run의 줄바꿈은 문단으로 나눈다)."""
+    if isinstance(value, Run):
+        return [Para([Run(line, value.blue, value.bold)]) for line in value.text.split("\n")]
+    return value
+
+
+def cell_text(value: "Run | list[Para]") -> str:
+    return "\n".join(p.text for p in cell_paras(value))
+
+
 @dataclass
 class BodyItem:
     text: str
@@ -52,7 +63,7 @@ class SlideContent:
     pjt_name: str
     author: str
     updated_at: str
-    main: dict[str, Run]  # name, target, week_header, headline, schedule, owner
+    main: dict[str, Run | list[Para]]  # name, target, week_header, headline, schedule(여러 문단), owner
     body_top: list[Para]
     ms_rows: list[MsRow]
     ms_overflow: list[MsRow]

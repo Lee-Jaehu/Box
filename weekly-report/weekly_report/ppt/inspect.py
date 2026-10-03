@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from lxml import etree
 from pptx import Presentation
 
 from .budget import Geometry
 from .model import PageModel, SlideContent
-from .render import A_NS, BLUE, EA_FONT, LATIN_FONT, REQUIRED_SHAPES, a, read_geometry, shape_map
+from .model import cell_paras, cell_text
+from .render import A_NS, BLUE, EA_FONT, LATIN_FONT, REQUIRED_SHAPES, a, read_geometry, shape_map, theme_parts
 
 MAX_SLIDES = 2
 BODY_SIZE = 900  # 9pt
@@ -32,7 +34,7 @@ def _run_info(r) -> tuple[str, str | None, str | None, str | None, str | None]:
 
 
 def expected_blue(content: SlideContent, page: PageModel) -> list[str]:
-    blue = [content.main["headline"].text] if content.main["headline"].blue else []
+    blue = [r.text for key in ("headline", "schedule") for p in cell_paras(content.main[key]) for r in p.runs if r.blue and r.text]
     blue += [r.text for p in page.body for r in p.runs if r.blue]
     blue += [row.cells[i] for row in page.ms_rows for i, flag in enumerate(row.blue) if flag]
     return sorted(blue)
@@ -46,6 +48,13 @@ def inspect_pptx(path: Path, content: SlideContent, pages: list[PageModel]) -> l
         problems.append(f"슬라이드 수 {len(prs.slides)} ≠ 기대 {len(pages)}")
     if len(prs.slides) > MAX_SLIDES:
         problems.append(f"과제당 최대 {MAX_SLIDES}장 초과")
+    for part in theme_parts(prs):
+        root = etree.fromstring(part.blob)
+        for scheme in ("majorFont", "minorFont"):
+            for node in root.iter(a(scheme)):
+                ea = node.find(a("ea"))
+                if ea is not None and ea.get("typeface") != EA_FONT:
+                    problems.append(f"테마 {scheme} ea '{ea.get('typeface')}' ≠ {EA_FONT}")
     for index, (slide, page) in enumerate(zip(prs.slides, pages), 1):
         tag = f"{index}장"
         shapes = shape_map(slide)
@@ -76,6 +85,16 @@ def inspect_pptx(path: Path, content: SlideContent, pages: list[PageModel]) -> l
                     problems.append(f"{tag} {name}: 허용되지 않은 글자색 {color} ('{text[:15]}')")
                 if color == BLUE:
                     blue_found.append(text)
+        # 1-2) 슬라이드의 모든 글자(제목·머리글 포함)가 LG스마트체(ea)를 쓰는지
+        for shape in slide.shapes:
+            bodies_all = [shape.text_frame._txBody] if shape.has_text_frame else []
+            if shape.has_table:
+                bodies_all += [c._tc.txBody for row in shape.table.rows for c in row.cells]
+            for body in bodies_all:
+                for r in _runs(body):
+                    text, _, _, ea, _ = _run_info(r)
+                    if text.strip() and ea != EA_FONT:
+                        problems.append(f"{tag} {shape.name}: 한글 글꼴(ea) {ea} ≠ {EA_FONT} ('{text[:15]}')")
         # 2) 파란색 대상 일치
         want = expected_blue(content, page)
         if sorted(blue_found) != want:
@@ -94,8 +113,8 @@ def inspect_pptx(path: Path, content: SlideContent, pages: list[PageModel]) -> l
                 fill = ms.cell(r, 5)._tc.find(f"{a('tcPr')}/{a('solidFill')}/{a('srgbClr')}")
                 if fill is None or fill.get("val") != row.fill:
                     problems.append(f"{tag}: 마일스톤 {row.milestone_id} 상태 칸 배경 ≠ {row.fill}")
-        expected_main = {(1, 0): content.main["name"].text, (1, 2): content.main["headline"].text,
-                         (1, 3): content.main["schedule"].text, (1, 4): content.main["owner"].text}
+        expected_main = {(1, 0): cell_text(content.main["name"]), (1, 2): cell_text(content.main["headline"]),
+                         (1, 3): cell_text(content.main["schedule"]), (1, 4): cell_text(content.main["owner"])}
         for (r, c), value in expected_main.items():
             if main.cell(r, c).text != value:
                 problems.append(f"{tag}: main_table r{r}c{c} 값 불일치")
