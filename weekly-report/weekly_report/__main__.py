@@ -4,6 +4,7 @@ python -m weekly_report weekly   P-ASM-001 2026-W39 [--mode mock|live] [--out-ro
 python -m weekly_report pptgen   P-ASM-001 2026-W39 [--mode mock|live] [--out-root DIR] [--template PATH] [--output PATH]
 python -m weekly_report pipeline P-ASM-001 2026-W39 [--mode mock|live] [--out-root DIR] [--template PATH]
 python -m weekly_report preview  output/P-ASM-001_2026-W39.pptx [--out-dir DIR]   (LG스마트체로 PNG 렌더링)
+python -m weekly_report serve    [--port 8765] [--workspace DIR] [--no-browser]     (로컬 웹 테스트 화면)
 """
 
 from __future__ import annotations
@@ -46,8 +47,17 @@ def main(argv: list[str] | None = None) -> int:
     preview = sub.add_parser("preview", help="PPT → PNG 미리보기 (LG스마트체 사용, LibreOffice 필요)")
     preview.add_argument("pptx", type=Path)
     preview.add_argument("--out-dir", type=Path, help="기본: PPT 옆 preview/ 폴더")
+    web = sub.add_parser("serve", help="로컬 웹 테스트 화면 (메모 입력 → AI 응답 → PPT)")
+    web.add_argument("--port", type=int, default=8765)
+    web.add_argument("--workspace", type=Path, help="기본: weekly-report/workspace")
+    web.add_argument("--no-browser", action="store_true")
     args = parser.parse_args(argv)
     root = args.root.resolve()
+    if args.command == "serve":
+        from .webapp import serve
+
+        serve((args.workspace or root / "workspace").resolve(), args.port, not args.no_browser)
+        return 0
     if args.command == "preview":
         try:
             images, notes = render_preview(root, args.pptx, args.out_dir or args.pptx.parent / "preview")
