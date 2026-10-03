@@ -68,6 +68,7 @@ def main() -> int:
     out = demo / "out"
     with tempfile.TemporaryDirectory(prefix="wr-demo-") as tmp:
         root = build_root(demo, Path(tmp))
+        shutil.rmtree(demo / "prompts_sent", ignore_errors=True)  # 이번 실행에서 보낸 프롬프트만 남긴다
         client = RecordingClient(root, demo / "prompts_sent")
         try:
             weekly_path, cum_path, report = run_weekly(root, args.project_id, args.week, out, client=client)
