@@ -57,6 +57,8 @@ def render_preview(root: Path, pptx: Path, out_dir: Path, dpi: int = 110) -> tup
             listing = subprocess.run(["pdffonts", str(pdf)], capture_output=True, text=True).stdout
             notes.append("PDF 글꼴: LG스마트체 사용 확인" if "LGSmHa" in listing else "PDF 글꼴: LG스마트체가 쓰이지 않음 (대체 글꼴)")
         prefix = out_dir / pptx.stem
+        for old in out_dir.glob(f"{pptx.stem}-*.png"):  # 이전 실행의 남은 장 이미지 제거
+            old.unlink()
         subprocess.run([pdftoppm, "-r", str(dpi), "-png", str(pdf), str(prefix)], check=True, env=env, timeout=120)
     images = sorted(out_dir.glob(f"{pptx.stem}-*.png"))
     return images, notes

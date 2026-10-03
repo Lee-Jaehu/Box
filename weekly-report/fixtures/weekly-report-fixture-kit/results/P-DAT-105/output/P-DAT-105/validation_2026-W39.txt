@@ -2,7 +2,7 @@
 AI 모드: mock / 프롬프트 v0.2
 선택 Daily: D-260922-tester-05
 지난주 weekly: 없음
-지난주 cumulative: /tmp/tmpqjqu2n0g/root/data/derived/cumulative/P-DAT-105/2026-W38.json
+지난주 cumulative: /tmp/tmpgja7ki82/root/data/derived/cumulative/P-DAT-105/2026-W38.json
 
 [구조 검증]
 - weekly·cumulative JSON Schema 통과 (저장 완료)

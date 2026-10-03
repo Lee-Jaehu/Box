@@ -2,6 +2,7 @@
 
 import json
 import urllib.error
+from pathlib import Path
 
 import pytest
 
@@ -124,3 +125,40 @@ def test_fonts_fallback_without_files(tmp_path):
 
     fonts = load_fonts(tmp_path)
     assert fonts.regular is None and fonts.hangul_em == 1.0 and "글꼴 파일 없음" in fonts.summary()[0]
+
+
+def test_paginate_counts_rendered_bullet_prefix():
+    from weekly_report.ppt.budget import _layout_body
+    from weekly_report.ppt.model import BodyItem, Section
+
+    text = "가" * 49 + "a"  # 49.55자: 본문만 세면 1줄, "- " 접두를 붙이면 2줄
+    assert line_count(text) == 1 and line_count("- " + text) == 2
+    section = Section("progress", "진행", [BodyItem(text, ["D-1"])], 7)
+    paras, rest, used = _layout_body([(section, section.items, False)], capacity=2)
+    # 제목 1줄 + 항목 2줄 = 3줄 → 2줄 용량에는 넣지 않고 (계속)으로 넘긴다
+    assert paras == [] and used == 0 and rest[0][1] == section.items
+
+
+def test_preview_removes_stale_slide_images(tmp_path, monkeypatch):
+    import subprocess
+
+    from weekly_report import preview
+
+    out = tmp_path / "preview"
+    out.mkdir()
+    (out / "deck-1.png").write_bytes(b"old")
+    (out / "deck-2.png").write_bytes(b"old")  # 이전 실행의 2장째 (지금 덱은 1장)
+    pptx = tmp_path / "deck.pptx"
+    pptx.write_bytes(b"x")
+
+    def fake_run(cmd, **kwargs):
+        if "--convert-to" in cmd:
+            (Path(cmd[cmd.index("--outdir") + 1]) / "deck.pdf").write_bytes(b"%PDF")
+        elif cmd[0].endswith("pdftoppm"):
+            Path(cmd[-1] + "-1.png").write_bytes(b"new")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(preview.shutil, "which", lambda name: None if name == "pdffonts" else f"/usr/bin/{name}")
+    monkeypatch.setattr(preview.subprocess, "run", fake_run)
+    images, _ = preview.render_preview(tmp_path, pptx, out)
+    assert [p.name for p in images] == ["deck-1.png"] and (out / "deck-1.png").read_bytes() == b"new"

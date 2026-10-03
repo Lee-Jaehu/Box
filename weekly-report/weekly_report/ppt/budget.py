@@ -205,10 +205,11 @@ def _layout_body(sections: list[tuple[Section, list[BodyItem], bool]], capacity:
         block: list[Para] = []
         block_lines = head_lines
         for item in items:
-            lines = line_count(item.text, MAX_CHARS)
+            para = _item(item)
+            lines = para_lines(para)  # 실제로 쓰는 "- " 접두 문장 기준으로 센다
             if used + block_lines + lines > capacity:
                 break
-            block.append(_item(item))
+            block.append(para)
             block_lines += lines
             placed += 1
         if placed == 0 and items:
