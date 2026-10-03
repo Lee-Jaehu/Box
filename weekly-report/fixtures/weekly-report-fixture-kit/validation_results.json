@@ -10,9 +10,19 @@
     "detail": ""
   },
   {
+    "check": "P-APC-101 검증 보고서 과제별 분리",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
     "check": "P-APC-101 템플릿 누락 감지",
     "status": "PASS",
-    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+    "detail": ""
+  },
+  {
+    "check": "P-APC-101 PPT 생성·재검사(색·글꼴·표·장수)",
+    "status": "PASS",
+    "detail": ""
   },
   {
     "check": "P-ROL-102 Daily 필터",
@@ -21,6 +31,11 @@
   },
   {
     "check": "P-ROL-102 스키마 및 mock 실행",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "check": "P-ROL-102 검증 보고서 과제별 분리",
     "status": "PASS",
     "detail": ""
   },
@@ -36,13 +51,18 @@
   },
   {
     "check": "접기 불가능한 12행의 초과 대응",
-    "status": "FAIL",
-    "detail": "현재 12행 그대로 반환. PPT 생성기는 표 행 수만큼 잘라서 사용함."
+    "status": "PASS",
+    "detail": "9행 + (계속) 장 3행 이월"
   },
   {
     "check": "P-ROL-102 템플릿 누락 감지",
     "status": "PASS",
-    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+    "detail": ""
+  },
+  {
+    "check": "P-ROL-102 PPT 생성·재검사(색·글꼴·표·장수)",
+    "status": "PASS",
+    "detail": ""
   },
   {
     "check": "P-INV-103 Daily 필터",
@@ -55,9 +75,19 @@
     "detail": ""
   },
   {
+    "check": "P-INV-103 검증 보고서 과제별 분리",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
     "check": "P-INV-103 템플릿 누락 감지",
     "status": "PASS",
-    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+    "detail": ""
+  },
+  {
+    "check": "P-INV-103 PPT 생성·재검사(색·글꼴·표·장수)",
+    "status": "PASS",
+    "detail": ""
   },
   {
     "check": "P-SYS-104 Daily 필터",
@@ -70,9 +100,19 @@
     "detail": ""
   },
   {
+    "check": "P-SYS-104 검증 보고서 과제별 분리",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
     "check": "P-SYS-104 템플릿 누락 감지",
     "status": "PASS",
-    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+    "detail": ""
+  },
+  {
+    "check": "P-SYS-104 PPT 생성·재검사(색·글꼴·표·장수)",
+    "status": "PASS",
+    "detail": ""
   },
   {
     "check": "P-DAT-105 Daily 필터",
@@ -85,14 +125,24 @@
     "detail": ""
   },
   {
+    "check": "P-DAT-105 검증 보고서 과제별 분리",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
     "check": "P-DAT-105 템플릿 누락 감지",
     "status": "PASS",
-    "detail": "실제 PPT 생성 및 시각 검증은 BLOCKED"
+    "detail": ""
+  },
+  {
+    "check": "P-DAT-105 PPT 생성·재검사(색·글꼴·표·장수)",
+    "status": "PASS",
+    "detail": ""
   },
   {
     "check": "재실행 revision 증가",
     "status": "PASS",
-    "detail": "현재 재실행해도 revision=1"
+    "detail": ""
   },
   {
     "check": "메모 없는 주 AI 호출 생략",
@@ -101,13 +151,13 @@
   },
   {
     "check": "이전 pinned_facts 누락 방지",
-    "status": "FAIL",
-    "detail": "mock이 이전 고정 사실을 반환하지 않으면 코드에서도 보존하지 않음"
+    "status": "PASS",
+    "detail": ""
   },
   {
     "check": "입력에 없는 4 수치 검출",
-    "status": "FAIL",
-    "detail": "현재 숫자 4와 39는 예외 처리되어 누락됨"
+    "status": "PASS",
+    "detail": ""
   },
   {
     "check": "미존재 source ID 검출",
