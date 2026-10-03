@@ -1,0 +1,18 @@
+{
+  "items": [
+    {"text": "1차 로직(8/13): EPC 미보정·보정량 부족 개선, 이음매 예측 보정 세분화(2→3회)", "source_ids": ["P-ASM-001"]},
+    {"text": "1차 적용 결과 E77 18대 중 12대 감소, 6대 증가(#13-1·2 등)", "source_ids": ["P-ASM-001"]},
+    {"text": "2차 로직(9/4~): 예측 보정 Limit ±0.35mm, 이음매 이후 즉시 Feedback", "source_ids": ["P-ASM-001"]},
+    {"text": "2차 대표 4대 0.270% → 0.185%, 결과 법인 공유(9/15)", "source_ids": ["P-ASM-001"]},
+    {"text": "MEB 전 라인·ESMI1 #2-2·3 수평전개 완료(9/16)", "source_ids": ["P-ASM-001"]},
+    {"text": "ESWA 0.171% → 0.144%(4일) → 0.139%(2주), ESMI1 0.367% → 0.221%(2주)", "source_ids": ["D-260922-ljh-01", "D-260928-ljh-01"]},
+    {"text": "Normal Line 수평전개 완료(9/30), 누적 적용 호기 26대", "source_ids": ["D-260930-khw-01"]}
+  ],
+  "pinned_facts": [
+    {"text": "1차 적용 E77 위치 불량률 0.189% → 0.164%", "source_ids": ["P-ASM-001"]},
+    {"text": "ESWA 2차 로직 적용 후 0.171% → 0.144% (4일 단기)", "source_ids": ["D-260922-ljh-01"]}
+  ],
+  "new_pinned_facts": [
+    {"text": "ESWA 2주 평균 0.171% → 0.139%", "source_ids": ["D-260928-ljh-01"]}
+  ]
+}

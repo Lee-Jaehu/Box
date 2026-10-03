@@ -15,7 +15,7 @@ from .core import ValidationError, load_json, validate_schema
 from .ppt.budget import fit_sections, paginate
 from .ppt.compose import build_content
 from .ppt.inspect import inspect_pptx
-from .ppt.milestones import apply_updates, collapse_milestones, layout_milestones  # noqa: F401  (하위 호환 공개 API)
+from .ppt.milestones import apply_history, apply_updates, collapse_milestones, layout_milestones, load_prior_weeklies  # noqa: F401
 from .ppt.render import REQUIRED_SHAPES, open_template, read_geometry, render
 
 TEMPLATE_NAME = "주간업무PPT_Template_v2.pptx"
@@ -51,7 +51,10 @@ def generate_ppt(root: Path, project_path: Path, weekly_path: Path, cumulative_p
     if cumulative["as_of_week"] != weekly["week"]:
         raise ValidationError(f"주차 불일치: weekly {weekly['week']}, cumulative {cumulative['as_of_week']}")
 
-    overlaid, warnings, changed = apply_updates(project, weekly)  # baseline·원본 파일은 바꾸지 않는다
+    # 이전 주 일정 변화까지 누적해 메모리 복사본에만 적용한다 (baseline·원본 파일은 바꾸지 않음, 파랑은 이번 주만)
+    derived_base = weekly_path.resolve().parents[3] if len(weekly_path.resolve().parents) > 3 else root
+    prior = load_prior_weeklies(pid, weekly["week"], derived_base, root)
+    overlaid, warnings, changed = apply_history(project, prior, weekly)
     codes = CodeTable.load(root)
     content = build_content(overlaid, weekly, cumulative, codes, changed,
                             project_index=project_index, project_total=project_total, people=PeopleTable.load(root))

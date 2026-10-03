@@ -259,3 +259,24 @@ def test_missing_people_mapping_falls_back_to_id(repo, tmp_path):
     s = shapes(Presentation(str(out)).slides[0])
     assert s["author"].text_frame.text == "작성자 : ljh"
     assert any("config/people.json에 없는 사용자 ID" in n for n in notes)
+
+
+def test_prior_week_milestone_updates_accumulate_in_black(tmp_path):
+    """시연에서는 master가 갱신되지 않으므로 W39 일정 변화도 W40 PPT에 남아야 한다 (검정), W40 변경만 파랑."""
+    weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
+    weekly.update({"week": "2026-W40", "range": {"from": "2026-09-28", "to": "2026-10-04"},
+                   "milestone_updates": [{"milestone_id": "M6-4", "field": "plan", "to": "2026-10-13", "reason": None, "source_ids": []}]})
+    cumulative = read(ROOT / "data/derived/cumulative/P-ASM-001/2026-W39.json")
+    cumulative["as_of_week"] = "2026-W40"
+    w, c = tmp_path / "data/derived/weekly/P-ASM-001/2026-W40.json", tmp_path / "data/derived/cumulative/P-ASM-001/2026-W40.json"
+    write(w, weekly)
+    write(c, cumulative)
+    out = tmp_path / "output/out.pptx"
+    notes = generate_ppt(ROOT, ROOT / "data/master/projects/P-ASM-001.json", w, c, TEMPLATE, out, client=ExaoneClient(ROOT))
+    assert any("2026-W39 일정 변화 누적 적용" in n for n in notes)
+    assert any("plan_text '10월초' 대체" in n for n in notes)  # 날짜 확정 → 미정 문구 대체
+    ms = shapes(Presentation(str(out)).slides[0])["ms_table"].table
+    cell = {(r, c): (ms.cell(r, c).text, [col for *_, col in runs(ms.cell(r, c))]) for r in (8, 9) for c in (3, 6)}
+    assert cell[(8, 3)] == ("09/30 (+5)", ["000000"])  # W39 변경 → 검정
+    assert cell[(8, 6)] == ("WA·MI_HL Normal Line", ["000000"])
+    assert cell[(9, 3)] == ("10/13 (+18)", ["0000FF"])  # W40 변경 → 파랑

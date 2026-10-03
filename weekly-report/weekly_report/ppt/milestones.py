@@ -37,8 +37,47 @@ def apply_updates(project: dict[str, Any], weekly: dict[str, Any]) -> tuple[dict
     for mid, fld in sorted(changed):
         m = milestones[mid]
         if fld == "plan" and m.get("plan_text") and (mid, "plan_text") not in changed:
-            warnings.append(f"{mid}: 계획일이 바뀌었으나 기존 plan_text '{m['plan_text']}'가 표시 우선")
+            # 날짜가 확정되면 이전의 미정 문구(예: "10월초")는 그 날짜로 대체된다
+            warnings.append(f"{mid}: 계획일 {value_md(m['plan'])} 확정 → 이전 plan_text '{m['plan_text']}' 대체")
+            m["plan_text"] = None
     return result, warnings, changed
+
+
+def value_md(iso: str) -> str:
+    return f"{int(iso[5:7])}/{int(iso[8:10])}"
+
+
+def apply_history(project: dict[str, Any], prior_weeklies: list[dict[str, Any]],
+                  weekly: dict[str, Any]) -> tuple[dict[str, Any], list[str], set[tuple[str, str]]]:
+    """이전 주들의 milestone_updates를 주차 순서대로 누적 적용한 뒤 이번 주 것을 적용한다.
+
+    시연에서는 승인 절차가 없어 기준정보(master)가 갱신되지 않으므로, 이전 주 일정 변화도
+    메모리 복사본에 쌓아야 한다. 파란색 대상(changed)은 이번 주 변경만이다.
+    """
+    current, notes = project, []
+    for prior in sorted(prior_weeklies, key=lambda w: w["week"]):
+        if prior["week"] >= weekly["week"] or not prior.get("milestone_updates"):
+            continue
+        current, warnings, applied = apply_updates(current, prior)
+        notes.append(f"{prior['week']} 일정 변화 누적 적용(검정): {', '.join(f'{m}.{f}' for m, f in sorted(applied)) or '없음'}")
+        notes += [f"{prior['week']} {w}" for w in warnings]
+    current, warnings, changed = apply_updates(current, weekly)
+    return current, notes + warnings, changed
+
+
+def load_prior_weeklies(project_id: str, week: str, *dirs) -> list[dict[str, Any]]:
+    """여러 derived 위치에서 이번 주보다 이전 주차의 weekly를 모은다 (같은 주차는 앞 위치 우선)."""
+    import json
+
+    found: dict[str, dict[str, Any]] = {}
+    for base in dirs:
+        folder = base / f"data/derived/weekly/{project_id}"
+        if not folder.is_dir():
+            continue
+        for path in sorted(folder.glob("*.json")):
+            if path.stem < week and path.stem not in found:
+                found[path.stem] = json.loads(path.read_text(encoding="utf-8"))
+    return [found[k] for k in sorted(found)]
 
 
 def mmdd(iso: str | None) -> str:

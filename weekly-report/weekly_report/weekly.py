@@ -145,6 +145,18 @@ def merge_pinned(prev: list[dict[str, Any]], payload_pinned: list[Any], new_pinn
     return result
 
 
+def _short(path: Path | None, *bases: Path) -> str:
+    """보고서용 경로: 실행 위치(out_root/root) 기준 상대 경로."""
+    if path is None:
+        return "없음"
+    for base in bases:
+        try:
+            return str(path.resolve().relative_to(base.resolve()))
+        except ValueError:
+            continue
+    return path.name
+
+
 def _issue_lines(title: str, issues: list[Issue]) -> list[str]:
     lines = [f"[{title}]"]
     if not issues:
@@ -178,6 +190,11 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
 
     weekly_notes: list[Issue] = []
     cum_notes: list[Issue] = []
+    # 이전 주 일정 변화를 누적한 마일스톤으로 프롬프트를 만든다 (기준정보 파일은 그대로)
+    from .ppt.milestones import apply_history, load_prior_weeklies
+
+    prior_weeklies = load_prior_weeklies(project_id, week, out_root, root)
+    current_project, _, _ = apply_history(project, prior_weeklies, {"week": week, "milestone_updates": []})
 
     # ---------------------------------------------------------------- weekly
     if not dailies:
@@ -188,7 +205,7 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
         variables = {"week_label": week_label, "budget_progress": BUDGET["progress"], "budget_next_plan": BUDGET["next_plan"],
                      "budget_issues": BUDGET["issues"], "project_id": project_id, "project_name": project["name"],
                      "range_from": start.isoformat(), "range_to": end.isoformat(),
-                     "milestone_lines": pv.milestone_lines(project["milestones"], codes),
+                     "milestone_lines": pv.milestone_lines(current_project["milestones"], codes),
                      "prev_weekly_lines": pv.prev_weekly_lines(prev_weekly), "daily_blocks": pv.daily_blocks(dailies)}
         system, user = render_prompt(root, "weekly_rollup", variables)
         content = build_weekly_payload(client.complete("weekly_rollup", project_id, week, system, user), weekly_notes)
@@ -213,7 +230,7 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
     else:
         variables = {"max_items": MAX_CUMULATIVE_ITEMS, "project_id": project_id, "project_name": project["name"],
                      "background": project["background"], "purpose": project["purpose"],
-                     "completed_milestones": pv.completed_milestones(project["milestones"]),
+                     "completed_milestones": pv.completed_milestones(apply_history(project, prior_weeklies, weekly)[0]["milestones"]),
                      "prev_items": pv.cumulative_lines(prev_items), "pinned_facts": pv.cumulative_lines(prev_pinned),
                      "week_label": week_label, "weekly_lines": pv.weekly_lines(weekly)}
         system, user = render_prompt(root, "cumulative_update", variables)
@@ -269,7 +286,7 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
     lines = [f"과제 {project_id} / {week} ({start.isoformat()} ~ {end.isoformat()})",
              f"AI 모드: {client.mode} / 프롬프트 {version}",
              f"선택 Daily: {', '.join(revisions) or '없음 (AI 호출 생략, no_change=true)'}",
-             f"지난주 weekly: {prev_weekly_path or '없음'}", f"지난주 cumulative: {prev_cum_path or '없음'}", "",
+             f"지난주 weekly: {_short(prev_weekly_path, out_root, root)}", f"지난주 cumulative: {_short(prev_cum_path, out_root, root)}", "",
              "[구조 검증]", "- weekly·cumulative JSON Schema 통과 (저장 완료)", ""]
     lines += [f"- {s}" for s in skipped]
     lines += _issue_lines("의미 검증 – weekly", weekly_notes) + [""] + _issue_lines("의미 검증 – cumulative", cum_notes)
