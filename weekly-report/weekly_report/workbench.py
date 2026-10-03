@@ -35,25 +35,96 @@ class WorkbenchError(ValueError):
 
 # ---------------------------------------------------------------- 작업공간
 
-def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> Path:
-    """처음이면 저장소 입력 + W40 데모를 복사한다. force=True면 지우고 다시 만든다."""
-    if force and ws.exists():
-        shutil.rmtree(ws)
-    if (ws / MARKER).exists():
-        return ws
+# 작업공간이 쓸 수 있는 상태인지 확인할 때 보는 파일
+REQUIRED = ("schemas/daily.schema.json", "schemas/weekly.schema.json", "config/code_table_site_process.json",
+            "prompts/weekly_rollup.system.txt", "data/master/projects", TEMPLATE_NAME)
+# 초기화 전에 백업하는 사용자 입력·결과
+BACKUP_ITEMS = ("data/raw", "data/derived", "prompts/mock_responses", "output")
+
+
+def _copy(src: Path, dst: Path, *, overwrite: bool) -> None:
+    """파일 하나 복사. overwrite=False면 이미 있는 파일(사용자가 고친 메모 등)은 건드리지 않는다."""
+    if overwrite or not dst.exists():
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+
+
+def _copy_tree(src: Path, dst: Path, *, overwrite: bool) -> None:
+    for path in src.rglob("*"):
+        if path.is_file():
+            _copy(path, dst / path.relative_to(src), overwrite=overwrite)
+
+
+def workspace_ok(ws: Path) -> bool:
+    return (ws / MARKER).exists() and all((ws / rel).exists() for rel in REQUIRED)
+
+
+def _remove_tree(path: Path) -> list[str]:
+    """지울 수 있는 것은 모두 지우고, 지우지 못한 파일(예: Windows에서 열려 있는 PPT)은 목록으로 돌려준다."""
+    failed: list[str] = []
+    if not path.exists():
+        return failed
+    for item in sorted(path.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        try:
+            if item.is_dir() and not item.is_symlink():
+                item.rmdir()
+            else:
+                item.unlink()
+        except OSError:
+            if item.is_file():
+                failed.append(item.relative_to(path).as_posix())
+    return failed
+
+
+def _backup(ws: Path) -> Path | None:
+    """초기화 전 사용자 입력·결과를 workspace_backups/날짜시각/ 에 복사한다."""
+    items = [rel for rel in BACKUP_ITEMS if (ws / rel).exists()]
+    if not items:
+        return None
+    target = ws.parent / "workspace_backups" / datetime.now(KST).strftime("%Y%m%d-%H%M%S")
+    for rel in items:
+        try:
+            shutil.copytree(ws / rel, target / rel, dirs_exist_ok=True)
+        except (OSError, shutil.Error):
+            continue  # 백업은 최선 노력 (잠긴 파일 하나 때문에 초기화를 막지 않음)
+    return target
+
+
+def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[str, Any]:
+    """작업공간을 준비한다.
+
+    - 처음이거나 파일이 빠져 있으면(예: 초기화가 중간에 실패) 저장소 입력 + W40 데모를 다시 채운다.
+    - force=True(초기화)면 사용자 입력·결과를 백업한 뒤 지우고 다시 만든다.
+      Windows에서 열려 있어 지우지 못한 파일은 건너뛰고 결과에 알린다.
+    """
+    result: dict[str, Any] = {"restored": False, "backup": None, "locked": []}
+    if workspace_ok(ws) and not force:
+        return result
     ws.mkdir(parents=True, exist_ok=True)
+    (ws / MARKER).unlink(missing_ok=True)  # 표시 파일은 먼저 지우고 마지막에 다시 쓴다
+    if force:
+        backup = _backup(ws)
+        result["backup"] = str(backup) if backup else None
+        for name in ("config", "schemas", "prompts", "data", "output"):
+            result["locked"] += [f"{name}/{rel}" for rel in _remove_tree(ws / name)]
+    # 초기화(force)는 저장소 상태로 덮어쓰고, 복구(빠진 파일 채우기)는 있는 파일을 그대로 둔다
     for name in ("config", "schemas", "prompts", "data"):
-        shutil.copytree(repo / name, ws / name, dirs_exist_ok=True)
-    shutil.copy(find_template(repo), ws / TEMPLATE_NAME)
-    for font in repo.glob("LGSM*.[tT][tT][fF]"):
-        shutil.copy(font, ws / font.name)
+        _copy_tree(repo / name, ws / name, overwrite=force)
+    for source in [find_template(repo), *repo.glob("LGSM*.[tT][tT][fF]")]:
+        try:
+            _copy(source, ws / source.name, overwrite=force)
+        except PermissionError:
+            if not (ws / source.name).exists():
+                raise
+            result["locked"].append(source.name)  # 같은 파일이 이미 있고 열려 있음 → 그대로 사용
     demo = repo / "demo/w40"
     if (demo / "raw").is_dir():
-        shutil.copytree(demo / "raw", ws / "data/raw", dirs_exist_ok=True)
+        _copy_tree(demo / "raw", ws / "data/raw", overwrite=force)
     for path in (demo / "mock_responses").glob("*.json"):
-        shutil.copy(path, ws / "prompts/mock_responses" / path.name)
+        _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
     (ws / MARKER).write_text("weekly-report 웹 테스트 작업공간 (지워도 다시 만들어짐)\n", encoding="utf-8")
-    return ws
+    result["restored"] = True
+    return result
 
 
 def list_projects(ws: Path) -> list[dict[str, str]]:

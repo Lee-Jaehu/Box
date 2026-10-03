@@ -162,3 +162,29 @@ def test_preview_removes_stale_slide_images(tmp_path, monkeypatch):
     monkeypatch.setattr(preview.subprocess, "run", fake_run)
     images, _ = preview.render_preview(tmp_path, pptx, out)
     assert [p.name for p in images] == ["deck-1.png"] and (out / "deck-1.png").read_bytes() == b"new"
+
+
+def _open_files(suffix):
+    import os
+
+    found = []
+    for fd in os.listdir("/proc/self/fd"):
+        try:
+            target = os.readlink(f"/proc/self/fd/{fd}")
+        except OSError:
+            continue
+        if target.endswith(suffix):
+            found.append(target)
+    return found
+
+
+@pytest.mark.skipif(not Path("/proc/self/fd").exists(), reason="리눅스 /proc 필요")
+def test_font_files_are_closed_after_reading(tmp_path):
+    """Windows에서는 열린 파일을 지울 수 없다 → 글꼴 실측 후 파일 핸들이 남으면 작업공간 초기화가 실패한다."""
+    import shutil as sh
+
+    from weekly_report.fonts import load_fonts
+
+    sh.copy(ROOT / "LGSMHAR_V1.4_151215.TTF", tmp_path)
+    assert load_fonts(tmp_path).regular is not None
+    assert not [f for f in _open_files(".TTF") if str(tmp_path) in f]

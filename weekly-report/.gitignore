@@ -5,3 +5,4 @@ __pycache__/
 # 생성 결과 (PPT·검증 보고서)는 커밋하지 않는다
 /output/
 /workspace/
+/workspace_backups/

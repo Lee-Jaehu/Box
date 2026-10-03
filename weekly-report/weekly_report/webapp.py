@@ -48,6 +48,7 @@ class Handler(BaseHTTPRequestHandler):
     def _guard(self, action) -> None:
         try:
             with _lock:
+                wb.init_workspace(self.workspace)  # 빠진 파일이 있으면 먼저 복구 (초기화 중단 등)
                 self._json(action())
         except wb.WorkbenchError as exc:
             self._json({"error": str(exc)}, 400)
@@ -99,7 +100,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/run": lambda: wb.run(ws, body["project_id"], body["week"], body.get("mode", "mock")),
             "/api/response": lambda: (wb.save_response(ws, body["name"], body["text"]), {"ok": True})[1],
             "/api/responses/clear": lambda: {"removed": wb.clear_responses(ws, body["project_id"], body["week"])},
-            "/api/reset": lambda: (wb.init_workspace(ws, force=True), {"ok": True})[1],
+            "/api/reset": lambda: wb.init_workspace(ws, force=True),
         }
         action = routes.get(url.path)
         if action is None:

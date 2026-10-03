@@ -215,8 +215,13 @@ async function clearResponses() {
   catch (e) { show($("run-msg"), e.message, "err"); }
 }
 async function resetWorkspace() {
-  if (!confirm("작업공간을 처음 상태(저장소 예시 + W40 데모)로 되돌릴까요? 입력한 메모와 응답이 지워집니다.")) return;
-  await api("/api/reset", {}); resetForm(); await loadProjects(); await loadDailies(); $("result").classList.add("hidden");
+  if (!confirm("작업공간을 처음 상태(저장소 예시 + W40 데모)로 되돌릴까요?\n입력한 메모·응답·결과는 workspace_backups 폴더에 백업한 뒤 지웁니다.")) return;
+  try {
+    const r = await api("/api/reset", {}); resetForm(); clearRun(); await loadProjects(); await loadDailies();
+    let text = "작업공간을 초기화했습니다." + (r.backup ? `\n백업: ${r.backup}` : "");
+    if (r.locked.length) text += `\n열려 있어 지우지 못한 파일(그대로 둠): ${r.locked.join(", ")} — PowerPoint 등에서 닫은 뒤 필요하면 다시 초기화하세요.`;
+    show($("daily-msg"), text, r.locked.length ? "info" : "ok");
+  } catch (e) { show($("daily-msg"), e.message, "err"); }
 }
 
 function clearRun() { $("result").classList.add("hidden"); $("need").classList.add("hidden"); hide($("run-msg")); }

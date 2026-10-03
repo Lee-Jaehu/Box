@@ -51,17 +51,18 @@ class FontSet:
 def _read(path: Path) -> FontInfo | None:
     from fontTools.ttLib import TTFont
 
-    font = TTFont(str(path), lazy=True)
-    names = [n for n in font["name"].names if n.nameID == 1]
-    korean = [n.toUnicode() for n in names if n.platformID == 3 and n.langID == 0x412]
-    family = (korean or [n.toUnicode() for n in names] or [""])[0]
-    units = font["head"].unitsPerEm
-    glyph = font.getBestCmap().get(ord(SAMPLE_HANGUL))
-    if glyph is None:
-        return None
-    os2 = font["OS/2"]
-    return FontInfo(path, family, font["hmtx"][glyph][0] / units, (os2.usWinAscent + os2.usWinDescent) / units,
-                    embeddable=not (os2.fsType & 0x0002))
+    # 파일을 열어 둔 채 두면 Windows에서 지우거나 덮어쓸 수 없다 → 읽고 바로 닫는다
+    with TTFont(str(path), lazy=False) as font:
+        names = [n for n in font["name"].names if n.nameID == 1]
+        korean = [n.toUnicode() for n in names if n.platformID == 3 and n.langID == 0x412]
+        family = (korean or [n.toUnicode() for n in names] or [""])[0]
+        units = font["head"].unitsPerEm
+        glyph = font.getBestCmap().get(ord(SAMPLE_HANGUL))
+        if glyph is None:
+            return None
+        os2 = font["OS/2"]
+        return FontInfo(path, family, font["hmtx"][glyph][0] / units, (os2.usWinAscent + os2.usWinDescent) / units,
+                        embeddable=not (os2.fsType & 0x0002))
 
 
 def font_files(root: Path) -> list[Path]:

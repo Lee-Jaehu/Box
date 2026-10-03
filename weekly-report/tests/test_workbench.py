@@ -2,6 +2,8 @@
 
 import hashlib
 import json
+import shutil
+from pathlib import Path
 import threading
 import urllib.error
 import urllib.request
@@ -19,7 +21,8 @@ def digests():
 
 @pytest.fixture
 def ws(tmp_path):
-    return wb.init_workspace(tmp_path / "ws")
+    wb.init_workspace(tmp_path / "ws")
+    return tmp_path / "ws"
 
 
 def test_init_workspace_includes_w40_demo_and_keeps_repo(ws):
@@ -110,3 +113,55 @@ def test_http_smoke(ws):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_reset_survives_locked_file_and_backs_up_user_data(ws, monkeypatch):
+    """Windows처럼 열려 있는 파일을 지울 수 없어도 초기화는 끝까지 복원하고, 입력은 백업한다."""
+    memo = wb.save_daily(ws, {"date": "2026-10-06", "author": "khw", "visibility": "project", "project_id": "P-ASM-001", "raw_text": "백업될 메모"})
+    assert wb.run(ws, "P-ASM-001", "2026-W40")["status"] == "ok"
+    original_unlink = Path.unlink
+
+    def locked_unlink(self, *args, **kwargs):
+        if self.suffix in (".pptx", ".TTF"):
+            raise PermissionError(13, "다른 프로세스가 사용 중", str(self))
+        return original_unlink(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", locked_unlink)
+    result = wb.init_workspace(ws, force=True)
+    monkeypatch.undo()
+    assert "output/P-ASM-001_2026-W40.pptx" in result["locked"]
+    assert wb.workspace_ok(ws) and (ws / "schemas/daily.schema.json").exists()
+    assert not any(d["daily_id"] == memo["daily_id"] for d in wb.list_dailies(ws, "P-ASM-001", "2026-W41"))
+    backup = Path(result["backup"])
+    assert (backup / f"data/raw/daily/2026/26-10-06/{memo['daily_id']}.json").exists()
+    assert wb.save_daily(ws, {"date": "2026-10-06", "author": "ljh", "visibility": "project", "project_id": "P-ASM-001", "raw_text": "초기화 후 저장"})
+
+
+def test_broken_workspace_is_repaired_without_touching_user_memos(ws):
+    """초기화가 중간에 끊겨 schemas 등이 사라진 상태(사용자 보고 사례) → 다음 요청에서 빠진 파일만 복구."""
+    memo = wb.save_daily(ws, {"date": "2026-09-28", "author": "ljh", "visibility": "project", "project_id": "P-ASM-001", "raw_text": "사용자가 고친 메모"})
+    shutil.rmtree(ws / "schemas")
+    shutil.rmtree(ws / "config")
+    assert not wb.workspace_ok(ws)
+    server = make_server(ws, port=0)  # 서버 시작 시 복구
+    server.server_close()
+    assert wb.workspace_ok(ws)
+    texts = {d["daily_id"]: d["raw_text"] for d in wb.list_dailies(ws, "P-ASM-001", "2026-W40")}
+    assert texts[memo["daily_id"]] == "사용자가 고친 메모"
+    assert wb.save_daily(ws, {"date": "2026-10-06", "author": "ljh", "visibility": "project", "project_id": "P-ASM-001", "raw_text": "복구 후 저장"})
+
+
+@pytest.mark.skipif(not Path("/proc/self/fd").exists(), reason="리눅스 /proc 필요")
+def test_no_workspace_files_left_open_after_run(ws):
+    import os
+
+    assert wb.run(ws, "P-ASM-001", "2026-W40")["status"] == "ok"
+    still_open = []
+    for fd in os.listdir("/proc/self/fd"):
+        try:
+            target = os.readlink(f"/proc/self/fd/{fd}")
+        except OSError:
+            continue
+        if target.startswith(str(ws.resolve())):
+            still_open.append(target)
+    assert still_open == []
