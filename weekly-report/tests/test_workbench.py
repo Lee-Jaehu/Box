@@ -251,3 +251,18 @@ def test_bad_stored_answer_reopens_paste_panel_instead_of_dead_end(ws):
     assert (ws / "prompts/mock_responses/weekly_rollup__P-ASM-001__2026-W41.json").exists()  # 앞 단계 응답은 유지
     wb.save_response(ws, need["response_name"], json.dumps({"items": [{"text": "북미 적용 준비 회의 진행", "source_ids": ["D-261006-ljh-01"]}]}))
     assert wb.run(ws, "P-ASM-001", "2026-W41")["status"] == "ok"
+
+
+def test_old_workspace_picks_up_updated_prompts_but_keeps_user_data(ws):
+    """저장소의 프롬프트가 바뀌면(v0.3 → v0.4) 기존 작업공간도 다음 요청에서 새 프롬프트를 쓴다."""
+    memo = wb.save_daily(ws, {"date": "2026-10-06", "author": "ljh", "visibility": "project", "project_id": "P-ASM-001", "raw_text": "유지될 메모"})
+    old_rules = "4. 문장은 보고서 개조식으로 쓴다.\n"
+    (ws / "prompts/common_rules.txt").write_text(old_rules, encoding="utf-8")
+    response = ws / "prompts/mock_responses/weekly_rollup__P-ASM-001__2026-W40.json"
+    response.write_text('{"headline": {"text": "사용자 응답", "source_ids": []}}', encoding="utf-8")
+    assert wb.stale_files(ws) == ["prompts/common_rules.txt"]
+    result = wb.init_workspace(ws)
+    assert result["updated"] == ["prompts/common_rules.txt"] and not result["restored"]
+    assert "경어체" in (ws / "prompts/common_rules.txt").read_text(encoding="utf-8")
+    assert "사용자 응답" in response.read_text(encoding="utf-8")
+    assert any(d["daily_id"] == memo["daily_id"] for d in wb.list_dailies(ws, "P-ASM-001", "2026-W41"))

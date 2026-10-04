@@ -6,6 +6,13 @@
 
 from __future__ import annotations
 
+import re
+
+# 본문·요약 문장 규칙 (2026-10-04 결정): 한 항목 = PPT 한 줄, 30~60자, 경어체 종결
+SENTENCE_MIN = 30.0
+SENTENCE_MAX = 60.0
+_TRAILING_NOTE_RE = re.compile(r"(\s*\([^()]*\))+\s*$")  # 끝의 "(판단)", "(지원 요청)" 같은 표시
+
 WIDE_RANGES = (
     ("가", "힣"),  # 한글 음절
     ("ᄀ", "ᇿ"),  # 한글 자모
@@ -55,3 +62,22 @@ def line_count(text: str, width: float = 50.0) -> int:
 # 하위 호환: 기존 core.wrapped_lines 사용처
 def wrapped_lines(text: str, width: float = 50.0) -> int:
     return line_count(text, width)
+
+
+def is_polite(text: str) -> bool:
+    """경어체("~습니다/~니다")로 끝나는지. 끝의 괄호 표시와 마침표는 무시한다."""
+    body = _TRAILING_NOTE_RE.sub("", text.strip().rstrip(" .")).rstrip(" .")
+    return body.endswith("니다")
+
+
+def sentence_problems(text: str) -> list[str]:
+    """문장 규칙 위반 설명 (없으면 빈 목록)."""
+    problems = []
+    length = weighted_length(text)
+    if length < SENTENCE_MIN:
+        problems.append(f"{length:.1f}자 < 최소 {SENTENCE_MIN:g}자 (함축적이라 이해하기 어려울 수 있음)")
+    elif length > SENTENCE_MAX:
+        problems.append(f"{length:.1f}자 > 최대 {SENTENCE_MAX:g}자 (PPT 한 줄 초과)")
+    if not is_polite(text):
+        problems.append('경어체 종결("~했습니다/~입니다") 아님')
+    return problems

@@ -71,6 +71,23 @@ def missing_files(ws: Path, repo: Path = REPO) -> list[str]:
     return [rel for rel in runtime_files(repo) if not (ws / rel).exists()]
 
 
+def stale_files(ws: Path, repo: Path = REPO) -> list[str]:
+    """저장소에서 바뀐 실행 파일(프롬프트·스키마·설정·기준정보). 템플릿·글꼴은 비교하지 않는다."""
+    stale = []
+    for rel in runtime_files(repo):
+        if rel.startswith(RUNTIME_TREES) and (ws / rel).is_file() and (ws / rel).read_bytes() != (repo / rel).read_bytes():
+            stale.append(rel)
+    return stale
+
+
+def refresh_runtime(ws: Path, repo: Path = REPO) -> list[str]:
+    """저장소가 갱신되면(예: 프롬프트 v0.4) 작업공간의 실행 파일도 맞춘다. 사용자 입력·응답·결과는 건드리지 않는다."""
+    updated = stale_files(ws, repo)
+    for rel in updated:
+        _copy(repo / rel, ws / rel, overwrite=True)
+    return updated
+
+
 def workspace_ok(ws: Path, repo: Path = REPO) -> bool:
     return (ws / MARKER).exists() and not missing_files(ws, repo)
 
@@ -134,8 +151,9 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
     - force=True(초기화)면 사용자 입력·결과를 백업한 뒤 지우고 다시 만든다.
       Windows에서 열려 있어 지우지 못한 파일은 건너뛰고 결과에 알린다.
     """
-    result: dict[str, Any] = {"restored": False, "backup": None, "locked": []}
+    result: dict[str, Any] = {"restored": False, "backup": None, "locked": [], "updated": []}
     if workspace_ok(ws, repo) and not force:
+        result["updated"] = refresh_runtime(ws, repo)
         return result
     ws.mkdir(parents=True, exist_ok=True)
     if force:
@@ -148,6 +166,8 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
     # 초기화(force)는 저장소 상태로 덮어쓰고, 복구(빠진 파일 채우기)는 있는 파일을 그대로 둔다
     for name in ("config", "schemas", "prompts", "data"):
         _copy_tree(repo / name, ws / name, overwrite=force)
+    if not force:
+        result["updated"] = refresh_runtime(ws, repo)
     for source in [find_template(repo), *repo.glob("LGSM*.[tT][tT][fF]")]:
         try:
             _copy(source, ws / source.name, overwrite=force)

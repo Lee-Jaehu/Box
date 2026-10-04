@@ -219,7 +219,7 @@ def test_no_issue_shows_default_text(tmp_path):
     weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
     weekly["issues"] = []
     out, _ = build(ROOT, tmp_path, weekly=weekly)
-    assert "특이사항 없음" in shapes(Presentation(str(out)).slides[0])["body_main"].text_frame.text
+    assert "금주에는 특이사항이 없습니다" in shapes(Presentation(str(out)).slides[0])["body_main"].text_frame.text
 
 
 def test_project_week_mismatch_is_rejected(tmp_path):

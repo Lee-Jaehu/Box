@@ -1,5 +1,7 @@
-# EXAONE 프롬프트 (시연용 v0.3)
+# EXAONE 프롬프트 (시연용 v0.4)
 
+> v0.4 (2026-10-04): 그룹장 보고용 경어체("~했습니다/~입니다") 종결, 한 항목 30~60자(함축 금지)로 변경. fit_to_budget에 min_chars 변수 추가.
+>
 > v0.3 (2026-10-03): cumulative_update의 max_items를 PPT 첫 장에 남는 줄 수로 정하고, 고정 사실의 핵심 수치를 items에 포함하도록 규칙 추가.
 
 | prompt_id | 파일 | 언제 호출 | 결과 저장 |
@@ -11,7 +13,7 @@
 - 모든 system 파일의 `{{common_rules}}` 자리에 `common_rules.txt` 내용을 넣는다.
 - 호출 설정: temperature 0.1, 응답은 JSON만. 앞뒤 ```json 표시는 제거 후 파싱.
 - 파싱 실패 시 1회 재요청: "직전 응답이 JSON 형식이 아닙니다. 같은 내용을 JSON으로만 다시 출력하세요."
-- 결과 JSON의 `ai.prompt_id`, `ai.prompt_version`(v0.3)을 함께 저장한다.
+- 결과 JSON의 `ai.prompt_id`, `ai.prompt_version`(v0.4)을 함께 저장한다.
 
 ## 변수
 
@@ -49,7 +51,7 @@ daily_blocks 형식:
 | 변수 | 내용 |
 |---|---|
 | slot_name | 칸 이름 (예: progress) |
-| max_items, max_chars | 칸 한도 |
+| max_items, max_chars, min_chars | 칸 한도 (항목 수, 문장 60자·30자) |
 | item_lines | `- (D-260922-ljh-01) 문장` 형식 목록 |
 
 ## mock 응답

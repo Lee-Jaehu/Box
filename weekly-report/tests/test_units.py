@@ -167,7 +167,7 @@ def test_paginate_counts_rendered_bullet_prefix():
     text = "가" * 49 + "a"  # 49.55자: 본문만 세면 1줄, "- " 접두를 붙이면 2줄
     assert line_count(text) == 1 and line_count("- " + text) == 2
     section = Section("progress", "진행", [BodyItem(text, ["D-1"])], 7)
-    paras, rest, used = _layout_body([(section, section.items, False)], capacity=2)
+    paras, rest, used = _layout_body([(section, section.items, False)], capacity=2, width=50.0)
     # 제목 1줄 + 항목 2줄 = 3줄 → 2줄 용량에는 넣지 않고 (계속)으로 넘긴다
     assert paras == [] and used == 0 and rest[0][1] == section.items
 
@@ -221,3 +221,23 @@ def test_font_files_are_closed_after_reading(tmp_path):
     sh.copy(ROOT / "LGSMHAR_V1.4_151215.TTF", tmp_path)
     assert load_fonts(tmp_path).regular is not None
     assert not [f for f in _open_files(".TTF") if str(tmp_path) in f]
+
+
+def test_sentence_rules_polite_and_30_to_60_chars():
+    from weekly_report.textmetrics import is_polite, sentence_problems
+
+    good = "북미 Site 수평전개를 10/13 적용하고, 현지 PLC 보정 파라미터를 검증할 예정입니다"
+    assert sentence_problems(good) == []
+    assert is_polite("원격 접속 지원 여부를 IT팀에 확인 요청드립니다 (지원 요청)")
+    assert is_polite("추가 모니터링이 필요할 것으로 보입니다(판단).")
+    short = sentence_problems("수평전개 누적 26대")  # 예전 개조식: 짧고 명사형 종결
+    assert any("최소 30자" in p for p in short) and any("경어체" in p for p in short)
+    assert any("최대 60자" in p for p in sentence_problems("가" * 58 + "했습니다"))
+
+
+def test_prompts_ask_for_polite_full_sentences():
+    from weekly_report.core import render_prompt
+
+    system, _ = render_prompt(ROOT, "fit_to_budget", {"slot_name": "progress", "max_items": 7, "max_chars": 60,
+                                                       "min_chars": 30, "item_lines": "- x"})
+    assert "~습니다/~니다" in system and "30자 이상 60자 이내" in system and "개조식으로 쓴다" not in system

@@ -18,9 +18,9 @@ SECTION_SPEC = (
     ("next_plan", "향후 계획", 3),
     ("issues", "이슈·지원 요청", 2),
 )
-NO_ISSUE = "특이사항 없음"
-NO_PROGRESS = "금주 변경 사항 없음"
-NO_PLAN = "해당 없음"
+NO_ISSUE = "금주에는 특이사항이 없습니다"
+NO_PROGRESS = "금주에는 변경 사항이 없습니다"
+NO_PLAN = "향후 계획은 해당 사항이 없습니다"
 MAX_MS_ROWS = 9
 
 

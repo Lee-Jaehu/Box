@@ -17,6 +17,7 @@ from .ai import ExaoneClient
 from .codes import CodeTable
 from .core import KST, ValidationError, atomic_json, load_json, previous_week, render_prompt, validate_schema, week_range
 from .ppt.compose import norm_text
+from .textmetrics import SENTENCE_MAX, sentence_problems
 from .validate import Issue, build_evidence, check_item, check_milestone_updates, sort_issues
 
 ITEM_KEYS = ("text", "source_ids", "kind", "changed")
@@ -145,6 +146,11 @@ def merge_pinned(prev: list[dict[str, Any]], payload_pinned: list[Any], new_pinn
     return result
 
 
+def style_issues(path: str, value: dict[str, Any]) -> list[Issue]:
+    """문장 규칙(30~60자, 경어체) 위반은 '주의'로 보고한다. 저장·PPT 생성은 막지 않는다."""
+    return [Issue(f"{path}.text", "주의", f"문장 규칙: {problem}") for problem in sentence_problems(value["text"])]
+
+
 def _short(path: Path | None, *bases: Path) -> str:
     """보고서용 경로: 실행 위치(out_root/root) 기준 상대 경로."""
     if path is None:
@@ -198,7 +204,7 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
 
     # ---------------------------------------------------------------- weekly
     if not dailies:
-        content = {"headline": {"text": f"금주({week_label}) 변경 없음", "source_ids": [], "kind": "fact", "changed": True},
+        content = {"headline": {"text": f"금주({week_label})에는 변경 사항이 없습니다", "source_ids": [], "kind": "fact", "changed": True},
                    "progress": [], "next_plan": [], "issues": [], "milestone_updates": []}
         weekly_ai_model = "AI 호출 없음 (Daily 없음)"
     else:
@@ -216,7 +222,7 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
         "meta": {"schema": "weekly", "schema_version": "0.1", "revision": 1, "created_at": now, "updated_at": now, "updated_by": "pipeline"},
         "project_id": project_id, "week": week, "range": {"from": start.isoformat(), "to": end.isoformat()},
         "source_daily_ids": [d["daily_id"] for d in dailies], **content, "no_change": not dailies,
-        "budget": {"max_chars_per_line": 50, "lines": dict(BUDGET)}, "review_state": "draft",
+        "budget": {"max_chars_per_line": int(SENTENCE_MAX), "lines": dict(BUDGET)}, "review_state": "draft",
         "ai": {"model": weekly_ai_model, "prompt_id": "weekly_rollup", "prompt_version": version, "generated_at": now, "input_revisions": revisions},
     }
     validate_schema(weekly, root / "schemas/weekly.schema.json")  # 구조 오류면 여기서 중단 (저장하지 않음)
@@ -268,9 +274,11 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
         ev_week = build_evidence(dailies=dailies, project=project, prev_texts=prev_texts + prev_cum_texts, computed=computed,
                                  allowed_ids=daily_ids | {project_id}, codes=codes, prev_level="주의")
         weekly_notes += check_item("headline", weekly["headline"], ev_week)
+        weekly_notes += style_issues("headline", weekly["headline"])
         for slot in ("progress", "next_plan", "issues"):
             for index, value in enumerate(weekly[slot]):
                 weekly_notes += check_item(f"{slot}[{index}]", value, ev_week)
+                weekly_notes += style_issues(f"{slot}[{index}]", value)
         weekly_notes += check_milestone_updates(weekly["milestone_updates"], project, ev_week)
 
         prev_ids = {s for v in prev_items + prev_pinned for s in v.get("source_ids", [])}
@@ -279,6 +287,8 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
         for key in ("items", "pinned_facts"):
             for index, value in enumerate(cumulative[key]):
                 cum_notes += check_item(f"{key}[{index}]", value, ev_cum)
+        for index, value in enumerate(cumulative["items"]):  # 고정 사실은 지난 문장 그대로라 문체 검사 제외
+            cum_notes += style_issues(f"items[{index}]", value)
 
     # 저장: 두 파일 모두 구조 검증을 통과한 뒤에만 쓴다
     weekly_path = out_root / f"data/derived/weekly/{project_id}/{week}.json"
