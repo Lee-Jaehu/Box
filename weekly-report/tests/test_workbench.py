@@ -205,3 +205,49 @@ def test_any_missing_runtime_file_triggers_repair(ws):
     wb.clear_responses(ws, "P-ASM-001", "2026-W40")
     assert wb.workspace_ok(ws)
     assert not (ws / "prompts/mock_responses/weekly_rollup__P-ASM-001__2026-W40.json").exists()
+
+
+def _w41_need_cumulative(ws):
+    wb.save_daily(ws, {"date": "2026-10-06", "author": "ljh", "visibility": "project", "project_id": "P-ASM-001",
+                       "raw_text": "북미 적용 준비 회의 진행."})
+    first = wb.run(ws, "P-ASM-001", "2026-W41")
+    weekly = {"headline": {"text": "금주(W41)에는 북미 적용 준비", "source_ids": ["D-261006-ljh-01"]},
+              "progress": [{"text": "북미 적용 준비 회의 진행", "source_ids": ["D-261006-ljh-01"]}], "next_plan": [], "issues": []}
+    wb.save_response(ws, first["response_name"], json.dumps(weekly, ensure_ascii=False))
+    second = wb.run(ws, "P-ASM-001", "2026-W41")
+    assert second["prompt_id"] == "cumulative_update" and '"items": [...]' in second["format"]
+    return second
+
+
+def test_pasted_ai_answer_with_prose_and_wrapper_is_accepted(ws):
+    """사용자 보고: EXAONE 답을 붙여 넣고 실행 → 'cumulative_update 응답에 items 배열이 없음'."""
+    need = _w41_need_cumulative(ws)
+    answer = ("누적 요약을 갱신했습니다.\n\n```json\n" + json.dumps({"cumulative_update": {
+        "items": ["북미 적용 준비 회의 진행"], "pinned_facts": [], "new_pinned_facts": []}}, ensure_ascii=False)
+        + "\n```\n\n고정 사실은 변경하지 않았습니다.")
+    wb.save_response(ws, need["response_name"], answer)
+    result = wb.run(ws, "P-ASM-001", "2026-W41")
+    assert result["status"] == "ok", result
+    cum = read(ws / "data/derived/cumulative/P-ASM-001/2026-W41.json")
+    assert cum["items"][0]["text"] == "북미 적용 준비 회의 진행" and cum["items"][0]["source_ids"] == []
+
+
+def test_wrong_shape_answer_is_rejected_at_save_with_reason(ws):
+    need = _w41_need_cumulative(ws)
+    with pytest.raises(wb.WorkbenchError, match=r'"items" 배열이 필요합니다 \(받은 최상위 키: summary\)'):
+        wb.save_response(ws, need["response_name"], json.dumps({"summary": "요약"}))
+    with pytest.raises(wb.WorkbenchError, match="weekly_rollup"):  # 이전 단계 답을 다시 붙여 넣은 경우
+        wb.save_response(ws, need["response_name"], json.dumps({"headline": {"text": "h", "source_ids": []}, "progress": []}))
+    assert not (ws / "prompts/mock_responses" / need["response_name"]).exists()
+
+
+def test_bad_stored_answer_reopens_paste_panel_instead_of_dead_end(ws):
+    need = _w41_need_cumulative(ws)
+    bad = json.dumps({"summary": "요약"})
+    (ws / "prompts/mock_responses" / need["response_name"]).write_text(bad, encoding="utf-8")  # 이전 버전이 저장한 응답
+    result = wb.run(ws, "P-ASM-001", "2026-W41")
+    assert result["status"] == "need_response" and result["prompt_id"] == "cumulative_update"
+    assert '"items" 배열이 필요합니다' in result["error"] and result["previous"] == bad and result["prompt"] == need["prompt"]
+    assert (ws / "prompts/mock_responses/weekly_rollup__P-ASM-001__2026-W41.json").exists()  # 앞 단계 응답은 유지
+    wb.save_response(ws, need["response_name"], json.dumps({"items": [{"text": "북미 적용 준비 회의 진행", "source_ids": ["D-261006-ljh-01"]}]}))
+    assert wb.run(ws, "P-ASM-001", "2026-W41")["status"] == "ok"

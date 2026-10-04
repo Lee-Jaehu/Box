@@ -15,7 +15,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-from .ai import AIError, ExaoneClient, MockResponseMissing, parse_json_text
+from .ai import RESPONSE_SHAPES, AIError, ExaoneClient, MockResponseMissing, ResponseFormatError, read_payload
 from .core import KST, ValidationError, atomic_json, load_json, validate_schema, week_range
 from .ppt.budget import BudgetError
 from .pptgen import TEMPLATE_NAME, find_template, generate_ppt
@@ -309,13 +309,25 @@ def mark_deleted(ws: Path, daily_id: str) -> None:
 
 # ---------------------------------------------------------------- AI 응답
 
+def response_format(prompt_id: str) -> str:
+    """화면 안내용: 이 단계 응답에 꼭 있어야 하는 키."""
+    shape = RESPONSE_SHAPES[prompt_id]
+    need = [f'"{k}": {{...}}' for k in shape["objects"]] + [f'"{k}": [...]' for k in shape["lists"]]
+    return "{" + ", ".join(need) + "}" + (f" (선택: {', '.join(shape['optional'])})" if shape["optional"] else "")
+
+
 def save_response(ws: Path, name: str, text: str) -> None:
-    if not RESPONSE_RE.fullmatch(name):
+    """붙여 넣은 AI 응답을 형식 검사 후 저장한다 (틀리면 저장하지 않고 이유를 알려 준다)."""
+    match = RESPONSE_RE.fullmatch(name)
+    if not match:
         raise WorkbenchError(f"응답 파일 이름이 올바르지 않음: {name}")
+    prompt_id = match.group(1)
     try:
-        value = parse_json_text(text)
-    except (json.JSONDecodeError, ValueError) as exc:
+        value = read_payload(text, prompt_id)
+    except json.JSONDecodeError as exc:
         raise WorkbenchError(f"JSON 형식이 아닙니다: {exc}") from exc
+    except ResponseFormatError as exc:
+        raise WorkbenchError(f"{exc}. 필요한 형식: {response_format(prompt_id)} — 저장하지 않았습니다") from exc
     path = ws / "prompts/mock_responses" / name
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -345,12 +357,22 @@ def _rel(ws: Path, path: Path) -> str:
     return path.resolve().relative_to(ws.resolve()).as_posix()
 
 
+def _need_response(client: PromptCapturingClient) -> dict[str, Any]:
+    last = client.last or {}
+    return {"status": "need_response", **last, "format": response_format(last["prompt_id"]) if last.get("prompt_id") in RESPONSE_SHAPES else ""}
+
+
 def run(ws: Path, project_id: str, week: str, mode: str = "mock") -> dict[str, Any]:
     client = PromptCapturingClient(ws, mode)
     try:
         weekly_path, cum_path, report = run_weekly(ws, project_id, week, ws, mode, client=client)
     except MockResponseMissing:
-        return {"status": "need_response", **(client.last or {})}
+        return _need_response(client)
+    except ResponseFormatError as exc:
+        # 저장돼 있던 응답이 형식에 맞지 않음 → 그 단계만 다시 붙여 넣게 한다 (다른 단계 응답은 그대로)
+        need = _need_response(client)
+        saved = ws / "prompts/mock_responses" / need.get("response_name", "")
+        return {**need, "error": str(exc), "previous": saved.read_text(encoding="utf-8") if saved.is_file() else ""}
     except (ValidationError, AIError, FileNotFoundError) as exc:
         return {"status": "error", "stage": "주간 정리", "message": str(exc)}
     pptx = ws / f"output/{project_id}_{week}.pptx"

@@ -94,9 +94,10 @@
         <div><b>보낼 프롬프트</b> <span id="need-name" class="hint"></span>
           <textarea id="prompt" class="mono" readonly style="min-height:300px"></textarea>
           <div class="buttons"><button id="copy">프롬프트 복사</button></div></div>
-        <div><b>AI 응답 JSON 붙여넣기</b>
+        <div><b>AI 응답 JSON 붙여넣기</b> <span class="hint">필요한 형식: <code id="need-format"></code></span>
           <textarea id="response" class="mono" style="min-height:300px" placeholder="{ ... } 형식의 JSON (```json 표시가 있어도 됩니다)"></textarea>
-          <div class="buttons"><button id="save-response" class="primary">응답 저장 후 다시 실행</button></div></div>
+          <div class="buttons"><button id="save-response" class="primary">응답 저장 후 다시 실행</button></div>
+          <div id="response-msg" class="msg"></div></div>
       </div>
     </div>
   </section>
@@ -188,8 +189,10 @@ async function run() {
     if (r.status === "need_response") {
       $("result").classList.add("hidden");
       $("need").classList.remove("hidden");
-      $("need-name").textContent = r.response_name; $("prompt").value = r.prompt; $("response").value = "";
-      show($("run-msg"), `AI 응답이 필요합니다 (${r.prompt_id}). 왼쪽 프롬프트를 AI에 보내고, 받은 JSON을 오른쪽에 붙여 넣어 주세요.`, "info");
+      $("need-name").textContent = r.response_name; $("prompt").value = r.prompt; $("need-format").textContent = r.format || "";
+      $("response").value = r.previous || ""; hide($("response-msg"));
+      if (r.error) show($("run-msg"), `저장된 ${r.prompt_id} 응답을 쓸 수 없습니다: ${r.error}\n오른쪽 응답을 고치거나, 왼쪽 프롬프트로 AI 응답을 다시 받아 붙여 넣어 주세요. (다른 단계 응답은 그대로 둡니다)`, "err");
+      else show($("run-msg"), `AI 응답이 필요합니다 (${r.prompt_id}). 왼쪽 프롬프트를 AI에 보내고, 받은 JSON을 오른쪽에 붙여 넣어 주세요.`, "info");
     } else if (r.status === "error") {
       $("result").classList.add("hidden");
       show($("run-msg"), `[${r.stage}] ${r.message}`, "err");
@@ -205,8 +208,9 @@ async function run() {
   $("run").disabled = false;
 }
 async function saveResponse() {
-  try { await api("/api/response", {name: $("need-name").textContent, text: $("response").value}); await run(); }
-  catch (e) { show($("run-msg"), e.message, "err"); }
+  try { await api("/api/response", {name: $("need-name").textContent, text: $("response").value}); }
+  catch (e) { show($("response-msg"), e.message, "err"); return; }  // 저장 실패: 붙여넣기 칸을 그대로 두고 이유를 바로 아래에 표시
+  hide($("response-msg")); await run();
 }
 async function clearResponses() {
   if (!confirm("이 과제·주차의 AI 응답을 지울까요? 다음 실행 때 프롬프트부터 다시 시작합니다.")) return;

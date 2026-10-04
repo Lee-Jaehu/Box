@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from conftest import ROOT, read
-from weekly_report.ai import AIError, ExaoneClient, MockResponseMissing
+from weekly_report.ai import AIError, ExaoneClient, MockResponseMissing, ResponseFormatError, read_payload
 from weekly_report.codes import CodeTable
 from weekly_report.textmetrics import line_count, weighted_length, wrap_text
 from weekly_report.validate import build_evidence, check_item, extract_tokens
@@ -83,8 +83,41 @@ def test_live_retries_once_on_non_json(monkeypatch):
     transport = FakeTransport([{"choices": [{"message": {"content": "죄송합니다"}}]},
                                {"choices": [{"message": {"content": "```json\n{\"ok\": 1}\n```"}}]}])
     client = ExaoneClient(ROOT, "live", transport=transport)
-    assert client.complete("weekly_rollup", "P", "2026-W39", "s", "u") == {"ok": 1}
+    assert client.complete("free_form", "P", "2026-W39", "s", "u") == {"ok": 1}
     assert len(transport.bodies) == 2 and "JSON" in transport.bodies[1]["messages"][-1]["content"]
+
+
+def test_live_retries_once_on_wrong_shape(monkeypatch):
+    monkeypatch.setenv("EXAONE_API_URL", "https://exaone.invalid/v1")
+    monkeypatch.setenv("EXAONE_API_KEY", "secret-key-123")
+    good = {"items": [{"text": "A 완료", "source_ids": ["D-1"]}]}
+    transport = FakeTransport([{"content": json.dumps({"summary": "x"})},
+                               {"content": "결과입니다.\n```json\n" + json.dumps({"result": good}) + "\n```\n참고하세요."}])
+    client = ExaoneClient(ROOT, "live", transport=transport)
+    assert client.complete("cumulative_update", "P", "2026-W39", "s", "u") == good
+    assert '"items" 배열' in transport.bodies[1]["messages"][-1]["content"]
+
+
+def test_read_payload_accepts_common_ai_variants():
+    item = {"text": "A 완료", "source_ids": ["D-1"]}
+    variants = [
+        "누적 요약입니다.\n```json\n" + json.dumps({"items": [item]}) + "\n```",
+        json.dumps({"cumulative_update": {"items": [item], "pinned_facts": []}}),
+        json.dumps({"items": [item]}) + "\n\n위와 같이 정리했습니다.",
+        json.dumps([item]),
+    ]
+    for text in variants:
+        assert read_payload(text, "cumulative_update")["items"] == [item], text
+    assert read_payload(json.dumps({"items": ["A 완료"]}), "cumulative_update")["items"] == [{"text": "A 완료", "source_ids": []}]
+
+
+def test_read_payload_explains_wrong_shape():
+    with pytest.raises(ResponseFormatError, match="받은 최상위 키: summary, pinned_facts"):
+        read_payload(json.dumps({"summary": ["A"], "pinned_facts": []}), "cumulative_update")
+    with pytest.raises(ResponseFormatError, match="weekly_rollup"):
+        read_payload(json.dumps({"headline": {"text": "h"}, "progress": []}), "cumulative_update")
+    with pytest.raises(ResponseFormatError, match=r"items\[1\]"):
+        read_payload(json.dumps({"items": [{"text": "a"}, {"txt": "b"}]}), "cumulative_update")
 
 
 def test_live_errors_do_not_leak_key(monkeypatch):
