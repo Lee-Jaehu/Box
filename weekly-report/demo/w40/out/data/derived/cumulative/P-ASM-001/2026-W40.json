@@ -2,9 +2,9 @@
   "meta": {
     "schema": "cumulative",
     "schema_version": "0.1",
-    "revision": 10,
+    "revision": 12,
     "created_at": "2026-10-03T21:36:00+09:00",
-    "updated_at": "2026-10-04T09:56:48+09:00",
+    "updated_at": "2026-10-04T10:05:00+09:00",
     "updated_by": "pipeline"
   },
   "project_id": "P-ASM-001",
@@ -12,7 +12,7 @@
   "prev_ref": "data/derived/cumulative/P-ASM-001/2026-W39.json",
   "items": [
     {
-      "text": "8/13 1차 로직을 적용해 E77 불량률이 0.189% → 0.164%로, 18대 중 12대가 감소했습니다",
+      "text": "1차 로직(EPC 보정량·이음매 예측 보정 개선)을 적용해 E77 불량률이 0.189% → 0.164%로 감소했습니다. (08/13)",
       "source_ids": [
         "P-ASM-001"
       ],
@@ -20,7 +20,7 @@
       "changed": false
     },
     {
-      "text": "9/4부터 2차 로직(Limit ±0.35mm)을 적용해 대표 4대 불량률이 0.270% → 0.185%로 감소했습니다",
+      "text": "2차 로직(Limit ±0.35mm)을 적용해 대표 4대 불량률이 0.270% → 0.185%로 감소했습니다. (09/04~)",
       "source_ids": [
         "P-ASM-001"
       ],
@@ -28,7 +28,7 @@
       "changed": false
     },
     {
-      "text": "수평전개는 MEB·ESMI1 #2-2·3(9/16), Normal Line(9/30)까지 완료해 누적 26대입니다",
+      "text": "수평전개를 MEB·ESMI1 #2-2·3(9/16), Normal Line(9/30) 순으로 완료해 누적 26대입니다. (09/16~09/30)",
       "source_ids": [
         "P-ASM-001",
         "D-260930-khw-01"
@@ -37,7 +37,7 @@
       "changed": false
     },
     {
-      "text": "ESWA는 0.171% → 0.144%(4일) → 0.139%(2주), ESMI1은 0.367% → 0.221%로 개선했습니다",
+      "text": "ESWA 0.171% → 0.144%(4일) → 0.139%(2주), ESMI1 0.367% → 0.221%로 효과가 유지됐습니다. (09/22~09/28)",
       "source_ids": [
         "D-260922-ljh-01",
         "D-260928-ljh-01"
@@ -76,8 +76,8 @@
   "ai": {
     "model": "mock",
     "prompt_id": "cumulative_update",
-    "prompt_version": "v0.4",
-    "generated_at": "2026-10-04T09:56:48+09:00",
+    "prompt_version": "v0.5",
+    "generated_at": "2026-10-04T10:04:59+09:00",
     "input_revisions": {
       "P-ASM-001": 6,
       "D-260928-ljh-01": 2,

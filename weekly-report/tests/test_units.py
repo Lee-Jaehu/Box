@@ -223,15 +223,19 @@ def test_font_files_are_closed_after_reading(tmp_path):
     assert not [f for f in _open_files(".TTF") if str(tmp_path) in f]
 
 
-def test_sentence_rules_polite_and_30_to_60_chars():
-    from weekly_report.textmetrics import is_polite, sentence_problems
+def test_sentence_rules_polite_40_to_60_chars_with_date():
+    from weekly_report.textmetrics import has_date_note, is_polite, sentence_problems
 
-    good = "북미 Site 수평전개를 10/13 적용하고, 현지 PLC 보정 파라미터를 검증할 예정입니다"
-    assert sentence_problems(good) == []
-    assert is_polite("원격 접속 지원 여부를 IT팀에 확인 요청드립니다 (지원 요청)")
+    good = "북미 Site 수평전개를 적용하고, 적용 전 현지 PLC 보정 파라미터 이식을 검증할 예정입니다. (~10/13)"
+    assert sentence_problems(good, need_date=True) == []
+    assert is_polite("원격 접속 지원 여부를 IT팀에 확인 요청드립니다 (지원 요청). (10/01)")
     assert is_polite("추가 모니터링이 필요할 것으로 보입니다(판단).")
+    for note in ("(10/08)", "(09/28~09/30)", "(~10/16)", "(09/04~)"):
+        assert has_date_note(f"수평전개를 완료했습니다. {note}"), note
+    assert not has_date_note("WA 4대(#21~#24)에 적용했습니다")  # 문장 안 괄호는 날짜 표시가 아님
     short = sentence_problems("수평전개 누적 26대")  # 예전 개조식: 짧고 명사형 종결
-    assert any("최소 30자" in p for p in short) and any("경어체" in p for p in short)
+    assert any("최소 40자" in p for p in short) and any("경어체" in p for p in short)
+    assert any("날짜" in p for p in sentence_problems("가" * 40 + "했습니다", need_date=True))
     assert any("최대 60자" in p for p in sentence_problems("가" * 58 + "했습니다"))
 
 
@@ -239,8 +243,9 @@ def test_prompts_ask_for_polite_full_sentences():
     from weekly_report.core import render_prompt
 
     system, _ = render_prompt(ROOT, "fit_to_budget", {"slot_name": "progress", "max_items": 7, "max_chars": 60,
-                                                       "min_chars": 30, "item_lines": "- x"})
-    assert "~습니다/~니다" in system and "30자 이상 60자 이내" in system and "개조식으로 쓴다" not in system
+                                                       "min_chars": 40, "item_lines": "- x"})
+    assert "~습니다/~니다" in system and "40자 이상 60자 이내" in system and "개조식으로 쓴다" not in system
+    assert '"(MM/DD)"' in system and "메모의 작성일" in system
 
 
 def test_record_ids_copied_into_text_are_moved_to_source_ids():

@@ -18,7 +18,7 @@ from .codes import CodeTable
 from .core import KST, ValidationError, atomic_json, load_json, previous_week, render_prompt, validate_schema, week_range
 from .ppt.compose import norm_text
 from .textmetrics import SENTENCE_MAX, sentence_problems
-from .validate import Issue, build_evidence, check_item, check_milestone_updates, sort_issues
+from .validate import Issue, build_evidence, id_dates, check_item, check_milestone_updates, sort_issues
 
 ITEM_KEYS = ("text", "source_ids", "kind", "changed")
 KINDS = {"fact", "judgement", "plan", "issue"}
@@ -146,9 +146,9 @@ def merge_pinned(prev: list[dict[str, Any]], payload_pinned: list[Any], new_pinn
     return result
 
 
-def style_issues(path: str, value: dict[str, Any]) -> list[Issue]:
-    """문장 규칙(30~60자, 경어체) 위반은 '주의'로 보고한다. 저장·PPT 생성은 막지 않는다."""
-    return [Issue(f"{path}.text", "주의", f"문장 규칙: {problem}") for problem in sentence_problems(value["text"])]
+def style_issues(path: str, value: dict[str, Any], *, need_date: bool) -> list[Issue]:
+    """문장 규칙(40~60자, 경어체, 진행 날짜) 위반은 '주의'로 보고한다. 저장·PPT 생성은 막지 않는다."""
+    return [Issue(f"{path}.text", "주의", f"문장 규칙: {problem}") for problem in sentence_problems(value["text"], need_date=need_date)]
 
 
 def _short(path: Path | None, *bases: Path) -> str:
@@ -271,24 +271,24 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
     prev_cum_texts = [v["text"] for v in prev_items + [_cum_item(p) for p in prev_pinned]]
     computed = [week_label, f"{start.month}/{start.day}", f"{end.month}/{end.day}"]
     if dailies:
-        ev_week = build_evidence(dailies=dailies, project=project, prev_texts=prev_texts + prev_cum_texts, computed=computed,
+        ev_week = build_evidence(dailies=dailies, project=project, prev_texts=prev_texts + prev_cum_texts, computed=computed + id_dates(daily_ids),
                                  allowed_ids=daily_ids | {project_id}, codes=codes, prev_level="주의")
         weekly_notes += check_item("headline", weekly["headline"], ev_week)
-        weekly_notes += style_issues("headline", weekly["headline"])
+        weekly_notes += style_issues("headline", weekly["headline"], need_date=False)
         for slot in ("progress", "next_plan", "issues"):
             for index, value in enumerate(weekly[slot]):
                 weekly_notes += check_item(f"{slot}[{index}]", value, ev_week)
-                weekly_notes += style_issues(f"{slot}[{index}]", value)
+                weekly_notes += style_issues(f"{slot}[{index}]", value, need_date=slot != "next_plan")
         weekly_notes += check_milestone_updates(weekly["milestone_updates"], project, ev_week)
 
         prev_ids = {s for v in prev_items + prev_pinned for s in v.get("source_ids", [])}
-        ev_cum = build_evidence(dailies=dailies, project=project, prev_texts=prev_cum_texts, computed=computed,
+        ev_cum = build_evidence(dailies=dailies, project=project, prev_texts=prev_cum_texts, computed=computed + id_dates(daily_ids | prev_ids),
                                 allowed_ids=daily_ids | {project_id} | prev_ids, codes=codes, prev_level="정보")
         for key in ("items", "pinned_facts"):
             for index, value in enumerate(cumulative[key]):
                 cum_notes += check_item(f"{key}[{index}]", value, ev_cum)
         for index, value in enumerate(cumulative["items"]):  # 고정 사실은 지난 문장 그대로라 문체 검사 제외
-            cum_notes += style_issues(f"items[{index}]", value)
+            cum_notes += style_issues(f"items[{index}]", value, need_date=True)
 
     # 저장: 두 파일 모두 구조 검증을 통과한 뒤에만 쓴다
     weekly_path = out_root / f"data/derived/weekly/{project_id}/{week}.json"
