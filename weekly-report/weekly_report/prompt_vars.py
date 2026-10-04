@@ -48,9 +48,10 @@ def daily_blocks(dailies: list[dict[str, Any]]) -> str:
 def item_lines(items: list[dict[str, Any]], *, with_slot: str | None = None) -> str:
     lines = []
     for value in items:
-        ids = ",".join(value.get("source_ids", [])) or "근거 없음"
+        # 근거 ID는 문장 뒤 [근거: ...]로 분리해 보여 준다. 앞에 (ID)를 붙이면 AI가 문장에 그대로 옮겨 쓴다
+        ids = ", ".join(value.get("source_ids", [])) or "없음"
         label = f"[{SLOT_LABEL.get(with_slot, with_slot)}] " if with_slot else ""
-        lines.append(f"- {label}({ids}) {value['text']}")
+        lines.append(f"- {label}{value['text']}  [근거: {ids}]")
     return "\n".join(lines)
 
 

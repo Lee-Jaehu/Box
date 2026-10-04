@@ -71,6 +71,11 @@ RESPONSE_SHAPES: dict[str, dict[str, tuple[str, ...]]] = {
     "cumulative_update": {"objects": (), "lists": ("items",), "optional": ("pinned_facts", "new_pinned_facts")},
     "fit_to_budget": {"objects": (), "lists": ("items",), "optional": ("dropped",)},
 }
+# AI가 문장 앞뒤에 옮겨 쓴 근거 표시: "(P-ASM-001) ...", "(D-260922-ljh-01, D-...) ...", "... [근거: D-...]"
+_ID = r"(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|P-[A-Z]+-\d{3}"
+LEADING_IDS_RE = re.compile(rf"^\s*[(\[]\s*((?:{_ID})(?:\s*[,·/]\s*(?:{_ID}))*)\s*[)\]]\s*")
+TRAILING_SOURCE_RE = re.compile(r"\s*\[근거:[^\]]*\]\s*$")
+ID_RE = re.compile(_ID)
 ITEM_LISTS = {"progress", "next_plan", "issues", "items", "pinned_facts", "new_pinned_facts", "dropped"}
 
 
@@ -125,6 +130,24 @@ def _has_shape(value: Any, shape: dict[str, tuple[str, ...]]) -> bool:
     return isinstance(value, dict) and all(k in value for k in shape["objects"] + shape["lists"])
 
 
+def strip_source_tags(item: Any) -> Any:
+    """문장에 섞여 들어온 근거 ID 표시를 떼어 source_ids로 옮긴다 (PPT에 ID가 보이지 않게)."""
+    if not isinstance(item, dict) or not isinstance(item.get("text"), str):
+        return item
+    text = TRAILING_SOURCE_RE.sub("", item["text"])
+    match = LEADING_IDS_RE.match(text)
+    ids: list[str] = []
+    if match:
+        ids = ID_RE.findall(match.group(1))
+        text = text[match.end():]
+    if text == item["text"]:
+        return item
+    sources = item.get("source_ids")
+    if isinstance(sources, list) and all(isinstance(s, str) for s in sources):
+        sources = list(dict.fromkeys([*sources, *ids]))
+    return {**item, "text": text.strip(), "source_ids": sources if sources is not None else ids}
+
+
 def normalize_payload(value: Any, prompt_id: str) -> Any:
     """흔한 변형을 받아들인다: 한 겹 감싼 객체, items 배열만 준 경우, 문자열 항목."""
     shape = RESPONSE_SHAPES.get(prompt_id)
@@ -140,9 +163,11 @@ def normalize_payload(value: Any, prompt_id: str) -> Any:
         value = dict(value)
         for key in ITEM_LISTS & set(value):
             if isinstance(value[key], list):
-                value[key] = [{"text": v, "source_ids": []} if isinstance(v, str) else v for v in value[key]]
+                value[key] = [strip_source_tags({"text": v, "source_ids": []} if isinstance(v, str) else v) for v in value[key]]
         if prompt_id == "weekly_rollup" and isinstance(value.get("headline"), str):
             value["headline"] = {"text": value["headline"], "source_ids": []}
+        if isinstance(value.get("headline"), dict):
+            value["headline"] = strip_source_tags(value["headline"])
     return value
 
 

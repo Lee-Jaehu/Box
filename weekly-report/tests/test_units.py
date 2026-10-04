@@ -241,3 +241,25 @@ def test_prompts_ask_for_polite_full_sentences():
     system, _ = render_prompt(ROOT, "fit_to_budget", {"slot_name": "progress", "max_items": 7, "max_chars": 60,
                                                        "min_chars": 30, "item_lines": "- x"})
     assert "~습니다/~니다" in system and "30자 이상 60자 이내" in system and "개조식으로 쓴다" not in system
+
+
+def test_record_ids_copied_into_text_are_moved_to_source_ids():
+    """실제 EXAONE 응답(사용자 Example): 프롬프트의 "(P-ASM-001) 문장"을 따라 문장 앞에 ID를 붙여 옴."""
+    answer = {"items": [{"text": "(P-ASM-001) 1차 로직을 적용해 E77 불량률이 0.189% → 0.164%로 감소했습니다", "source_ids": ["D-261005-jaehu-01"]},
+                        {"text": "수평전개를 9/16 완료했습니다  [근거: D-260930-khw-01]", "source_ids": ["D-260930-khw-01"]}],
+              "pinned_facts": [{"text": "(D-260922-ljh-01) ESWA 2차 로직 적용 후 0.171% → 0.144% (4일 단기)", "source_ids": []}]}
+    value = read_payload(json.dumps(answer, ensure_ascii=False), "cumulative_update")
+    assert value["items"][0] == {"text": "1차 로직을 적용해 E77 불량률이 0.189% → 0.164%로 감소했습니다",
+                                 "source_ids": ["D-261005-jaehu-01", "P-ASM-001"]}
+    assert value["items"][1]["text"] == "수평전개를 9/16 완료했습니다"
+    assert value["pinned_facts"][0] == {"text": "ESWA 2차 로직 적용 후 0.171% → 0.144% (4일 단기)", "source_ids": ["D-260922-ljh-01"]}
+    # 문장 안의 괄호(호기·기간)는 그대로 둔다
+    keep = read_payload(json.dumps({"items": [{"text": "(4일 단기) 효과를 확인했습니다", "source_ids": []}]}, ensure_ascii=False), "cumulative_update")
+    assert keep["items"][0]["text"] == "(4일 단기) 효과를 확인했습니다"
+
+
+def test_prompt_lists_sources_after_text_not_as_prefix():
+    from weekly_report.prompt_vars import cumulative_lines
+
+    text = cumulative_lines([{"text": "1차 적용 E77 0.189% → 0.164%", "source_ids": ["P-ASM-001"]}])
+    assert text == "- 1차 적용 E77 0.189% → 0.164%  [근거: P-ASM-001]"
