@@ -15,6 +15,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from . import sources
 from .ai import AIError
 from .core import ValidationError
 from .ppt.budget import BudgetError
@@ -40,7 +41,7 @@ def _report(root: Path, args) -> int:
             result = generate_exec_summary(root, args.project_id, args.week, output, mode=args.mode)
         else:
             year, month = (int(v) for v in args.month.split("-"))
-            ids = args.projects or sorted(p.stem for p in (root / "data/master/projects").glob("*.json"))
+            ids = args.projects or [p["project_id"] for p in sources.list_projects(root)]
             output = args.output or root / f"output/report/월간종합_{args.month}.pptx"
             result = generate_monthly(root, ids, year, month, output, mode=args.mode)
     except (FileNotFoundError, ValidationError, AIError, ValueError) as exc:
@@ -81,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     exec_cmd.add_argument("week", help="기준 주차, 예: 2026-W40")
     monthly_cmd = kinds.add_parser("monthly", help="월간 종합 보고")
     monthly_cmd.add_argument("month", help="YYYY-MM, 예: 2026-09")
-    monthly_cmd.add_argument("--projects", nargs="+", help="기본: data/master/projects의 모든 과제")
+    monthly_cmd.add_argument("--projects", nargs="+", help="기본: 모든 과제 (내부 기준정보 + WorkLog export)")
     for cmd in (exec_cmd, monthly_cmd):
         cmd.add_argument("--mode", choices=("mock", "live"), default="mock")
         cmd.add_argument("--output", type=Path)
@@ -111,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
             template = find_template(root, args.template)
             output = getattr(args, "output", None) or out_root / f"output/{args.project_id}_{args.week}.pptx"
             notes = generate_ppt(
-                root, root / f"data/master/projects/{args.project_id}.json",
+                root, sources.load_project(root, args.project_id),
                 _derived_input("weekly", args.project_id, args.week, out_root, root),
                 _derived_input("cumulative", args.project_id, args.week, out_root, root),
                 template, output, mode=args.mode,
@@ -119,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"템플릿: {template}\nPPT: {output}\nPPT 검사: {output.with_name(output.stem + '_ppt_check.txt')}")
             problems = [n for n in notes if n.startswith("PPT 검사 문제")]
             print(f"PPT 재검사: {'문제 ' + str(len(problems)) + '건' if problems else '통과'}")
-    except (FileNotFoundError, ValidationError, BudgetError, AIError) as exc:
+    except (FileNotFoundError, ValidationError, BudgetError, AIError, ValueError) as exc:
         print(f"오류: {exc}", file=sys.stderr)
         return 1
     return 0

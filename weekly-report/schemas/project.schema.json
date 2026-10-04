@@ -29,7 +29,8 @@
     },
     "project_id": {
       "type": "string",
-      "pattern": "^P-[A-Z]+-\\d{3}$"
+      "pattern": "^(P-[A-Z]+-\\d{3}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+      "description": "내부 과제 코드(P-ASM-001) 또는 WorkLog 과제 UUID"
     },
     "name": {
       "type": "string"
@@ -304,6 +305,20 @@
           },
           "order": {
             "type": "integer"
+          },
+          "scope_label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "적용 범위 칸 표시 문구 (WorkLog: 계획 기간 MM/DD~MM/DD)"
+          },
+          "source_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "원본 시스템의 마일스톤 ID (WorkLog UUID)"
           }
         },
         "additionalProperties": false
@@ -394,6 +409,79 @@
         }
       },
       "additionalProperties": false
+    },
+    "people": {
+      "type": "object",
+      "description": "WorkLog 변환 시: 사용자 ID → 이름·사번·팀 (config/people.json보다 우선)",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "employee_number": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "source": {
+      "type": "object",
+      "description": "입력 출처 (WorkLog export 변환 시)",
+      "required": [
+        "system"
+      ],
+      "properties": {
+        "system": {
+          "enum": [
+            "internal",
+            "worklog"
+          ]
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "generated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "milestones_managed": {
+          "type": "boolean",
+          "description": "true면 일정·상태는 시스템 값이 기준 (AI milestone_updates 무시)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "target_label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "대상 칸 표시 문구 (target 코드가 없을 때, 예: 팀명)"
     }
   },
   "additionalProperties": false,

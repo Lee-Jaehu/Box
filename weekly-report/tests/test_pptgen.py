@@ -258,7 +258,7 @@ def test_missing_people_mapping_falls_back_to_id(repo, tmp_path):
     out, notes = build(repo, tmp_path)
     s = shapes(Presentation(str(out)).slides[0])
     assert s["author"].text_frame.text == "작성자 : ljh"
-    assert any("config/people.json에 없는 사용자 ID" in n for n in notes)
+    assert any("이름을 찾지 못한 사용자 ID" in n for n in notes)
 
 
 def test_prior_week_milestone_updates_accumulate_in_black(tmp_path):

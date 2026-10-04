@@ -22,6 +22,7 @@ from .pptgen import TEMPLATE_NAME, find_template, generate_ppt
 from .report.generate import generate_exec_summary, generate_monthly
 from .report.render import TEMPLATE_NAME as REPORT_TEMPLATE
 from .weekly import run_weekly
+from . import sources
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE = REPO / "workspace"
@@ -183,6 +184,8 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
         _copy_tree(demo / "raw", ws / "data/raw", overwrite=force)
     for path in (demo / "mock_responses").glob("*.json"):
         _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
+    for path in (repo / "demo/worklog/mock_responses").glob("*.json"):  # WorkLog 익명 예시 W40 데모 응답
+        _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
     for path in (repo / "demo/report/mock_responses").glob("report_exec_summary__*.json"):  # W40 경영진 1장 요약 데모 응답
         _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
     (ws / MARKER).write_text("weekly-report 웹 테스트 작업공간 (지워도 다시 만들어짐)\n", encoding="utf-8")
@@ -191,11 +194,8 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
 
 
 def list_projects(ws: Path) -> list[dict[str, str]]:
-    projects = []
-    for path in sorted((ws / "data/master/projects").glob("*.json")):
-        value = load_json(path)
-        projects.append({"project_id": value["project_id"], "name": value["name"]})
-    return projects
+    """내부 기준정보 + WorkLog export 과제 (source: internal / worklog)."""
+    return sources.list_projects(ws)
 
 
 # ---------------------------------------------------------------- Daily 메모
@@ -235,6 +235,12 @@ def list_dailies(ws: Path, project_id: str, week: str) -> list[dict[str, Any]]:
         if not (start <= day <= end) or daily.get("project_id") not in (project_id, None):
             continue
         result.append({**daily, "excluded": exclusion_reason(daily, project_id)})
+    try:  # WorkLog 업무일지: 읽기 전용 (수정은 WorkLog 웹에서)
+        project = sources.load_project(ws, project_id)
+        result += [{**d, "excluded": None, "readonly": True} for d in sources.worklog_dailies(ws, project)
+                   if start <= date.fromisoformat(d["date"]) <= end]
+    except FileNotFoundError:
+        pass
     return sorted(result, key=lambda d: (d["date"], d["daily_id"]))
 
 
@@ -402,7 +408,7 @@ def run(ws: Path, project_id: str, week: str, mode: str = "mock") -> dict[str, A
         return {"status": "error", "stage": "주간 정리", "message": str(exc)}
     pptx = ws / f"output/{project_id}_{week}.pptx"
     try:
-        notes = generate_ppt(ws, ws / f"data/master/projects/{project_id}.json", weekly_path, cum_path,
+        notes = generate_ppt(ws, sources.load_project(ws, project_id), weekly_path, cum_path,
                              find_template(ws), pptx, client=client)
     except PermissionError:
         return {"status": "error", "stage": "PPT", "message": f"{pptx.name}이(가) PowerPoint에서 열려 있습니다. 파일을 닫고 다시 실행하세요."}

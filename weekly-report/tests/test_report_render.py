@@ -19,6 +19,7 @@ from weekly_report.report.render import SLIDE_NAMES
 EXEC_EXAMPLE = ROOT / "docs/보고자료_예시/report_exec_summary__예시응답.json"
 DIRS = [ROOT, ROOT / "demo/w40/out"]
 TODAY = date(2026, 10, 4)
+WORKLOG_SAMPLE = "00000000-0000-4000-8000-000000000001"  # data/worklog/WorkLog-sample
 
 
 def load_demo():
@@ -132,7 +133,8 @@ def test_web_report_flow(ws):
     with pytest.raises(wb.WorkbenchError, match="head_message"):
         wb.save_response(ws, need["response_name"], json.dumps({"summary": "x"}))
     answer = {"head_message": {"text": "10월 재료교체 과제는 Normal Line 수평전개를 완료했습니다", "source_ids": ["D-260930-khw-01"]},
-              "project_comments": [{"project_id": "P-ASM-001", "text": "Normal Line 수평전개 完(9/30)", "source_ids": ["D-260930-khw-01"]}],
+              "project_comments": [{"project_id": "P-ASM-001", "text": "Normal Line 수평전개 完(9/30)", "source_ids": ["D-260930-khw-01"]},
+                                   {"project_id": WORKLOG_SAMPLE, "text": "업무기록 시스템 개발 진행", "source_ids": [WORKLOG_SAMPLE]}],  # 작업공간의 WorkLog 예시 과제
               "highlights": [], "risks": [], "requests": []}
     wb.save_response(ws, need["response_name"], "결과입니다\n```json\n" + json.dumps(answer, ensure_ascii=False) + "\n```")
     done = wb.run_report(ws, "monthly", "P-ASM-001", "2026-W40")

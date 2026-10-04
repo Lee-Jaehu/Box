@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from . import prompt_vars as pv
+from . import sources
+from .worklog import is_managed, overlay_snapshot
 from .codes import CodeTable
 from .core import load_json, render_prompt, week_range
 from .ppt.milestones import apply_history, delay_days, load_prior_weeklies, mmdd
@@ -54,9 +56,15 @@ def latest_cumulative(project_id: str, week: str, dirs: list[Path]) -> dict[str,
 
 
 def current_project(project: dict[str, Any], week: str, dirs: list[Path]) -> dict[str, Any]:
-    """기준정보 위에 week까지의 일정 변화를 덧씌운 상태 (주간 PPT와 같은 규칙)."""
+    """기준정보 위에 week까지의 일정 변화를 덧씌운 상태 (주간 PPT와 같은 규칙).
+
+    WorkLog 관리 과제는 week까지 중 가장 최근 주간 정리본의 일정 snapshot을 쓴다 (없으면 현재 값).
+    """
     after = f"{week[:6]}{int(week[6:]) + 1:02d}"  # week 포함
     weeklies = load_prior_weeklies(project["project_id"], after, *dirs)
+    if is_managed(project):
+        snaps = [w for w in sorted(weeklies, key=lambda w: w["week"]) if w.get("milestone_snapshot")]
+        return overlay_snapshot(project, snaps[-1]["milestone_snapshot"]) if snaps else project
     return apply_history(project, weeklies, {"week": after, "milestone_updates": []})[0]
 
 
@@ -103,7 +111,7 @@ def monthly_variables(root: Path, project_ids: list[str], year: int, month: int,
                       org: str | None = None) -> dict[str, Any]:
     dirs = dirs or [root]
     weeks = month_weeks(year, month)
-    projects = [current_project(load_json(root / f"data/master/projects/{pid}.json"), weeks[-1], dirs) for pid in project_ids]
+    projects = [current_project(sources.load_project(root, pid), weeks[-1], dirs) for pid in project_ids]
     weekly_blocks, cumulative_blocks = [], []
     for project in projects:
         pid = project["project_id"]
@@ -125,7 +133,7 @@ def monthly_variables(root: Path, project_ids: list[str], year: int, month: int,
 def exec_variables(root: Path, project_id: str, as_of_week: str, dirs: list[Path] | None = None,
                    recent_weeks: int = 4) -> dict[str, Any]:
     dirs = dirs or [root]
-    master = load_json(root / f"data/master/projects/{project_id}.json")
+    master = sources.load_project(root, project_id)
     project = current_project(master, as_of_week, dirs)
     codes = CodeTable.load(root)
     blocks = []

@@ -77,7 +77,7 @@ RESPONSE_SHAPES: dict[str, dict[str, tuple[str, ...]]] = {
                             "optional": ("left_items", "right_items", "emphasis")},
 }
 # AI가 문장 앞뒤에 옮겨 쓴 근거 표시: "(P-ASM-001) ...", "(D-260922-ljh-01, D-...) ...", "... [근거: D-...]"
-_ID = r"(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|P-[A-Z]+-\d{3}"
+_ID = r"(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|P-[A-Z]+-\d{3}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 LEADING_IDS_RE = re.compile(rf"^\s*[(\[]\s*((?:{_ID})(?:\s*[,·/]\s*(?:{_ID}))*)\s*[)\]]\s*")
 TRAILING_SOURCE_RE = re.compile(r"\s*\[근거:[^\]]*\]\s*$")
 ID_RE = re.compile(_ID)

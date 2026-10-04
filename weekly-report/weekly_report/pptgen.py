@@ -11,6 +11,7 @@ from pathlib import Path
 from .ai import ExaoneClient
 from .codes import CodeTable, PeopleTable
 from .fonts import load_fonts
+from .worklog import is_managed, overlay_snapshot
 from .core import ValidationError, load_json, validate_schema
 from .ppt.budget import LINE_FACTOR_LG, MIN_CUMULATIVE, cumulative_room, fit_cumulative_limit, fit_sections, paginate
 from .ppt.compose import build_content
@@ -55,7 +56,19 @@ def estimate_cumulative_items(root: Path, project: dict, prior_weeklies: list[di
     return limit, f"PPT 첫 장 기준 누적 요약 자리 {room}줄 (마일스톤 표 {len(content.ms_rows)}행) → 최대 {limit}개"
 
 
-def generate_ppt(root: Path, project_path: Path, weekly_path: Path, cumulative_path: Path, template: Path, output: Path,
+def managed_overlay(project: dict, weekly: dict) -> tuple[dict, list[str], set[tuple[str, str]]]:
+    """WorkLog 관리 과제: 그 주에 저장한 일정 snapshot 값으로 표를 만들고, 그 주에 바뀐 값만 파란색."""
+    overlaid = overlay_snapshot(project, weekly.get("milestone_snapshot"))
+    by_source = {m["source_id"]: m["milestone_id"] for m in overlaid["milestones"] if m.get("source_id")}
+    snap = weekly.get("milestone_snapshot") or {}
+    alias = {v["milestone_id"]: by_source.get(sid) for sid, v in snap.items()}
+    changed = {(alias.get(u["milestone_id"]) or u["milestone_id"], u["field"]) for u in weekly.get("milestone_updates", [])}
+    rev = (project.get("source") or {}).get("revision")
+    notes = [f"WorkLog 일정 기준 (rev {rev}{', 그 주 snapshot 적용' if snap else ''}) — 지난주 대비 바뀐 값 {len(changed)}개 파란색"]
+    return overlaid, notes, changed
+
+
+def generate_ppt(root: Path, project_path: "Path | dict", weekly_path: Path, cumulative_path: Path, template: Path, output: Path,
                  *, client: ExaoneClient | None = None, mode: str = "mock", report_path: Path | None = None,
                  project_index: int = 1, project_total: int = 1) -> list[str]:
     """PPT를 만들고 경고·검사 결과 목록을 돌려준다. 결과는 report_path(기본: output 옆)에도 남긴다."""
@@ -66,7 +79,9 @@ def generate_ppt(root: Path, project_path: Path, weekly_path: Path, cumulative_p
     if fonts.regular:
         geom.line_factor = LINE_FACTOR_LG  # LG스마트체 실측 줄 높이
 
-    project, weekly, cumulative = load_json(project_path), load_json(weekly_path), load_json(cumulative_path)
+    # project_path: 기준정보 파일 경로 또는 이미 읽은 과제 dict (WorkLog 과제는 sources.load_project 결과)
+    project = project_path if isinstance(project_path, dict) else load_json(project_path)
+    weekly, cumulative = load_json(weekly_path), load_json(cumulative_path)
     validate_schema(project, root / "schemas/project.schema.json")
     validate_schema(weekly, root / "schemas/weekly.schema.json")
     validate_schema(cumulative, root / "schemas/cumulative.schema.json")
@@ -79,10 +94,13 @@ def generate_ppt(root: Path, project_path: Path, weekly_path: Path, cumulative_p
     # 이전 주 일정 변화까지 누적해 메모리 복사본에만 적용한다 (baseline·원본 파일은 바꾸지 않음, 파랑은 이번 주만)
     derived_base = weekly_path.resolve().parents[3] if len(weekly_path.resolve().parents) > 3 else root
     prior = load_prior_weeklies(pid, weekly["week"], derived_base, root)
-    overlaid, warnings, changed = apply_history(project, prior, weekly)
+    if is_managed(project):
+        overlaid, warnings, changed = managed_overlay(project, weekly)
+    else:
+        overlaid, warnings, changed = apply_history(project, prior, weekly)
     codes = CodeTable.load(root)
-    content = build_content(overlaid, weekly, cumulative, codes, changed,
-                            project_index=project_index, project_total=project_total, people=PeopleTable.load(root))
+    content = build_content(overlaid, weekly, cumulative, codes, changed, project_index=project_index,
+                            project_total=project_total, people=PeopleTable.load(root).with_project(project))
     notes = list(warnings) + content.notes
     notes += fit_cumulative_limit(content, geom)
     notes += fit_sections(content, client if client is not None else ExaoneClient(root, mode), root)

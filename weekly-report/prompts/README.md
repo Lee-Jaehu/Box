@@ -1,5 +1,7 @@
-# EXAONE 프롬프트 (시연용 v0.5)
+# EXAONE 프롬프트 (시연용 v0.6)
 
+> v0.6 (2026-10-04): WorkLog 연동. weekly_rollup의 milestone_updates 지시를 변수 {{milestone_policy}}로 (WorkLog 관리 과제는 항상 []).
+>
 > v0.5 (2026-10-04): 문장 40~60자로 늘림, 진행 현황·이슈·누적 요약 문장 끝에 진행 날짜 "(MM/DD)" 표시 (메모 본문 날짜, 없으면 작성일).
 >
 > v0.4 (2026-10-04): 그룹장 보고용 경어체("~했습니다/~입니다") 종결, 한 항목 30~60자(함축 금지)로 변경. fit_to_budget에 min_chars 변수 추가.
@@ -15,7 +17,7 @@
 - 모든 system 파일의 `{{common_rules}}` 자리에 `common_rules.txt` 내용을 넣는다.
 - 호출 설정: temperature 0.1, 응답은 JSON만. 앞뒤 ```json 표시는 제거 후 파싱.
 - 파싱 실패 시 1회 재요청: "직전 응답이 JSON 형식이 아닙니다. 같은 내용을 JSON으로만 다시 출력하세요."
-- 결과 JSON의 `ai.prompt_id`, `ai.prompt_version`(v0.5)을 함께 저장한다.
+- 결과 JSON의 `ai.prompt_id`, `ai.prompt_version`(v0.6)을 함께 저장한다.
 
 ## 변수
 
@@ -26,6 +28,7 @@
 | budget_progress / budget_next_plan / budget_issues | 칸별 최대 항목 수 | 7 / 3 / 2 |
 | project_id, project_name | 기준정보 | P-ASM-001, ESWA 재료교체 불량 개선 |
 | range_from, range_to | 주 시작·끝 (월~일) | 2026-09-21, 2026-09-27 |
+| milestone_policy | milestone_updates 작성 지시 (WorkLog 관리 과제는 "항상 []") | |
 | milestone_lines | 마일스톤 한 줄씩 | `- M6-3 | 수평전개 | 적용 범위: Normal·조립 | Baseline 2026-09-25 | 계획 2026-09-25 | 상태 진행` |
 | prev_weekly_lines | 지난주 주간 정리본 항목 (없으면 "없음") | `- [진행] ...` |
 | daily_blocks | 이번 주 메모 원문 (아래 형식, 날짜순) | |

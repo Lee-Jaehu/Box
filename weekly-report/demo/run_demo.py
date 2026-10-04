@@ -2,6 +2,7 @@
 
 사용법 (weekly-report 폴더에서):
     python demo/run_demo.py demo/w40 P-ASM-001 2026-W40
+    python demo/run_demo.py demo/worklog 00000000-0000-4000-8000-000000000001 2026-W40   (WorkLog 익명 예시)
 
 - 저장소의 data/master·data/raw·data/derived는 건드리지 않는다. 임시 root에 복사한 뒤 데모 Daily를 더한다.
 - EXAONE 대신 쓰는 응답은 `{데모}/mock_responses/`에 둔다 (현재는 Claude가 프롬프트를 읽고 작성한 응답).
@@ -20,6 +21,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
+from weekly_report import sources  # noqa: E402
 from weekly_report.ai import ExaoneClient, MockResponseMissing  # noqa: E402
 from weekly_report.pptgen import find_template, generate_ppt  # noqa: E402
 from weekly_report.preview import PreviewError, render_preview  # noqa: E402
@@ -77,7 +79,7 @@ def main() -> int:
             return 2
         print(f"weekly: {weekly_path.relative_to(demo)}\ncumulative: {cum_path.relative_to(demo)}\n검증 보고서: {report.relative_to(demo)}")
         pptx = out / f"output/{args.project_id}_{args.week}.pptx"
-        notes = generate_ppt(root, root / f"data/master/projects/{args.project_id}.json", weekly_path, cum_path,
+        notes = generate_ppt(root, sources.load_project(root, args.project_id), weekly_path, cum_path,
                              find_template(REPO), pptx, client=client)
         problems = [n for n in notes if n.startswith("PPT 검사 문제")]
         print(f"PPT: {pptx.relative_to(demo)} (재검사 {'문제 ' + str(len(problems)) + '건' if problems else '통과'})")

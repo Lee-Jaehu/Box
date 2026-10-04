@@ -11,6 +11,10 @@
 - Worklog 웹은 다른 개발자가 만든다. `data/master`, `data/raw` 는 **읽기만** 하고 절대 쓰지 않는다.
   우리가 쓰는 곳은 `data/derived` 와 `output/` 뿐이다.
 - 구현 순서: pptgen 먼저 (data/derived 예시로 개발) → weekly 다음.
+- WorkLog 연동(2026-10-04): 동료가 만든 업무기록 시스템 export(`WORKLOG_PROJECT_EXPORT`/`WORKLOG_DAILY_EXPORT`)를 그대로 읽는다.
+  `weekly_report/worklog.py`(변환)·`sources.py`(입력 읽기), 위치 `config/sources.json`(기본 data/worklog), 근거 docs/WorkLog_연동.md
+  - 마일스톤 일정·상태는 WorkLog 값이 기준(AI 일정 추출 안 함). 지난주 snapshot 대비 바뀐 값만 파란색
+  - WorkLog에 없는 칸: 대상 = 팀명, 마일스톤 적용 범위 = 계획 기간(MM/DD~MM/DD)
 - 보고 자료 확장(초안 구현, 2026-10-04): 월간 종합 보고·경영진 1장 요약 (`weekly_report/report/`, 템플릿 `보고자료_Template_v1_초안.pptx`). Rule이 틀·표·숫자, EXAONE은 칸별 문장만.
   문체는 헤드메시지·결론 경어체 + 본문 개조식(장표모음집 방식). 근거: docs/보고자료_양식_분석.md, prompts/report/
 

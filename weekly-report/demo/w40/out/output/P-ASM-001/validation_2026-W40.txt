@@ -1,5 +1,5 @@
 과제 P-ASM-001 / 2026-W40 (2026-09-28 ~ 2026-10-04)
-AI 모드: mock / 프롬프트 v0.5
+AI 모드: mock / 프롬프트 v0.6
 선택 Daily: D-260928-ljh-01, D-260929-khw-01, D-260930-khw-01, D-261001-ljh-01, D-261002-ljh-01
 지난주 weekly: data/derived/weekly/P-ASM-001/2026-W39.json
 지난주 cumulative: data/derived/cumulative/P-ASM-001/2026-W39.json

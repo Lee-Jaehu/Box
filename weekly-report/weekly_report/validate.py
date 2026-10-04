@@ -23,7 +23,8 @@ from .codes import CodeTable
 
 ISO_DATE_RE = re.compile(r"(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)")
 MD_DATE_RE = re.compile(r"(?<![\d./])(\d{1,2})/(\d{1,2})(?![\d/])")
-RECORD_ID_RE = re.compile(r"(?<![A-Za-z0-9])(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|(?<![A-Za-z0-9])P-[A-Z]+-\d{3}|(?<![A-Za-z0-9])M\d+(?:-\d+)?(?![A-Za-z0-9])")
+# WorkLog 과제·원본 ID(UUID)도 기록 ID로 인식한다 (숫자로 잘못 읽지 않게)
+RECORD_ID_RE = re.compile(r"(?<![0-9A-Za-z-])[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![0-9A-Za-z-])|(?<![A-Za-z0-9])(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|(?<![A-Za-z0-9])P-[A-Z]+-\d{3}|(?<![A-Za-z0-9])M\d+(?:-\d+)?(?![A-Za-z0-9])")
 UNIT_RE = re.compile(r"#\d+(?:-\d+)?(?:[·,]\d+)*")
 CODE_RE = re.compile(r"(?<![A-Za-z0-9_])[A-Za-z_]+\d[A-Za-z0-9_]*")
 NUMBER_RE = re.compile(r"(?<![\d.])\d+(?:\.\d+)?%?")

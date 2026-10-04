@@ -15,6 +15,7 @@ from typing import Any
 
 from ..ai import ExaoneClient
 from ..codes import CodeTable, PeopleTable
+from .. import sources
 from ..core import KST, load_json
 from ..fonts import load_fonts
 from ..ppt.model import Para, Run
@@ -120,7 +121,7 @@ def generate_exec_summary(root: Path, project_id: str, week: str, output: Path, 
     system, user = render_report_prompt(root, "report_exec_summary", variables)
     client = _client(root, client, mode)
     payload = client.complete("report_exec_summary", project_id, week, system, user)
-    project = current_project(load_json(root / f"data/master/projects/{project_id}.json"), week, dirs)
+    project = current_project(sources.load_project(root, project_id), week, dirs)
     codes = CodeTable.load(root)
     fallback = exec_fallback(project, latest_cumulative(project_id, week, dirs), find_derived("weekly", project_id, week, dirs))
     content, notes = check_report("report_exec_summary", payload, root, user, [project], fallback)
@@ -177,14 +178,14 @@ def generate_monthly(root: Path, project_ids: list[str], year: int, month: int, 
     client = _client(root, client, mode)
     payload = client.complete("report_monthly", scope, period, system, user)
     weeks = month_weeks(year, month)
-    projects = [current_project(load_json(root / f"data/master/projects/{pid}.json"), weeks[-1], dirs) for pid in project_ids]
+    projects = [current_project(sources.load_project(root, pid), weeks[-1], dirs) for pid in project_ids]
     computed = [f"{month}월", f"{len(projects)}개"]  # "9월 6개 과제" 같은 표현의 근거 (코드 계산값)
     content, notes = check_report("report_monthly", payload, root, user, projects, monthly_fallback(projects, variables["month_label"]),
                                   computed)
 
     people, codes = PeopleTable.load(root), CodeTable.load(root)
     comments = {c["project_id"]: c["text"] for c in content["project_comments"]}
-    rows = [project_row(p, people, codes, comments.get(p["project_id"], "")).cells for p in projects]
+    rows = [project_row(p, people.with_project(p), codes, comments.get(p["project_id"], "")).cells for p in projects]
     owners: dict[str, str] = {}
     for project in projects:
         owners[project["project_id"]] = project["name"]

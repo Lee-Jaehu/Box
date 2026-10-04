@@ -1,0 +1,322 @@
+{
+  "fileType": "WORKLOG_DAILY_EXPORT",
+  "schemaVersion": "1.0",
+  "documentVersion": 1,
+  "generatedAt": "2026-10-04T15:35:50+09:00",
+  "sourceRevision": 3,
+  "timezone": "Asia/Seoul",
+  "project": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "name": "WorkLog",
+    "deletedAt": null
+  },
+  "date": "2026-10-04",
+  "logs": [
+    {
+      "createdAt": "2026-10-04T15:07:25+09:00",
+      "updatedAt": "2026-10-04T15:35:50+09:00",
+      "todoRecords": [
+        {
+          "refId": "00000000-0000-4000-8000-000000000200",
+          "trackerId": "00000000-0000-4000-8000-000000001200",
+          "clientEntryId": "00000000-0000-4000-8000-000000002200",
+          "originalSnapshot": {
+            "content": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Claude 개발 버전 테스트"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "status": "open",
+            "assigneeId": null,
+            "assigneeName": null,
+            "dueDate": null,
+            "impact": null,
+            "response": null,
+            "registeredAt": "2026-10-04T06:07:25.653242Z"
+          }
+        },
+        {
+          "refId": "00000000-0000-4000-8000-000000000202",
+          "trackerId": "00000000-0000-4000-8000-000000001202",
+          "clientEntryId": "00000000-0000-4000-8000-000000002202",
+          "originalSnapshot": {
+            "content": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "GPT Codex 기반 추가 개발"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "status": "open",
+            "assigneeId": null,
+            "assigneeName": null,
+            "dueDate": null,
+            "impact": null,
+            "response": null,
+            "registeredAt": "2026-10-04T06:07:25.653242Z"
+          }
+        }
+      ],
+      "issueRecords": [
+        {
+          "refId": "00000000-0000-4000-8000-000000000204",
+          "trackerId": "00000000-0000-4000-8000-000000001204",
+          "clientEntryId": "00000000-0000-4000-8000-000000002204",
+          "originalSnapshot": {
+            "content": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "업무용 컴퓨터 Codex 사용 불가"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "status": "open",
+            "assigneeId": null,
+            "assigneeName": null,
+            "dueDate": null,
+            "impact": null,
+            "response": null,
+            "registeredAt": "2026-10-04T06:07:25.653242Z"
+          }
+        },
+        {
+          "refId": "00000000-0000-4000-8000-000000000206",
+          "trackerId": "00000000-0000-4000-8000-000000001206",
+          "clientEntryId": "00000000-0000-4000-8000-000000002206",
+          "originalSnapshot": {
+            "content": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "데이터 적재 구조 변경됨"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "status": "open",
+            "assigneeId": null,
+            "assigneeName": null,
+            "dueDate": null,
+            "impact": null,
+            "response": null,
+            "registeredAt": "2026-10-04T06:07:25.653242Z"
+          }
+        }
+      ],
+      "achievements": [],
+      "lessonLearned": {
+        "documentVersion": 1,
+        "format": "tiptap-json",
+        "doc": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Codex는 업무용 노트북으로 할 수 없다."
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "note": null,
+      "collaborators": [
+        {
+          "userId": "00000000-0000-4000-8000-000000000011",
+          "name": "이샘플",
+          "team": "예시기획팀"
+        }
+      ],
+      "id": "00000000-0000-4000-8000-000000000300",
+      "revision": 3,
+      "author": {
+        "id": "00000000-0000-4000-8000-000000000010",
+        "name": "김예시",
+        "employeeNumber": "00000010",
+        "teamId": "00000000-0000-4000-8000-000000000002",
+        "teamName": "예시DX팀"
+      },
+      "tasks": [
+        {
+          "id": "00000000-0000-4000-8000-000000000301",
+          "title": "AI 기반 프롬프트 구체화",
+          "milestone": {
+            "id": "00000000-0000-4000-8000-000000000102",
+            "nameSnapshot": "설계"
+          },
+          "performedStart": "2026-10-04",
+          "performedEnd": "2026-10-04",
+          "sortOrder": 0,
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "GPT, Claude를 활용하여 개발 요건 구체화"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "프롬프트 디자인"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph"
+                }
+              ]
+            }
+          },
+          "attachments": []
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000302",
+          "title": "코드 개발",
+          "milestone": {
+            "id": "00000000-0000-4000-8000-000000000103",
+            "nameSnapshot": "Work log 개발"
+          },
+          "performedStart": "2026-10-04",
+          "performedEnd": "2026-10-04",
+          "sortOrder": 1,
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "orderedList",
+                  "attrs": {
+                    "start": 1,
+                    "type": null
+                  },
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "FAST API, node js 기반 Web Service 구축"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "SQLite를 활용한 DB."
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "사본을 활용한 json 체계 구축"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph"
+                }
+              ]
+            }
+          },
+          "attachments": []
+        }
+      ]
+    }
+  ]
+}

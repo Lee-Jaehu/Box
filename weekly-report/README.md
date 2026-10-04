@@ -67,6 +67,20 @@ python -m weekly_report pptgen P-ASM-001 2026-W39 --out-root "$OUT"
 - **같은 기능, 명령어로:** `python -m weekly_report serve [--port 8765] [--workspace DIR] [--no-browser]`
 - **PPT를 열어 둔 채 다시 실행하면** Windows가 파일을 잠가 덮어쓸 수 없다. PowerPoint에서 닫고 다시 실행한다.
 
+## WorkLog 연동 (업무기록 시스템 export)
+
+동료가 만든 WorkLog의 export JSON을 `data/worklog/` 아래(하위 폴더 포함)에 두면 그대로 읽습니다. 파일 구분은 `fileType`으로 합니다.
+- 과제 목록에 WorkLog 과제가 함께 나옵니다.
+- 업무일지 1건(작성자별 하루 기록)이 Daily 1건이 됩니다. 수행 task·이슈·할 일·배운 점을 구조 그대로 AI에 보냅니다.
+- 마일스톤 일정·상태는 WorkLog 값을 씁니다. 지난주 대비 바뀐 값만 파란색입니다.
+
+```bash
+python demo/run_demo.py demo/worklog 00000000-0000-4000-8000-000000000001 2026-W40   # 익명 예시
+python -m weekly_report pipeline 00000000-0000-4000-8000-000000000001 2026-W40
+```
+
+필드 대응·계산 규칙·동료에게 요청할 항목: `docs/WorkLog_연동.md`
+
 ## 보고 자료 (경영진 1장 요약 · 월간 종합, 템플릿 초안)
 
 장표모음집 분석(`docs/보고자료_양식_분석.md`)을 바탕으로 만든 초안입니다. 표·숫자·색은 Rule이 기준정보로 채우고, EXAONE은 칸별 문장만 씁니다.

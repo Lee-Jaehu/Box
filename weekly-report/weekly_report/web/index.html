@@ -139,7 +139,7 @@ function iso(d) { return d.toISOString().slice(0, 10); }
 
 async function loadProjects() {
   const data = await api("/api/projects");
-  $("project").innerHTML = data.projects.map(p => `<option value="${p.project_id}">${p.project_id} · ${p.name}</option>`).join("");
+  $("project").innerHTML = data.projects.map(p => `<option value="${p.project_id}">${p.source === "worklog" ? `[WorkLog] ${p.name}` : `${p.project_id} · ${p.name}`}</option>`).join("");
 }
 async function loadDailies() {
   hide($("daily-msg"));
@@ -153,10 +153,12 @@ async function loadDailies() {
   for (const d of data.dailies) {
     const tr = document.createElement("tr");
     tr.className = "row" + (d.excluded ? " excluded" : "");
-    tr.innerHTML = `<td>${d.date}</td><td>${d.author}</td><td>${d.category || ""}</td><td></td>
-      <td>${d.excluded ? `<span class="tag x">제외 · ${d.excluded}</span>` : `<span class="tag">정리 대상</span>`}</td>`;
+    tr.innerHTML = `<td>${d.date}</td><td></td><td>${d.category || ""}</td><td></td>
+      <td>${d.excluded ? `<span class="tag x">제외 · ${d.excluded}</span>` : `<span class="tag">정리 대상</span>`}${d.readonly ? ` <span class="tag">WorkLog</span>` : ""}</td>`;
+    tr.children[1].textContent = d.author_name || d.author;
     tr.children[3].textContent = d.raw_text + (d.tables.length ? "  [표 포함]" : "");
-    tr.onclick = () => edit(d);
+    tr.children[3].style.whiteSpace = "pre-wrap";
+    tr.onclick = () => d.readonly ? show($("daily-msg"), `${d.daily_id}: WorkLog 업무일지는 WorkLog 웹에서 수정합니다 (여기서는 읽기만 함).`, "info") : edit(d);
     body.appendChild(tr);
   }
   if (!editingId) $("f-date").value = iso(mon);

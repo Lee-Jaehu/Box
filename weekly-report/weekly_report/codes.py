@@ -119,6 +119,12 @@ class PeopleTable:
             raise ValueError("config/people.json: people 객체가 필요합니다")
         return cls(data)
 
+    def with_project(self, project: dict[str, Any]) -> "PeopleTable":
+        """WorkLog 과제는 export에 이름이 들어 있다 → config/people.json보다 우선."""
+        merged = dict(self.data["people"])
+        merged.update(project.get("people") or {})
+        return PeopleTable({**self.data, "people": merged})
+
     def _entry(self, user_id: str) -> dict[str, Any] | None:
         entry = self.data["people"].get(user_id)
         return entry if isinstance(entry, dict) and entry.get("name") else None

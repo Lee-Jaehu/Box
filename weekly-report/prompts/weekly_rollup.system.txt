@@ -7,7 +7,7 @@
 - progress: 이번 주 진행 현황 (최대 {{budget_progress}}개)
 - next_plan: 향후 계획 (최대 {{budget_next_plan}}개)
 - issues: 이슈·지원 요청 (최대 {{budget_issues}}개, 없으면 [])
-- milestone_updates: 이번 주 메모에서 확인된 마일스톤 일정·상태 변화
+- milestone_updates: {{milestone_policy}}
 
 [원문 처리 규칙]
 1. 메모는 구어체 원문이다. 보고서 문장으로 다시 쓰되 내용과 수치는 바꾸지 않는다.
