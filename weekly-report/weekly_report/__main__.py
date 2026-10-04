@@ -5,6 +5,8 @@ python -m weekly_report pptgen   P-ASM-001 2026-W39 [--mode mock|live] [--out-ro
 python -m weekly_report pipeline P-ASM-001 2026-W39 [--mode mock|live] [--out-root DIR] [--template PATH]
 python -m weekly_report preview  output/P-ASM-001_2026-W39.pptx [--out-dir DIR]   (LG스마트체로 PNG 렌더링)
 python -m weekly_report serve    [--port 8765] [--workspace DIR] [--no-browser]     (로컬 웹 테스트 화면)
+python -m weekly_report report exec    P-ASM-001 2026-W40 [--mode mock|live] [--output PATH]   (경영진 1장 요약)
+python -m weekly_report report monthly 2026-09 [--projects P-ASM-001 ...] [--mode mock|live] [--output PATH]  (월간 종합)
 """
 
 from __future__ import annotations
@@ -29,6 +31,27 @@ def _derived_input(kind: str, project_id: str, week: str, out_root: Path, root: 
     raise FileNotFoundError(f"{kind} 입력 없음: data/derived/{kind}/{project_id}/{week}.json (먼저 weekly를 실행하세요)")
 
 
+def _report(root: Path, args) -> int:
+    from .report.generate import generate_exec_summary, generate_monthly
+
+    try:
+        if args.kind == "exec":
+            output = args.output or root / f"output/report/경영진요약_{args.project_id}_{args.week}.pptx"
+            result = generate_exec_summary(root, args.project_id, args.week, output, mode=args.mode)
+        else:
+            year, month = (int(v) for v in args.month.split("-"))
+            ids = args.projects or sorted(p.stem for p in (root / "data/master/projects").glob("*.json"))
+            output = args.output or root / f"output/report/월간종합_{args.month}.pptx"
+            result = generate_monthly(root, ids, year, month, output, mode=args.mode)
+    except (FileNotFoundError, ValidationError, AIError, ValueError) as exc:
+        print(f"오류: {exc}", file=sys.stderr)
+        return 1
+    print(f"PPT: {result['pptx']}\n검사 보고서: {result['check']}")
+    print("AI 응답 처리: " + "; ".join(result["notes"]))
+    print("PPT 재검사: " + ("; ".join(result["problems"]) or "통과"))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m weekly_report", description="주간업무 자동화 시연 CLI")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1], help="weekly-report 폴더 (기본: 패키지 위치)")
@@ -51,6 +74,17 @@ def main(argv: list[str] | None = None) -> int:
     web.add_argument("--port", type=int, default=8765)
     web.add_argument("--workspace", type=Path, help="기본: weekly-report/workspace")
     web.add_argument("--no-browser", action="store_true")
+    report = sub.add_parser("report", help="보고 자료 (경영진 1장 요약 / 월간 종합, 템플릿 초안)")
+    kinds = report.add_subparsers(dest="kind", required=True)
+    exec_cmd = kinds.add_parser("exec", help="경영진 1장 요약")
+    exec_cmd.add_argument("project_id")
+    exec_cmd.add_argument("week", help="기준 주차, 예: 2026-W40")
+    monthly_cmd = kinds.add_parser("monthly", help="월간 종합 보고")
+    monthly_cmd.add_argument("month", help="YYYY-MM, 예: 2026-09")
+    monthly_cmd.add_argument("--projects", nargs="+", help="기본: data/master/projects의 모든 과제")
+    for cmd in (exec_cmd, monthly_cmd):
+        cmd.add_argument("--mode", choices=("mock", "live"), default="mock")
+        cmd.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     root = args.root.resolve()
     if args.command == "serve":
@@ -66,6 +100,8 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(*notes, *(f"미리보기: {p}" for p in images), sep="\n")
         return 0
+    if args.command == "report":
+        return _report(root, args)
     out_root = (args.out_root or root).resolve()
     try:
         if args.command in {"weekly", "pipeline"}:

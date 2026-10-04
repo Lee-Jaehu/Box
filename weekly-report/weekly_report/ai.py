@@ -70,13 +70,20 @@ RESPONSE_SHAPES: dict[str, dict[str, tuple[str, ...]]] = {
     "weekly_rollup": {"objects": ("headline",), "lists": (), "optional": ("progress", "next_plan", "issues", "milestone_updates")},
     "cumulative_update": {"objects": (), "lists": ("items",), "optional": ("pinned_facts", "new_pinned_facts")},
     "fit_to_budget": {"objects": (), "lists": ("items",), "optional": ("dropped",)},
+    # 보고 자료: 필수 칸만 여기서 확인하고, 나머지 칸은 report.checks가 스키마·칸 단위 대체로 처리
+    "report_monthly": {"objects": ("head_message",), "lists": ("project_comments",),
+                       "optional": ("highlights", "risks", "requests")},
+    "report_exec_summary": {"objects": ("title", "head_message"), "lists": ("background_conclusion",),
+                            "optional": ("left_items", "right_items", "emphasis")},
 }
 # AI가 문장 앞뒤에 옮겨 쓴 근거 표시: "(P-ASM-001) ...", "(D-260922-ljh-01, D-...) ...", "... [근거: D-...]"
 _ID = r"(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|P-[A-Z]+-\d{3}"
 LEADING_IDS_RE = re.compile(rf"^\s*[(\[]\s*((?:{_ID})(?:\s*[,·/]\s*(?:{_ID}))*)\s*[)\]]\s*")
 TRAILING_SOURCE_RE = re.compile(r"\s*\[근거:[^\]]*\]\s*$")
 ID_RE = re.compile(_ID)
-ITEM_LISTS = {"progress", "next_plan", "issues", "items", "pinned_facts", "new_pinned_facts", "dropped"}
+ITEM_LISTS = {"progress", "next_plan", "issues", "items", "pinned_facts", "new_pinned_facts", "dropped",
+              "project_comments", "highlights", "risks", "requests", "background_conclusion", "left_items", "right_items"}
+ITEM_OBJECTS = {"headline", "head_message", "title", "left_title", "right_title"}
 
 
 class ResponseFormatError(AIError):
@@ -164,10 +171,11 @@ def normalize_payload(value: Any, prompt_id: str) -> Any:
         for key in ITEM_LISTS & set(value):
             if isinstance(value[key], list):
                 value[key] = [strip_source_tags({"text": v, "source_ids": []} if isinstance(v, str) else v) for v in value[key]]
-        if prompt_id == "weekly_rollup" and isinstance(value.get("headline"), str):
-            value["headline"] = {"text": value["headline"], "source_ids": []}
-        if isinstance(value.get("headline"), dict):
-            value["headline"] = strip_source_tags(value["headline"])
+        for key in ITEM_OBJECTS & set(value):
+            if isinstance(value[key], str) and key in shape["objects"] + ("headline", "left_title", "right_title"):
+                value[key] = {"text": value[key], "source_ids": []}
+            if isinstance(value[key], dict):
+                value[key] = strip_source_tags(value[key])
     return value
 
 

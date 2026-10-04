@@ -12,6 +12,8 @@ class Run:
     text: str
     blue: bool = False
     bold: bool = False
+    color: str | None = None  # 보고 자료용: 지정하면 이 색(RRGGBB)을 쓴다 (주간 PPT는 blue만 사용)
+    highlight: bool = False  # 보고 자료용: 노랑 형광 (결론 핵심 구절)
 
 
 @dataclass

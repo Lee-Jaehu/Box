@@ -98,6 +98,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/daily": lambda: {"daily": wb.save_daily(ws, body)},
             "/api/daily/delete": lambda: (wb.mark_deleted(ws, body["daily_id"]), {"ok": True})[1],
             "/api/run": lambda: wb.run(ws, body["project_id"], body["week"], body.get("mode", "mock")),
+            "/api/report": lambda: wb.run_report(ws, body["kind"], body["project_id"], body["week"], body.get("mode", "mock")),
             "/api/response": lambda: (wb.save_response(ws, body["name"], body["text"]), {"ok": True})[1],
             "/api/responses/clear": lambda: {"removed": wb.clear_responses(ws, body["project_id"], body["week"])},
             "/api/reset": lambda: wb.init_workspace(ws, force=True),

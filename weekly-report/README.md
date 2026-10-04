@@ -67,6 +67,22 @@ python -m weekly_report pptgen P-ASM-001 2026-W39 --out-root "$OUT"
 - **같은 기능, 명령어로:** `python -m weekly_report serve [--port 8765] [--workspace DIR] [--no-browser]`
 - **PPT를 열어 둔 채 다시 실행하면** Windows가 파일을 잠가 덮어쓸 수 없다. PowerPoint에서 닫고 다시 실행한다.
 
+## 보고 자료 (경영진 1장 요약 · 월간 종합, 템플릿 초안)
+
+장표모음집 분석(`docs/보고자료_양식_분석.md`)을 바탕으로 만든 초안입니다. 표·숫자·색은 Rule이 기준정보로 채우고, EXAONE은 칸별 문장만 씁니다.
+- 헤드메시지·결론은 경어체로, 본문은 개조식으로 씁니다.
+- 검사를 통과하지 못한 칸은 Rule 값으로 대체하고 `*_check.txt`에 남깁니다.
+
+```bash
+python demo/report/run_report_demo.py                         # 데모: demo/report/out/*.pptx, preview/*.png
+python -m weekly_report report exec P-ASM-001 2026-W40        # 경영진 1장 요약 (mock 응답 필요)
+python -m weekly_report report monthly 2026-09                # 월간 종합 (전체 과제)
+python tools/make_report_template.py                          # 템플릿 초안 다시 만들기
+```
+
+웹 화면에서는 ② 카드의 "보고 자료 생성"을 누릅니다. 종류는 경영진 1장 요약(선택 과제·주차) 또는 월간 종합(그 주차가 속한 달, 전체 과제)입니다.
+흐름은 주간 정리와 같습니다: 프롬프트 복사 → EXAONE → 응답 붙여넣기.
+
 ## Rule과 AI의 역할 분리
 
 정확도를 위해 **배치·색·분량 판정·검증은 전부 코드(Rule)**가 하고, AI(EXAONE)는 문장만 다룹니다.

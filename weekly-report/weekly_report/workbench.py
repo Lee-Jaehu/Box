@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -19,12 +19,15 @@ from .ai import RESPONSE_SHAPES, AIError, ExaoneClient, MockResponseMissing, Res
 from .core import KST, ValidationError, atomic_json, load_json, validate_schema, week_range
 from .ppt.budget import BudgetError
 from .pptgen import TEMPLATE_NAME, find_template, generate_ppt
+from .report.generate import generate_exec_summary, generate_monthly
+from .report.render import TEMPLATE_NAME as REPORT_TEMPLATE
 from .weekly import run_weekly
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE = REPO / "workspace"
 MARKER = ".workspace"
-RESPONSE_RE = re.compile(r"^(weekly_rollup|cumulative_update|fit_to_budget)__[A-Za-z0-9-]+__\d{4}-W\d{2}(__[a-z_]+)?\.json$")
+RESPONSE_RE = re.compile(r"^(weekly_rollup|cumulative_update|fit_to_budget|report_monthly|report_exec_summary)"
+                         r"__[A-Za-z0-9-]+__\d{4}-(?:W\d{2}|\d{2})(__[a-z_]+)?\.json$")
 AUTHOR_RE = re.compile(r"^[a-z0-9]+$")
 CATEGORIES = {"DEV", "ROLL", "OPS", "INV", "DATA", "RPT"}
 
@@ -58,7 +61,7 @@ def _copy_tree(src: Path, dst: Path, *, overwrite: bool) -> None:
 
 def runtime_files(repo: Path = REPO) -> list[str]:
     """작업공간에 반드시 있어야 하는 파일 목록 (저장소 기준 상대 경로)."""
-    files = [TEMPLATE_NAME, *(p.name for p in repo.glob("LGSM*.[tT][tT][fF]"))]
+    files = [TEMPLATE_NAME, REPORT_TEMPLATE, *(p.name for p in repo.glob("LGSM*.[tT][tT][fF]"))]
     for tree in RUNTIME_TREES:
         for path in (repo / tree).rglob("*"):
             rel = path.relative_to(repo).as_posix()
@@ -168,7 +171,7 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
         _copy_tree(repo / name, ws / name, overwrite=force)
     if not force:
         result["updated"] = refresh_runtime(ws, repo)
-    for source in [find_template(repo), *repo.glob("LGSM*.[tT][tT][fF]")]:
+    for source in [find_template(repo), repo / REPORT_TEMPLATE, *repo.glob("LGSM*.[tT][tT][fF]")]:
         try:
             _copy(source, ws / source.name, overwrite=force)
         except PermissionError:
@@ -179,6 +182,8 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
     if (demo / "raw").is_dir():
         _copy_tree(demo / "raw", ws / "data/raw", overwrite=force)
     for path in (demo / "mock_responses").glob("*.json"):
+        _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
+    for path in (repo / "demo/report/mock_responses").glob("report_exec_summary__*.json"):  # W40 경영진 1장 요약 데모 응답
         _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
     (ws / MARKER).write_text("weekly-report 웹 테스트 작업공간 (지워도 다시 만들어짐)\n", encoding="utf-8")
     result["restored"] = True
@@ -412,6 +417,38 @@ def run(ws: Path, project_id: str, week: str, mode: str = "mock") -> dict[str, A
         "validation": report.read_text(encoding="utf-8"),
         "ppt_check": check.read_text(encoding="utf-8"),
     }
+
+
+def run_report(ws: Path, kind: str, project_id: str, week: str, mode: str = "mock") -> dict[str, Any]:
+    """보고 자료 생성 (주간 run과 같은 흐름: 응답이 없으면 프롬프트를 보여 주고, 붙여 넣으면 이어서 진행).
+
+    kind=exec: 선택 과제의 경영진 1장 요약 (week 기준)
+    kind=monthly: week의 목요일이 속한 달의 월간 종합 보고 (작업공간의 모든 과제)
+    """
+    client = PromptCapturingClient(ws, mode)
+    try:
+        if kind == "exec":
+            pptx = ws / f"output/report/경영진요약_{project_id}_{week}.pptx"
+            result = generate_exec_summary(ws, project_id, week, pptx, client=client)
+        elif kind == "monthly":
+            thursday = week_range(week)[0] + timedelta(days=3)
+            pptx = ws / f"output/report/월간종합_{thursday.year}-{thursday.month:02d}.pptx"
+            result = generate_monthly(ws, [p["project_id"] for p in list_projects(ws)], thursday.year, thursday.month, pptx, client=client)
+        else:
+            raise WorkbenchError(f"알 수 없는 보고 종류: {kind}")
+    except MockResponseMissing:
+        return _need_response(client)
+    except ResponseFormatError as exc:
+        need = _need_response(client)
+        saved = ws / "prompts/mock_responses" / need.get("response_name", "")
+        return {**need, "error": str(exc), "previous": saved.read_text(encoding="utf-8") if saved.is_file() else ""}
+    except PermissionError:
+        return {"status": "error", "stage": "보고 자료", "message": "PPT 파일이 PowerPoint에서 열려 있습니다. 파일을 닫고 다시 실행하세요."}
+    except (ValidationError, AIError, FileNotFoundError) as exc:
+        return {"status": "error", "stage": "보고 자료", "message": str(exc)}
+    return {"status": "ok", "kind": kind, "problems": result["problems"],
+            "files": {"pptx": _rel(ws, result["pptx"]), "check": _rel(ws, result["check"])},
+            "check": result["check"].read_text(encoding="utf-8")}
 
 
 def resolve_file(ws: Path, rel: str) -> Path:

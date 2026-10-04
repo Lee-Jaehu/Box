@@ -27,7 +27,7 @@ A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 REQUIRED_SHAPES = ("slide_title", "pjt_header", "author", "updated_at", "main_table", "body_top", "ms_table", "body_main")
 SLIDE_SIZE_IN = (10.83, 7.5)
-BLUE, BLACK = "0000FF", "000000"
+BLUE, BLACK, HIGHLIGHT = "0000FF", "000000", "FFFF00"
 EA_FONT = EA_REGULAR  # TTF nameID 1과 같은 이름이어야 PowerPoint가 LG스마트체를 쓴다
 
 
@@ -136,6 +136,19 @@ def _set_color(rpr, color: str) -> None:
     rpr.insert(list(rpr).index(ln) + 1 if ln is not None else 0, fill)
 
 
+def _set_highlight(rpr, color: str = HIGHLIGHT) -> None:
+    """글자 형광 표시. rPr 자식 순서상 highlight는 latin 앞에 둔다."""
+    for old in rpr.findall(a("highlight")):
+        rpr.remove(old)
+    node = etree.Element(a("highlight"))
+    etree.SubElement(node, a("srgbClr")).set("val", color)
+    latin = rpr.find(a("latin"))
+    if latin is not None:
+        latin.addprevious(node)
+    else:
+        rpr.append(node)
+
+
 def _set_fonts(rpr) -> None:
     latin = rpr.find(a("latin"))
     if latin is None:
@@ -172,9 +185,13 @@ def write_paras(tx_body, paras: list[Para], *, recolor: bool = True, proto: Prot
                 continue
             r = etree.SubElement(p, a("r"))
             rpr = proto.run_props(run.bold)
-            if recolor or run.blue:
+            if run.color:
+                _set_color(rpr, run.color)
+            elif recolor or run.blue:
                 _set_color(rpr, BLUE if run.blue else BLACK)
             _set_fonts(rpr)
+            if run.highlight:
+                _set_highlight(rpr)
             r.append(rpr)
             etree.SubElement(r, a("t")).text = run.text
         end = deepcopy(proto.end) if proto.end is not None else etree.Element(a("endParaRPr"))
