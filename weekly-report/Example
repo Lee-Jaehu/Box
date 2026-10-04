@@ -1,89 +1,40 @@
 {
-  "headline": {
-    "text": "금주(W41)에는 Normal Line 수평전개 완료, 효과 데이터 2주 기준 확정",
-    "source_ids": ["D-261005-jaehu-01", "D-261005-jaehu-02", "D-261009-jaehu-01"],
-    "changed": true
-  },
-  "progress": [
+  "items": [
     {
-      "text": "M6-3(수평전개) Normal WA 적용 완료: 9/30→10/2, 재료교체 11회 중 불량 1건",
-      "source_ids": ["D-261007-jaehu-01", "D-261008-jaehu-01", "D-261009-jaehu-01"],
-      "changed": true
+      "text": "(P-ASM-001) 1차 로직: E77 불량률 0.189%→0.164%→0.152%(2주 확정)",
+      "source_ids": ["D-261005-jaehu-01", "D-261005-jaehu-02"]
     },
     {
-      "text": "MEB E77 불량률 2주 확정: 0.181% → 0.152% 감소",
-      "source_ids": ["D-261005-jaehu-01", "D-261005-jaehu-02"],
-      "changed": true
+      "text": "(P-ASM-001) 2차 로직: Limit ±0.35mm, 대표 4대 0.270%→0.185%, ESWA 0.171%→0.139%(2주)",
+      "source_ids": ["D-260928-ljh-01"]
     },
     {
-      "text": "ESMI1 불량률 2주 확정: 0.361% → 0.244% 감소",
-      "source_ids": ["D-261005-jaehu-02"],
-      "changed": true
-    },
-    {
-      "text": "#13-2 EPC 센서 렌즈 청소·정렬 완료, 불량률 0.262% → 0.198% 개선",
-      "source_ids": ["D-261005-jaehu-01", "D-261007-jaehu-01", "D-261008-jaehu-01"],
-      "changed": true
-    },
-    {
-      "text": "Normal Line PLC 파라미터 매핑표 초안 완료, 북미 적용 예정",
-      "source_ids": ["D-261008-jaehu-01"],
-      "changed": true
-    },
-    {
-      "text": "최종 효과 산출 일정: 10/16 → 10/9로 단축",
-      "source_ids": ["D-261009-jaehu-01"],
-      "changed": true
-    },
-    {
-      "text": "MI_HL 법인 대상 호기 리스트 미확보, 다음 주 화요일까지 요청",
-      "source_ids": ["D-261007-jaehu-01", "D-261008-jaehu-01"],
-      "changed": true
+      "text": "수평전개 완료: MEB·ESMI1#2-2·3(9/16)·M6-3 Normal(10/2), WA 11회 중 불량 1건, #13-2 EPC 0.262%→0.198%",
+      "source_ids": ["D-261005-jaehu-01", "D-261007-jaehu-01", "D-261008-jaehu-01", "D-261009-jaehu-01"]
     }
   ],
-  "next_plan": [
+  "pinned_facts": [
     {
-      "text": "증가 호기 4대 센서 점검 결과 확인 (다음 주 예정)",
-      "source_ids": ["D-261007-jaehu-01"],
-      "changed": true
+      "text": "(P-ASM-001) 1차 적용 E77 위치 불량률 0.189% → 0.164%",
+      "source_ids": []
     },
     {
-      "text": "MI_HL Normal 대상 호기 리스트 수신 후 일정 확정",
-      "source_ids": ["D-261008-jaehu-01"],
-      "changed": true
+      "text": "(D-260922-ljh-01) ESWA 2차 로직 적용 후 0.171% → 0.144% (4일 단기)",
+      "source_ids": ["D-260922-ljh-01"]
     },
     {
-      "text": "북미 Site 10월 셋째 주 적용 일정 확정 및 PLC 파라미터 검증",
-      "source_ids": ["D-261009-jaehu-01"],
-      "changed": true
+      "text": "(D-260928-ljh-01) ESWA 2주 평균 0.171% → 0.139%",
+      "source_ids": ["D-260928-ljh-01"]
     }
   ],
-  "issues": [
+  "new_pinned_facts": [
     {
-      "text": "MI_HL 법인 담당자 대상 호기 리스트 미확보로 진행 중, 일정 리스크",
-      "source_ids": ["D-261007-jaehu-01", "D-261008-jaehu-01"],
-      "changed": true
+      "text": "MEB E77 불량률 2주 확정: 0.181% → 0.152%",
+      "source_ids": ["D-261005-jaehu-01", "D-261005-jaehu-02"]
     },
     {
-      "text": "북미 PLC 펌웨어 버전 상이, 파라미터 이식 전 검증 필요",
-      "source_ids": ["D-261008-jaehu-01"],
-      "changed": false
-    }
-  ],
-  "milestone_updates": [
-    {
-      "milestone_id": "M6-3",
-      "field": "actual",
-      "to": "2026-10-02",
-      "reason": "Normal Line WA 가동 일정 지연, 6대 적용 완료 후 10/2 처리",
-      "source_ids": ["D-261007-jaehu-01", "D-261008-jaehu-01", "D-261009-jaehu-01"]
-    },
-    {
-      "milestone_id": "M6-4",
-      "field": "plan_text",
-      "to": "10월 셋째 주",
-      "reason": "북미 현지 담당자 10월 셋째 주 적용 가능 회신, 확정 아님",
-      "source_ids": ["D-261009-jaehu-01"]
+      "text": "ESMI1 불량률 2주 확정: 0.361% → 0.244%",
+      "source_ids": ["D-261005-jaehu-02"]
     }
   ]
 }
