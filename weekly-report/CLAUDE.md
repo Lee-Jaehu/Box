@@ -11,6 +11,8 @@
 - Worklog 웹은 다른 개발자가 만든다. `data/master`, `data/raw` 는 **읽기만** 하고 절대 쓰지 않는다.
   우리가 쓰는 곳은 `data/derived` 와 `output/` 뿐이다.
 - 구현 순서: pptgen 먼저 (data/derived 예시로 개발) → weekly 다음.
+- 보고 자료 확장(설계 단계, 2026-10-04): 월간 종합 보고·경영진 1장 요약. Rule이 틀·표·숫자, EXAONE은 칸별 문장만.
+  문체는 헤드메시지·결론 경어체 + 본문 개조식(장표모음집 방식). 근거: docs/보고자료_양식_분석.md, prompts/report/
 
 ## 폴더
 - `docs/` : 설계 문서 (INTERFACE_SPEC.md, 결정사항_요약.md, CLAUDE_CODE_작업순서.md)
