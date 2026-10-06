@@ -1,0 +1,118 @@
+{
+  "fileType": "WORKLOG_PROJECT_EXPORT",
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-10-04T10:00:00+09:00",
+  "sourceRevision": 3,
+  "timezone": "Asia/Seoul",
+  "project": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "name": "업무 검증 절차 개선 — 합성 예시",
+    "revision": 3,
+    "deletedAt": null,
+    "isShortTerm": false,
+    "status": "in_progress",
+    "team": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "name": "업무개선팀",
+      "parent": {
+        "id": "00000000-0000-4000-8000-000000000005",
+        "name": "운영담당"
+      }
+    },
+    "owner": {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "name": "예시 담당자",
+      "employeeNumber": null,
+      "teamId": "00000000-0000-4000-8000-000000000004"
+    },
+    "members": [
+      {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "name": "예시 담당자"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "name": "예시 협업자"
+      }
+    ],
+    "startDate": "2026-10-01",
+    "endDate": "2026-10-31",
+    "background": {
+      "documentVersion": 1,
+      "format": "tiptap-json",
+      "doc": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "검증 기록 방식이 서로 달라 확인 작업이 반복됨."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "purpose": {
+      "documentVersion": 1,
+      "format": "tiptap-json",
+      "doc": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "검증 절차를 통일하고 처리시간을 줄인다."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "retrospective": null
+  },
+  "milestones": [
+    {
+      "id": "00000000-0000-4000-8000-000000000007",
+      "name": "일반·수시 업무",
+      "isGeneral": true,
+      "status": "planned",
+      "sortOrder": 0,
+      "plannedStart": null,
+      "plannedEnd": null,
+      "baselineStart": null,
+      "baselineEnd": null,
+      "actualStart": null,
+      "actualEnd": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000006",
+      "name": "검증 기준 확정",
+      "isGeneral": false,
+      "status": "in_progress",
+      "sortOrder": 1,
+      "plannedStart": "2026-10-01",
+      "plannedEnd": "2026-10-10",
+      "baselineStart": "2026-10-01",
+      "baselineEnd": "2026-10-08",
+      "baselineConfirmedAt": "2026-10-01T09:00:00+09:00",
+      "actualStart": "2026-10-01",
+      "actualEnd": null
+    }
+  ],
+  "kpis": [
+    {
+      "id": "00000000-0000-4000-8000-000000000008",
+      "name": "건당 검증 처리시간",
+      "unit": "분/건",
+      "baselineValue": "30",
+      "targetValue": "10",
+      "direction": "decrease",
+      "active": true
+    }
+  ]
+}

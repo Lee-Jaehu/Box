@@ -1,0 +1,4 @@
+{
+  "description": "입력 위치. 내부 형식(data/master, data/raw/daily)과 함께 WorkLog export 폴더를 읽는다. 파일 구분은 fileType 값으로 한다.",
+  "worklog_dirs": ["data/worklog"]
+}

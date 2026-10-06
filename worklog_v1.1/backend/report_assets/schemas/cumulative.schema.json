@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cumulative.schema.json",
+  "title": "누적 요약",
+  "description": "과제의 주차별 누적 요약 스냅샷 (derived/cumulative/{project_id}/{week}.json). 지난주 확정 누적 + 이번 주 확정 주간 정리본으로 갱신.",
+  "type": "object",
+  "required": [
+    "meta",
+    "project_id",
+    "as_of_week",
+    "prev_ref",
+    "items",
+    "pinned_facts",
+    "mode",
+    "ai"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "as_of_week": {
+      "type": "string",
+      "pattern": "^\\d{4}-W\\d{2}$",
+      "description": "ISO 주차 (월~일), 예: 2026-W39"
+    },
+    "prev_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "pinned_facts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      },
+      "description": "요약이 반복돼도 빠지거나 바뀌면 안 되는 핵심 수치·결정"
+    },
+    "mode": {
+      "enum": [
+        "incremental",
+        "rebuild"
+      ],
+      "description": "rebuild = 원본 기록에서 다시 생성 (마일스톤 완료·분기 전환 시)"
+    },
+    "ai": {
+      "$ref": "#/$defs/ai"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "schema",
+        "schema_version",
+        "revision",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "파일이 다시 저장될 때마다 +1. 하류 처리는 이 값으로 변경을 감지"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_by": {
+          "type": "string",
+          "description": "사용자 ID (사번 권장)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "text",
+        "source_ids"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        },
+        "kind": {
+          "enum": [
+            "fact",
+            "judgement",
+            "plan",
+            "issue"
+          ]
+        },
+        "changed": {
+          "type": "boolean",
+          "description": "이번 주 신규·변경 여부 (파란색 판정용)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^((D|P|CP|R)-|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$)"
+      },
+      "description": "근거 레코드 ID (Daily, 기준정보, 변경 제안 등)"
+    },
+    "ai": {
+      "type": "object",
+      "required": [
+        "model",
+        "prompt_id",
+        "prompt_version",
+        "generated_at"
+      ],
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "prompt_id": {
+          "type": "string"
+        },
+        "prompt_version": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "input_revisions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "요약에 쓴 원본 레코드별 revision"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

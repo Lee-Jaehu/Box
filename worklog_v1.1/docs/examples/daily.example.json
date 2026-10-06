@@ -1,0 +1,438 @@
+{
+  "fileType": "WORKLOG_DAILY_EXPORT",
+  "schemaVersion": "1.0",
+  "documentVersion": 1,
+  "generatedAt": "2026-10-04T10:00:00+09:00",
+  "sourceRevision": 2,
+  "timezone": "Asia/Seoul",
+  "project": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "name": "업무 검증 절차 개선 — 합성 예시",
+    "deletedAt": null
+  },
+  "date": "2026-10-04",
+  "logs": [
+    {
+      "createdAt": "2026-10-04T10:00:00+09:00",
+      "updatedAt": "2026-10-04T10:00:00+09:00",
+      "todoRecords": [
+        {
+          "refId": "00000000-0000-4000-8000-000000000020",
+          "trackerId": "00000000-0000-4000-8000-000000000013",
+          "clientEntryId": "00000000-0000-4000-8000-000000000021",
+          "originalSnapshot": {
+            "content": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "보완 항목 재확인"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "gantt",
+                    "attrs": {
+                      "chartVersion": 1,
+                      "viewMode": "Week",
+                      "items": [
+                        {
+                          "itemId": "00000000-0000-4000-8000-000000000030",
+                          "label": "보완사항 확인",
+                          "startDate": "2026-10-05",
+                          "endDate": "2026-10-06"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "status": "open",
+            "dueDate": "2026-10-06",
+            "assigneeId": "00000000-0000-4000-8000-000000000002"
+          }
+        }
+      ],
+      "issueRecords": [
+        {
+          "refId": "00000000-0000-4000-8000-000000000022",
+          "trackerId": "00000000-0000-4000-8000-000000000014",
+          "clientEntryId": "00000000-0000-4000-8000-000000000023",
+          "originalSnapshot": {
+            "content": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "검증 기준 일부가 문서마다 달라 확인 필요"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "status": "open",
+            "impact": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "보완 2건의 판정에 영향"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "response": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "담당자 협의 후 기준 확정"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "achievements": [
+        {
+          "id": "00000000-0000-4000-8000-000000000024",
+          "type": "quantitative",
+          "presetKey": "time_reduction",
+          "kpiId": "00000000-0000-4000-8000-000000000008",
+          "kpiSnapshot": {
+            "name": "건당 검증 처리시간",
+            "unit": "분/건",
+            "baselineValue": "30",
+            "targetValue": "10"
+          },
+          "measuredOn": "2026-10-04",
+          "periodStart": "2026-10-04",
+          "periodEnd": "2026-10-04",
+          "numericPayload": {
+            "metricName": "건당 검증 처리시간",
+            "beforeValue": "30",
+            "afterValue": "10",
+            "unit": "분/건",
+            "comparisonBasis": "동일 검증 유형 1건",
+            "measurementScope": "시범 검증",
+            "derived": {
+              "difference": "20",
+              "relativeChangePercent": "66.666667",
+              "percentagePointChange": null
+            },
+            "calculationVersion": "1",
+            "summaryText": "건당 처리시간 30분 → 10분, 20분 단축(66.7% 감소)"
+          },
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "시범 적용 결과이며 전체 업무의 연간 절감량으로 환산하지 않음."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000025",
+          "type": "qualitative",
+          "presetKey": "standardization",
+          "kpiId": null,
+          "numericPayload": null,
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "서로 달랐던 검토 항목을 공통 체크리스트로 정리하여 검토 기준을 통일함."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "lessonLearned": null,
+      "note": null,
+      "collaborators": [],
+      "id": "00000000-0000-4000-8000-000000000009",
+      "revision": 1,
+      "author": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "name": "예시 담당자",
+        "employeeNumber": null,
+        "teamId": "00000000-0000-4000-8000-000000000004",
+        "teamName": "업무개선팀"
+      },
+      "tasks": [
+        {
+          "id": "00000000-0000-4000-8000-000000000011",
+          "milestone": {
+            "id": "00000000-0000-4000-8000-000000000006",
+            "nameSnapshot": "검증 기준 확정"
+          },
+          "performedStart": "2026-10-04",
+          "performedEnd": "2026-10-04",
+          "sortOrder": 0,
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "검증 시나리오 12건 확인 및 보완사항 정리"
+                    }
+                  ]
+                },
+                {
+                  "type": "table",
+                  "content": [
+                    {
+                      "type": "tableRow",
+                      "content": [
+                        {
+                          "type": "tableHeader",
+                          "attrs": {
+                            "colspan": 1,
+                            "rowspan": 1,
+                            "colwidth": null
+                          },
+                          "content": [
+                            {
+                              "type": "paragraph",
+                              "content": [
+                                {
+                                  "type": "text",
+                                  "text": "항목"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "tableHeader",
+                          "attrs": {
+                            "colspan": 1,
+                            "rowspan": 1,
+                            "colwidth": null
+                          },
+                          "content": [
+                            {
+                              "type": "paragraph",
+                              "content": [
+                                {
+                                  "type": "text",
+                                  "text": "결과"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "tableRow",
+                      "content": [
+                        {
+                          "type": "tableCell",
+                          "attrs": {
+                            "colspan": 1,
+                            "rowspan": 1,
+                            "colwidth": null
+                          },
+                          "content": [
+                            {
+                              "type": "paragraph",
+                              "content": [
+                                {
+                                  "type": "text",
+                                  "text": "검증 시나리오"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "tableCell",
+                          "attrs": {
+                            "colspan": 1,
+                            "rowspan": 1,
+                            "colwidth": null
+                          },
+                          "content": [
+                            {
+                              "type": "paragraph",
+                              "content": [
+                                {
+                                  "type": "text",
+                                  "text": "12건 확인, 2건 보완 필요"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "image",
+                  "attrs": {
+                    "attachmentUseId": "00000000-0000-4000-8000-000000000016"
+                  }
+                }
+              ]
+            }
+          },
+          "attachments": [
+            {
+              "useId": "00000000-0000-4000-8000-000000000016",
+              "attachmentId": "00000000-0000-4000-8000-000000000015",
+              "taskId": "00000000-0000-4000-8000-000000000011",
+              "originalName": "검증결과.png",
+              "mediaType": "image/png",
+              "sizeBytes": 12345,
+              "width": 1200,
+              "height": 800,
+              "title": "검증 결과 화면",
+              "description": "검증 시나리오 12건 중 보완이 필요한 2건을 표시한 화면. 실제 이미지 파일은 이 설계 예시에 포함하지 않음.",
+              "sortOrder": 0,
+              "fileRef": "attachments/00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000015.png"
+            }
+          ]
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000012",
+          "milestone": {
+            "id": "00000000-0000-4000-8000-000000000007",
+            "nameSnapshot": "일반·수시 업무"
+          },
+          "performedStart": "2026-10-04",
+          "performedEnd": "2026-10-04",
+          "sortOrder": 1,
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "현업 문의 2건에 대해 입력 방법 안내"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "createdAt": "2026-10-04T10:00:00+09:00",
+      "updatedAt": "2026-10-04T10:00:00+09:00",
+      "todoRecords": [],
+      "issueRecords": [],
+      "achievements": [],
+      "lessonLearned": null,
+      "note": null,
+      "collaborators": [],
+      "id": "00000000-0000-4000-8000-000000000010",
+      "revision": 1,
+      "author": {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "name": "예시 협업자",
+        "employeeNumber": "00123",
+        "teamId": "00000000-0000-4000-8000-000000000004",
+        "teamName": "업무개선팀"
+      },
+      "tasks": [
+        {
+          "id": "00000000-0000-4000-8000-000000000026",
+          "milestone": {
+            "id": "00000000-0000-4000-8000-000000000006",
+            "nameSnapshot": "검증 기준 확정"
+          },
+          "performedStart": "2026-10-04",
+          "performedEnd": "2026-10-04",
+          "sortOrder": 0,
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "공통 체크리스트의 누락 항목 검토"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "attachments": []
+        }
+      ]
+    }
+  ]
+}

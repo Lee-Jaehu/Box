@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "report_monthly.schema.json",
+  "title": "월간 과제 종합 보고 – EXAONE 출력 (칸별 문장)",
+  "description": "AI가 쓰는 문장 칸만 담는다. 표 수치·일정·색은 코드가 기준정보로 채운다. 분량은 weekly_report/report_vars.py MONTHLY_BUDGET.",
+  "type": "object",
+  "required": [
+    "head_message",
+    "project_comments",
+    "highlights",
+    "risks",
+    "requests"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "text",
+        "source_ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ids": {
+          "$ref": "#/$defs/sources"
+        }
+      }
+    }
+  },
+  "properties": {
+    "head_message": {
+      "$ref": "#/$defs/item"
+    },
+    "project_comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "project_id",
+          "text",
+          "source_ids"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "pattern": "^(P-[A-Z]+-\\d{3}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_ids": {
+            "$ref": "#/$defs/sources"
+          }
+        }
+      }
+    },
+    "highlights": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "risks": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "requests": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "text",
+          "source_ids"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "due": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{1,2}/\\d{1,2}$"
+          },
+          "dept": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_ids": {
+            "$ref": "#/$defs/sources"
+          }
+        }
+      }
+    }
+  }
+}
