@@ -1,10 +1,10 @@
 @echo off
+chcp 65001 >nul
 rem Worklog TEST launcher: same program, but a different port and a separate data folder so it never touches the real server/data.
 rem   테스트실행.bat            port 8100, data folder  <program folder>\data_test
 rem   테스트실행.bat 8200       port 8200
 rem To change the defaults permanently, edit the two "set" lines below.
 rem Test hooks: WORKLOG_DRY_RUN=1 prints the selected Python and exits. WORKLOG_NO_PAUSE=1 skips the final pause.
-chcp 65001 >nul
 setlocal EnableExtensions
 set "APP_ROOT=%~dp0"
 if "%APP_ROOT:~-1%"=="\" set "APP_ROOT=%APP_ROOT:~0,-1%"

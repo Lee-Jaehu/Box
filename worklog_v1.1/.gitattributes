@@ -1,0 +1,4 @@
+# Windows 배치 파일은 CRLF 그대로 저장·배포한다 (git 줄바꿈 변환 끔: GitHub ZIP·체크아웃·복사 어느 경로든 CRLF).
+# LF만 있는 .bat은 cmd.exe가 줄 경계를 잘못 읽어(특히 chcp 65001 + 한글) 줄 조각이 명령으로 실행된다.
+*.bat -text
+*.cmd -text
