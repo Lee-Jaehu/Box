@@ -56,6 +56,8 @@ class Settings:
     ai_input_chars: int = 24000
     # 호환 형식(system 내용을 user에 합치고 temperature·max_tokens 없이). auto = 5xx가 끝까지 나면 한 번 시도 후 그 작업 동안 유지
     ai_compat_mode: str = "auto"
+    # EXAONE API 문서: 헤더에 요청 ID를 넣는다. 헤더 이름(비우면 보내지 않음). 사내 문서의 정확한 이름으로 바꿀 수 있다
+    ai_request_id_header: str = "X-Request-ID"
     # 서버가 읽은 설정 파일 (화면·시작 로그에 "왜 붙여넣기 방식인지" 보여 줄 때 사용)
     config_file: Path | None = None
     config_found: bool = False
@@ -152,6 +154,8 @@ def load_settings(config_file: Path | None = None) -> Settings:
     for key in ("ai_api_url", "ai_api_key", "ai_model"):
         if merged.get(key):
             setattr(s, key, str(merged[key]).strip())
+    if "ai_request_id_header" in merged:
+        s.ai_request_id_header = str(merged["ai_request_id_header"] or "").strip()
     for key, cast in (("ai_timeout_seconds", float), ("report_job_retention", int), ("ai_input_chars", int)):
         if key in merged:
             setattr(s, key, cast(merged[key]))

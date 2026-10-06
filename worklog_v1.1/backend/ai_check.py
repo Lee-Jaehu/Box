@@ -9,6 +9,7 @@ import socket
 import sys
 import time
 import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any, Callable
 
@@ -17,6 +18,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from app.config import Settings, load_settings  # noqa: E402
 from app.services.reports import failed_request_path  # noqa: E402
 from weekly_report.ai import UrlLibTransport, _error_detail, _url_hint  # noqa: E402
+
+
+class LegacyTransport:
+    """예전 방식(2026-10-06 이전): Content-Type에 charset 없음, 한글을 UTF-8 원문 그대로, 요청 ID·Accept 없음, 기본 User-Agent."""
+
+    def request(self, url: str, key: str, body: dict[str, Any], timeout: float) -> bytes:
+        request = urllib.request.Request(url, json.dumps(body, ensure_ascii=False).encode("utf-8"),
+                                         {"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return response.read()
 
 SAMPLE = "재료교체 위치 불량 개선 로직을 3호기에 시험 적용해 불량률이 0.18%에서 0.15%로 감소했고, 원인 분석을 계속 진행했습니다. "
 SYSTEM = "너는 업무 보고서 작성 보조다. 출력은 JSON만 쓴다."
@@ -28,7 +39,7 @@ def _korean(chars: int) -> str:
 
 
 def cases(model: str | None, saved: dict[str, Any] | None) -> list[tuple[str, str, dict[str, Any]]]:
-    """(기호, 설명, 요청 본문)"""
+    """(기호, 설명, 요청 본문). A2만 예전 방식(LegacyTransport)으로 보낸다."""
     def body(messages: list[dict[str, str]], **extra: Any) -> dict[str, Any]:
         b: dict[str, Any] = {"messages": messages, **extra}
         if model:
@@ -38,6 +49,8 @@ def cases(model: str | None, saved: dict[str, Any] | None) -> list[tuple[str, st
     user = lambda text: [{"role": "user", "content": text}]  # noqa: E731
     out = [
         ("A", "user 'hello'만 (이전에 성공한 모양)", body(user("hello"))),
+        ("A2", "짧은 한글 — 예전 방식(charset 없음·UTF-8 원문·요청 ID 없음)", body(user("안녕하세요. 한 문장으로 답하세요."))),
+        ("A3", "짧은 한글 — 지금 방식(charset=utf-8·ASCII JSON·요청 ID)", body(user("안녕하세요. 한 문장으로 답하세요."))),
         ("B", "A + temperature 0.1", body(user("hello"), temperature=0.1)),
         ("C", "system + user (짧게)", body([{"role": "system", "content": SYSTEM}, {"role": "user", "content": "hello"}])),
         ("D", "user 한글 약 4,000자", body(user(_korean(4000)))),
@@ -76,6 +89,11 @@ def conclude(results: dict[str, str]) -> list[str]:
     lines: list[str] = []
     if not ok("A"):
         return ["A(가장 단순한 요청)부터 실패: 주소(AI_API_URL 전체 경로)·키·모델명(AI_MODEL)을 확인하세요. 프로그램 문제가 아닙니다."]
+    if "A2" in results and not ok("A2") and ok("A3"):
+        lines.append("예전 방식의 한글 요청만 실패: 한글 인코딩(charset·UTF-8 원문)이나 요청 ID 헤더가 원인이었고, 지금 방식으로 해결됩니다.")
+    if "A3" in results and not ok("A3"):
+        lines.append("지금 방식의 짧은 한글 요청도 실패: 요청 ID 헤더 이름이 사내 문서와 다를 수 있습니다 → config.json 의 AI_REQUEST_ID_HEADER 를"
+                     " 문서의 이름으로 바꾸거나 \"\" 로 비워 보세요.")
     if not ok("B") or not ok("C"):
         what = " · ".join(x for x, k in (("temperature", "B"), ("system 역할", "C")) if not ok(k))
         lines.append(f"게이트웨이가 {what}을(를) 처리하지 못함 → config.json 에 \"AI_COMPAT_MODE\": true 를 넣으세요"
@@ -95,11 +113,12 @@ def conclude(results: dict[str, str]) -> list[str]:
     return lines or ["모든 요청이 성공했습니다. 다시 보고자료를 만들어 보고, 실패하면 오류 메시지 전체를 알려 주세요."]
 
 
-def run(settings: Settings, transport: Any = None, out: Callable[[str], None] = print) -> list[str]:
+def run(settings: Settings, transport: Any = None, out: Callable[[str], None] = print, legacy: Any = None) -> list[str]:
     if not (settings.ai_api_url and settings.ai_api_key):
         out("config/config.json 에 AI_API_URL 과 AI_API_KEY 가 없습니다. 먼저 넣고 다시 실행하세요.")
         return []
-    transport = transport or UrlLibTransport()
+    transport = transport or UrlLibTransport(settings.ai_request_id_header or None)
+    legacy = legacy or LegacyTransport()
     saved_path = failed_request_path(settings)
     saved = None
     if saved_path.is_file():
@@ -107,14 +126,17 @@ def run(settings: Settings, transport: Any = None, out: Callable[[str], None] = 
             saved = json.loads(saved_path.read_text(encoding="utf-8"))
         except ValueError:
             saved = None
-    out(f"요청 주소: {_url_hint(settings.ai_api_url)} / 모델: {settings.ai_model or '(지정 안 함)'} / 제한 시간 {settings.ai_timeout_seconds:g}초")
+    out(f"요청 주소: {_url_hint(settings.ai_api_url)} / 모델: {settings.ai_model or '(지정 안 함)'} / 제한 시간 {settings.ai_timeout_seconds:g}초"
+        f" / 요청 ID 헤더: {settings.ai_request_id_header or '(보내지 않음)'}")
     out("-" * 70)
     results: dict[str, str] = {}
     for mark, label, body in cases(settings.ai_model, saved):
         out(f"[{mark}] {label} ...")
-        status, seconds, detail = send(transport, settings.ai_api_url, settings.ai_api_key, body, settings.ai_timeout_seconds)
+        sender = legacy if mark == "A2" else transport
+        status, seconds, detail = send(sender, settings.ai_api_url, settings.ai_api_key, body, settings.ai_timeout_seconds)
         results[mark] = status
-        out(f"    → {'성공' if status == 'ok' else '실패 ' + status} ({seconds:.1f}초) {detail}")
+        rid = getattr(sender, "last_request_id", None) if mark != "A2" else None
+        out(f"    → {'성공' if status == 'ok' else '실패 ' + status} ({seconds:.1f}초){f' 요청 ID {rid}' if rid else ''} {detail}")
     out("-" * 70)
     lines = conclude(results)
     for line in lines:

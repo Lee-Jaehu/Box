@@ -233,7 +233,7 @@ def test_ai_check_concludes_cause(tmp_path):
     _save_failed_request_file(settings, {"messages": [{"role": "user", "content": "x" * 30000}], "model": "k-exaone_v2"},
                               {"promptId": "weekly_rollup"})
     printed: list[str] = []
-    lines = ai_check.run(settings, Gateway(), printed.append)
+    lines = ai_check.run(settings, Gateway(), printed.append, legacy=Gateway())
     text = "\n".join(printed)
     assert "SECRETKEY" not in text and "QS" not in text
     assert "[G]" in text and "weekly_rollup" in text
@@ -260,3 +260,67 @@ def test_paste_mode_reason_names_file_and_empty_fields_without_key(tmp_path, mon
     monkeypatch.setenv("WORKLOG_AI_API_KEY", "SECRETKEY")  # 환경변수가 config.json보다 우선
     live = load_settings(cfg)
     assert live.ai_live and live.ai_paste_reason == "" and "SECRETKEY" not in json.dumps(config_info(live))
+
+
+
+# ---------------------------------------------------------------- EXAONE API 문서의 요청 형식 (결정 I42)
+
+class _Resp:
+    def __init__(self, data: bytes):
+        self.data = data
+
+    def read(self):
+        return self.data
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+
+def test_transport_follows_api_doc_headers_and_sends_ascii_json(monkeypatch):
+    seen = []
+    monkeypatch.setattr(ai.urllib.request, "urlopen", lambda req, timeout: (seen.append(req), _Resp(b"{}"))[1])
+    t = ai.UrlLibTransport()
+    t.request("https://ai.example/v1/chat/completions", "KEY", {"messages": [{"role": "user", "content": "한글 본문"}]}, 5)
+    req = seen[0]
+    headers = {k.lower(): v for k, v in req.header_items()}
+    assert headers["content-type"] == "application/json; charset=utf-8" and headers["accept"] == "*/*"
+    assert headers["authorization"] == "Bearer KEY" and headers["user-agent"].startswith("Worklog-PPT")
+    assert headers["x-request-id"] == t.last_request_id and len(t.last_request_id) == 36
+    raw = req.data
+    assert raw.isascii() and json.loads(raw)["messages"][0]["content"] == "한글 본문"  # \\uXXXX → 같은 글자
+    seen.clear()
+    ai.UrlLibTransport("x-req-id").request("https://ai.example/v1", "K", {}, 5)
+    ai.UrlLibTransport(None).request("https://ai.example/v1", "K", {}, 5)
+    names = [{k.lower() for k, _ in r.header_items()} for r in seen]
+    assert "x-req-id" in names[0] and not any("request-id" in n or "req-id" in n for n in names[1])
+
+
+def test_request_id_in_error_message_and_setting(tmp_path):
+    class WithId(Fake):
+        n = 0
+
+        def request(self, url, key, body, timeout):
+            WithId.n += 1
+            self.last_request_id = f"rid-{WithId.n}"
+            return super().request(url, key, body, timeout)
+
+    with pytest.raises(AIError) as err:
+        call(client(WithId(404)))
+    assert "요청 ID rid-" in str(err.value)
+    cfg = tmp_path / "c.json"
+    cfg.write_text(json.dumps({"AI_REQUEST_ID_HEADER": ""}), encoding="utf-8")
+    assert load_settings(cfg).ai_request_id_header == ""
+    cfg.write_text("{}", encoding="utf-8")
+    assert load_settings(cfg).ai_request_id_header == "X-Request-ID"
+
+
+def test_ai_check_encoding_conclusion():
+    import ai_check
+
+    res = {"A": "ok", "A2": "500", "A3": "ok", "B": "ok", "C": "ok", "D": "ok", "E": "ok", "F": "ok"}
+    assert any("한글 인코딩" in x for x in ai_check.conclude(res))
+    res["A3"] = "500"
+    assert any("AI_REQUEST_ID_HEADER" in x for x in ai_check.conclude(res))

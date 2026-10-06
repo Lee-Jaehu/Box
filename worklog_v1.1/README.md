@@ -36,7 +36,7 @@
 5. AI 연결이 없으면 ‘AI 응답 필요’가 나온다 → **프롬프트 복사** → 사내 AI 에 보내기 → 받은 JSON 붙여넣기 → **응답 저장 후 계속**(과제마다 2~3번, 팀장 요약을 켜면 1번 더). 같은 입력이면 다음부터는 다시 묻지 않는다.
 6. 완료되면 PPT 와 검사 보고서(숫자·날짜 근거 확인, PPT 재검사)를 내려받는다. **최근 보고자료** 목록은 모든 사용자에게 보인다.
 
-서버 AI 연결: `config\config.json` 에 `AI_API_URL`(호출 주소 전체), `AI_API_KEY`(필요 시 `AI_MODEL`, `AI_TIMEOUT_SECONDS`)를 넣고 **서버를 다시 시작**한다. 둘 중 하나라도 비면 보고자료는 붙여넣기 방식('AI 응답 필요' → 프롬프트 복사)이 되고, 서버 시작 화면과 보고자료 화면에 그 이유(읽은 파일·비어 있는 칸)가 나온다. 요청은 OpenAI 호환 Chat Completions 형식(`model`, `messages`, `Authorization: Bearer <키>`)이고 `response_format` 은 기본으로 보내지 않는다(`AI_JSON_MODE`). 사내 API 형식이 다르면 `backend/weekly_report/ai.py` 의 `ChatCompletionsAdapter` 를 바꾼다.
+서버 AI 연결: `config\config.json` 에 `AI_API_URL`(호출 주소 전체), `AI_API_KEY`(필요 시 `AI_MODEL`, `AI_TIMEOUT_SECONDS`)를 넣고 **서버를 다시 시작**한다. 둘 중 하나라도 비면 보고자료는 붙여넣기 방식('AI 응답 필요' → 프롬프트 복사)이 되고, 서버 시작 화면과 보고자료 화면에 그 이유(읽은 파일·비어 있는 칸)가 나온다. 요청은 OpenAI 호환 Chat Completions 형식(`model`, `messages`)이고 `response_format` 은 기본으로 보내지 않는다(`AI_JSON_MODE`). 헤더는 EXAONE API 문서의 'JSON 형식 요청'에 맞춘다: `Authorization: Bearer <키>`, `Content-Type: application/json; charset=utf-8`, `Accept: */*`, 요청마다 새 요청 ID(`X-Request-ID`, 이름은 `AI_REQUEST_ID_HEADER`로 바꾸거나 `""`로 뺌). 본문은 ASCII JSON(한글은 `\uXXXX`)으로 보낸다. 오류 메시지·검사 보고서에 요청 ID가 나오므로 사내 담당자 문의에 쓴다. 사내 API 형식이 다르면 `backend/weekly_report/ai.py` 의 `ChatCompletionsAdapter` 를 바꾼다.
 
 `config\config.json` 은 Git·배포 zip 에 들어 있지 않다(새 버전을 덮어 풀어도 설정 유지). 프로그램 폴더를 통째로 바꾸는 경우에도 키를 유지하려면 Windows 사용자 환경변수로 넣는다(config.json 보다 우선): `setx WORKLOG_AI_API_URL "https://…/chat/completions"`, `setx WORKLOG_AI_API_KEY "키"`, `setx WORKLOG_AI_MODEL "k-exaone_v2"` 후 새 창에서 `실행.bat`.
 - `AI_API_URL` 은 **호출 주소 전체**(예: `https://…/v1/chat/completions`)를 넣는다. 기본 주소나 채팅 화면 주소를 넣으면 405 가 난다.

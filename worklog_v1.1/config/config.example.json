@@ -16,5 +16,6 @@
   "AI_MAX_TOKENS": "",
   "AI_INPUT_CHARS": 24000,
   "AI_COMPAT_MODE": "auto",
+  "AI_REQUEST_ID_HEADER": "X-Request-ID",
   "AI_JSON_MODE": false
 }
