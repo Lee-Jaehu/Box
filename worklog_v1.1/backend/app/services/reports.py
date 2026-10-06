@@ -193,6 +193,7 @@ class ServiceClient(ExaoneClient):
                          transport=UrlLibTransport(settings.ai_request_id_header or None))
         self.settings = settings
         self.input_chars = settings.ai_input_chars
+        self.min_interval = settings.ai_min_interval_seconds
         self.compat = {"true": True, "false": False}.get(settings.ai_compat_mode)
         self.on_call = None  # 서버 AI 호출 직전 알림 (작업 단계 표시용): on_call(prompt_id, 입력 글자 수)
         self.not_before = not_before
@@ -240,7 +241,7 @@ class ServiceClient(ExaoneClient):
             _save_failed_request_file(self.settings, self.last_request, {
                 "savedAt": _now(self.settings), "promptId": prompt_id, "responseName": name,
                 "inputChars": stat.get("chars"), "sends": stat.get("sends"), "compat": bool(self.compat),
-                "requestId": stat.get("request_id")})
+                "requestId": stat.get("request_id"), "events": stat.get("events", [])})
         except OSError:
             log.warning("실패한 AI 요청을 저장하지 못함")
 

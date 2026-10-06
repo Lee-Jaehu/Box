@@ -49,3 +49,4 @@ Worklog 서비스 연결 코드는 `backend/app/services/reports.py`, 참고 슬
 
 - ai.py (I40, 사내 게이트웨이 500 "Connection error." 대응): 호환 형식 `compat`(system을 user에 합치고 temperature·max_tokens 없음) — 5xx가 재요청 뒤에도 계속되면 1번 시도 후 유지. `last_request`(실패 분석용, 키 없음). 5xx 메시지에 입력 글자 수·AI점검 안내. 원본에도 같은 변경(`EXAONE_COMPAT_MODE`).
 - ai.py (I42, EXAONE API 문서 형식): `UrlLibTransport` 헤더 `Content-Type: application/json; charset=utf-8`·`Accept: */*`·`User-Agent: Worklog-PPT/1.0`·요청 ID(`X-Request-ID`, 이름 설정 가능), 본문 ASCII JSON. 요청 ID를 오류 메시지에. 원본에도 같은 변경(`EXAONE_REQUEST_ID_HEADER`).
+- ai.py (I43, 호출 한도 429): 프로세스 공용 요청 간격 `_pace`(`min_interval`, 기본 1.5초), 429 전용 재시도(Retry-After 또는 `RATE_LIMIT_DELAYS` 2·5·10·20·30초), 호출 경위 `events`를 오류 메시지에. 원본에도 같은 변경(`EXAONE_MIN_INTERVAL_SECONDS`).

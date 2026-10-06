@@ -58,6 +58,8 @@ class Settings:
     ai_compat_mode: str = "auto"
     # EXAONE API 문서: 헤더에 요청 ID를 넣는다. 헤더 이름(비우면 보내지 않음). 사내 문서의 정확한 이름으로 바꿀 수 있다
     ai_request_id_header: str = "X-Request-ID"
+    # 요청 사이 최소 간격(초). 사내 게이트웨이 호출 한도 "초당 1회"(429) 대응. 직전 요청의 시작·끝 모두에서 센다
+    ai_min_interval_seconds: float = 1.5
     # 서버가 읽은 설정 파일 (화면·시작 로그에 "왜 붙여넣기 방식인지" 보여 줄 때 사용)
     config_file: Path | None = None
     config_found: bool = False
@@ -156,7 +158,8 @@ def load_settings(config_file: Path | None = None) -> Settings:
             setattr(s, key, str(merged[key]).strip())
     if "ai_request_id_header" in merged:
         s.ai_request_id_header = str(merged["ai_request_id_header"] or "").strip()
-    for key, cast in (("ai_timeout_seconds", float), ("report_job_retention", int), ("ai_input_chars", int)):
+    for key, cast in (("ai_timeout_seconds", float), ("report_job_retention", int), ("ai_input_chars", int),
+                      ("ai_min_interval_seconds", float)):
         if key in merged:
             setattr(s, key, cast(merged[key]))
     if str(merged.get("ai_compat_mode") or "").strip():
