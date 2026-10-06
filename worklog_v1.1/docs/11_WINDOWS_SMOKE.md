@@ -12,7 +12,7 @@
    - embedded: `runtime\python\python.exe` (직접 구성. `_pth`/site-packages/네이티브 wheel 포함 여부를 §E 로 확인)
 4. (선택) 운영 서버와 별도로 시험하려면 테스트실행.bat [포트] 를 쓴다(데이터는 data_test\ 로 분리).
    - `.bat` 파일은 **CRLF 줄바꿈**이어야 한다. LF만 있으면 cmd 가 줄 경계를 잘못 읽어 `'…'은(는) 내부 또는 외부 명령… 이 아닙니다` 가 줄 조각마다 나온다(특히 `chcp 65001` + 한글). 저장소는 `.gitattributes`(`*.bat -text`)로 CRLF 그대로 저장하므로 GitHub ZIP·clone 어느 쪽으로 받아도 CRLF 다. 편집기로 고칠 때 LF 로 바꾸지 않는다.
-5. 포트 확인: `netsh interface ipv4 show excludedportrange protocol=tcp` 에 사용할 포트(기본 8000)가 **없어야** 한다. 있으면 `config.json` 의 `PORT` 변경(예약 포트는 `WinError 10013` 으로 서버가 종료된다).
+5. 포트 확인: `netsh interface ipv4 show excludedportrange protocol=tcp` 에 사용할 포트(기본 8000)가 **없어야** 한다. 있으면 `config.json` 의 `PORT` 변경(예약 포트는 `WinError 10013` 으로 서버가 종료된다). 회사 PC 보안 정책으로 `netsh.exe` 실행이 막히면("Access is denied") `테스트실행.bat` 의 포트 검사(`scripts\check-port.ps1`)는 예약 포트 검사를 건너뛰고 안내 한 줄만 출력한 뒤 계속한다.
 
 - ☐ 3 의 방법으로 만든 환경에서 `실행.bat` 이 `[Worklog] Python (conda|embedded|venv): …` 를 출력하고 서버가 시작된다
 - ☐ 한글·공백이 들어간 폴더(예: `D:\업무 도구\worklog`)에서도 동일하게 시작된다
