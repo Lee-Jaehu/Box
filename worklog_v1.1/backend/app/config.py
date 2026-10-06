@@ -48,7 +48,12 @@ class Settings:
     ai_api_url: str | None = None
     ai_api_key: str | None = None
     ai_model: str | None = None
-    ai_timeout_seconds: float = 120.0
+    # 사고형 모델(k-exaone_v2)은 사고 과정까지 만든 뒤 답하므로 입력이 크면 2분을 넘기기 쉽다 → 기본 5분
+    ai_timeout_seconds: float = 300.0
+    # 응답 길이 한도(max_tokens). 비우면 보내지 않음(서버 기본값). '길이 한도에 걸려 잘림' 오류가 나면 늘린다
+    ai_max_tokens: int | None = None
+    # 한 번의 AI 호출에 넣을 업무일지 원문 글자 수 상한. 넘으면 기록마다 균등하게 줄이고 확인 보고서에 알린다
+    ai_input_chars: int = 24000
     # 요청에 response_format={"type":"json_object"}를 붙일지. 사내 EXAONE 게이트웨이는 이 옵션에 500을 돌려줘서 기본은 끔
     # (프롬프트가 JSON만 요구하고, 응답에 설명·```json이 섞여도 JSON만 골라 읽음)
     ai_json_mode: bool = False
@@ -130,7 +135,9 @@ def load_settings(config_file: Path | None = None) -> Settings:
     for key in ("ai_api_url", "ai_api_key", "ai_model"):
         if merged.get(key):
             setattr(s, key, str(merged[key]).strip())
-    for key, cast in (("ai_timeout_seconds", float), ("report_job_retention", int)):
+    for key, cast in (("ai_timeout_seconds", float), ("report_job_retention", int), ("ai_input_chars", int)):
         if key in merged:
             setattr(s, key, cast(merged[key]))
+    if str(merged.get("ai_max_tokens") or "").strip() not in ("", "0"):
+        s.ai_max_tokens = int(merged["ai_max_tokens"])
     return s

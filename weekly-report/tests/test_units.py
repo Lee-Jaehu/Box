@@ -124,12 +124,29 @@ def test_live_errors_do_not_leak_key(monkeypatch):
     monkeypatch.setenv("EXAONE_API_URL", "https://exaone.invalid/v1")
     monkeypatch.setenv("EXAONE_API_KEY", "secret-key-123")
     for error in (TimeoutError(), urllib.error.HTTPError("u", 500, "x", {}, None), urllib.error.URLError(OSError("down"))):
+        client = ExaoneClient(ROOT, "live", transport=FakeTransport([error] * 3))  # 일시 오류는 2번 더 보낸 뒤 포기
+        client.sleep = lambda seconds: None
         with pytest.raises(AIError) as info:
-            ExaoneClient(ROOT, "live", transport=FakeTransport([error])).complete("p", "P", "W", "s", "u")
-        assert "secret-key-123" not in str(info.value)
+            client.complete("p", "P", "W", "s", "u")
+        assert "secret-key-123" not in str(info.value) and "요청 3회" in str(info.value)
     bad = FakeTransport([{"content": "x"}, {"content": "y"}])
     with pytest.raises(AIError, match="2회"):
         ExaoneClient(ROOT, "live", transport=bad).complete("p", "P", "W", "s", "u")
+
+
+def test_live_reads_json_after_think_and_retries_gateway_error(monkeypatch):
+    """사고형 모델: <think> 안의 { }를 건너뛰고, 게이트웨이 일시 오류(500)는 대기 후 다시 보낸다."""
+    monkeypatch.setenv("EXAONE_API_URL", "https://exaone.invalid/v1")
+    monkeypatch.setenv("EXAONE_API_KEY", "k")
+    answer = {"choices": [{"finish_reason": "stop", "message": {"content": '<think>{형식}</think>\n{"items": [{"text": "a", "source_ids": []}]}'}}]}
+    client = ExaoneClient(ROOT, "live", transport=FakeTransport([urllib.error.HTTPError("u", 500, "x", {}, None), answer]))
+    waits = []
+    client.sleep = waits.append
+    assert client.complete("cumulative_update", "P", "W", "s", "u")["items"][0]["text"] == "a"
+    assert waits == [3.0] and client.call_log[0]["sends"] == 2
+    cut = {"choices": [{"finish_reason": "length", "message": {"content": None, "reasoning": "생각"}}]}
+    with pytest.raises(AIError, match="길이 한도"):
+        ExaoneClient(ROOT, "live", transport=FakeTransport([cut])).complete("cumulative_update", "P", "W", "s", "u")
 
 
 def test_live_requires_env(monkeypatch):

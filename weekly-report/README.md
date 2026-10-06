@@ -148,7 +148,7 @@ python tools/make_report_template.py                          # 템플릿 초안
 ### EXAONE 클라이언트 (`weekly_report/ai.py`)
 
 - mock(기본): `prompts/mock_responses/{prompt_id}__{project_id}__{week}.json`, fit_to_budget은 `…__{week}__{slot}.json`. mock 파일이 없으면 fit_to_budget은 원문 유지로 처리합니다.
-- live: `EXAONE_API_URL`, `EXAONE_API_KEY`(선택 `EXAONE_MODEL`). 요청·응답 변환은 `Adapter`로 분리했고 현재는 Chat Completions 형식 가정입니다. **사내 API 계약을 받지 못해 실제 연결은 검증하지 않았습니다.** JSON 파싱 실패 시 문서 문구로 1회 재요청, 타임아웃·HTTP·연결 오류는 키를 포함하지 않는 `AIError`로 보고합니다.
+- live: `EXAONE_API_URL`, `EXAONE_API_KEY`(선택 `EXAONE_MODEL`). 요청·응답 변환은 `Adapter`로 분리했고 현재는 Chat Completions 형식 가정입니다. **사내 API 계약을 받지 못해 실제 연결은 검증하지 않았습니다.** JSON 파싱 실패 시 문서 문구로 1회 재요청, 응답 앞의 사고 과정(`<think>…</think>`)은 빼고 JSON을 찾습니다. HTTP 408/429/5xx·연결 실패·타임아웃은 3초·10초 뒤 최대 2번 더 보내고, 그래도 실패하면 키를 포함하지 않는 `AIError`로 보고합니다. 응답이 길이 한도로 잘리면(`finish_reason=length`) 그 원인을 알리며, 한도는 선택 환경변수 `EXAONE_MAX_TOKENS`로 정합니다.
 - 프롬프트 원문은 `prompts/*.txt`에서 읽고 `{{변수}}`만 치환합니다. 변수 형식은 `prompts/README.md`를 따릅니다(`weekly_report/prompt_vars.py`).
 
 ## 확인된 문서·예시 불일치와 처리 방식

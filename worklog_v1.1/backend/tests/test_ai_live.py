@@ -29,8 +29,10 @@ class FakeTransport:
 
 
 def client(transport, json_mode=False):
-    return ExaoneClient(Path("."), "live", transport=transport, adapter=ChatCompletionsAdapter(json_mode=json_mode),
-                        api_url="https://ai.example/v1/chat/completions?token=secret", api_key="KEY", model="k-exaone_v2")
+    c = ExaoneClient(Path("."), "live", transport=transport, adapter=ChatCompletionsAdapter(json_mode=json_mode),
+                     api_url="https://ai.example/v1/chat/completions?token=secret", api_key="KEY", model="k-exaone_v2")
+    c.sleep = lambda seconds: None  # 일시 오류 재요청 대기 없이
+    return c
 
 
 def test_default_request_has_no_json_mode_and_reads_fenced_json():
@@ -50,9 +52,9 @@ def test_json_mode_rejected_retries_without_it():
 
 def test_http_error_message_shows_server_reply_without_key_or_query():
     with pytest.raises(AIError) as err:
-        client(FakeTransport(500)).complete("cumulative_update", "P", "2026-W40", "s", "u")
+        client(FakeTransport(500, 500, 500)).complete("cumulative_update", "P", "2026-W40", "s", "u")
     msg = str(err.value)
-    assert "HTTP 오류: 500" in msg and "Connection error" in msg and "https://ai.example/v1/chat/completions" in msg
+    assert "HTTP 오류: 500" in msg and "요청 3회" in msg and "Connection error" in msg and "https://ai.example/v1/chat/completions" in msg
     assert "secret" not in msg and "KEY" not in msg
 
 

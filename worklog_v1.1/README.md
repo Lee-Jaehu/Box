@@ -98,7 +98,9 @@ python backend/run.py                 # http://localhost:8000/
 | `TIMEZONE` | `Asia/Seoul` | 업무 날짜 기준 |
 | `BACKUP_HARDLINK_ATTACHMENTS` | `false` | 공간 절약용. 켜면 원본 손상이 백업에도 번질 수 있음 |
 | `AI_API_URL` / `AI_API_KEY` / `AI_MODEL` | 비어 있음 | 보고자료 AI. 주소·키가 모두 있으면 서버가 직접 호출, 없으면 붙여넣기 방식. 키는 화면에 노출하지 않음 |
-| `AI_TIMEOUT_SECONDS` | `120` | AI 호출 한 번의 제한 시간 |
+| `AI_TIMEOUT_SECONDS` | `300` | AI 호출 한 번의 제한 시간. 사고형 모델(k-exaone_v2)은 입력이 크면 2분을 넘기기 쉬움 |
+| `AI_MAX_TOKENS` | 비어 있음 | 응답 길이 한도(max_tokens). 비우면 보내지 않음. "응답 길이 한도에 걸려 잘림" 오류가 나면 늘림(사고 과정도 한도에 포함) |
+| `AI_INPUT_CHARS` | `24000` | AI 호출 한 번에 넣을 업무일지 원문 글자 수 상한. 넘으면 기록마다 균등하게 줄이고 검사 보고서에 알림(팀장 요약은 절반, 이슈 줄 우선) |
 | `REPORT_JOB_RETENTION` | `200` | 보관할 보고자료 작업 수(넘으면 오래된 결과부터 삭제) |
 
 이 외 `SQLITE_SYNCHRONOUS`(기본 FULL), `SQLITE_BUSY_TIMEOUT_MS`(5000), `EXPORT_WORKER_ENABLED` 가 있다.

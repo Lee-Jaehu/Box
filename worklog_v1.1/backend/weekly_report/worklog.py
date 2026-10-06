@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -120,6 +121,95 @@ def tiptap_inline(value: Any) -> str:
         else:
             joined.append(part)
     return " / ".join(joined)
+
+
+# ---------------------------------------------------------------- Task 에디터 섹션 (## 진행 현황 / ## 이슈 / ## 향후계획)
+# [Worklog 통합] Task 하나 안에 MD처럼 "## 진행 현황 : …" 식으로 쓴 내용을 섹션별 contents{}로 나눈다 (결정 I38).
+# 받는 형식: dict {"진행 현황": "..."|[...]} / MD 문자열 / tiptap 문서(heading 노드 또는 "## "로 시작하는 문단).
+
+SECTION_PROGRESS, SECTION_ISSUE, SECTION_PLAN, SECTION_BODY = "진행 현황", "이슈", "향후계획", "내용"
+SECTION_ORDER = (SECTION_PROGRESS, SECTION_ISSUE, SECTION_PLAN)
+_SECTION_ALIASES = {
+    SECTION_PROGRESS: ("진행 현황", "진행현황", "진행 상황", "진행상황", "진행", "실적", "수행 내용", "수행내용", "금주 실적", "progress"),
+    SECTION_ISSUE: ("이슈", "이슈 사항", "이슈사항", "문제", "문제점", "리스크", "issue", "issues"),
+    SECTION_PLAN: ("향후계획", "향후 계획", "계획", "다음 계획", "차주 계획", "추후 계획", "to-do", "todo", "next", "plan"),
+}
+_ALIAS = {re.sub(r"\s+", "", a).lower(): name for name, aliases in _SECTION_ALIASES.items() for a in aliases}
+_HEADING_RE = re.compile(r"^\s*#{1,6}(\s*)([^:：]+?)\s*(?:[:：]\s*(.*))?$")
+
+
+def section_name(raw: str) -> str:
+    """섹션 이름 정규화: 별칭은 진행 현황 / 이슈 / 향후계획으로, 그 밖은 원래 이름."""
+    text = raw.strip().strip("[]【】").strip()
+    return _ALIAS.get(re.sub(r"\s+", "", text).lower(), text)
+
+
+def _section_lines(lines: list[str]) -> dict[str, list[str]]:
+    sections: dict[str, list[str]] = {}
+    current = SECTION_BODY
+    for line in lines:
+        match = _HEADING_RE.match(line)
+        # "##이슈"처럼 붙여 쓴 것은 알려진 섹션 이름일 때만 제목으로 본다 ("#1 개선" 같은 본문 보호)
+        if match and (match.group(1) or section_name(match.group(2)) in SECTION_ORDER):
+            current = section_name(match.group(2))
+            sections.setdefault(current, [])
+            if match.group(3) and match.group(3).strip():
+                sections[current].append(match.group(3).strip())
+            continue
+        if line.strip():
+            sections.setdefault(current, []).append(line.rstrip())
+    return {k: v for k, v in sections.items() if v}
+
+
+def _tiptap_section_lines(doc: dict[str, Any]) -> list[str]:
+    """tiptap → 줄 목록. heading 노드는 "## 제목" 줄로 바꿔 MD와 같은 규칙으로 나눈다."""
+    lines: list[str] = []
+    for node in doc.get("content", []) or []:
+        if node.get("type") == "heading":
+            lines.append("## " + _inline(node).replace("\n", " ").strip())
+        else:
+            lines += tiptap_lines({"type": "doc", "content": [node]})
+    return lines
+
+
+def task_sections(value: Any) -> dict[str, list[str]]:
+    """Task 내용 → {섹션: [줄, ...]}. 섹션 표시가 없으면 {"내용": [...]}."""
+    if isinstance(value, dict) and _doc(value) is None:
+        out: dict[str, list[str]] = {}
+        for raw, body in value.items():
+            if isinstance(body, (list, tuple)):
+                lines = [str(x).strip() for x in body if str(x).strip()]
+            elif _doc(body) is not None:
+                lines = tiptap_lines(body)
+            else:
+                lines = tiptap_lines(str(body)) if body is not None else []
+            if lines:
+                out.setdefault(section_name(str(raw)), []).extend(lines)
+        return out
+    if isinstance(value, str):
+        return _section_lines(value.splitlines())
+    doc = _doc(value)
+    return _section_lines(_tiptap_section_lines(doc)) if doc is not None else {}
+
+
+def task_contents(task: dict[str, Any]) -> dict[str, list[str]]:
+    """Task의 섹션 내용: contents(동료 에디터가 쓸 수 있는 칸) → content 순으로 찾는다."""
+    for field in ("contents", "content"):
+        sections = task_sections(task.get(field))
+        if sections:
+            return sections
+    return {}
+
+
+def merge_contents(parts: list[dict[str, list[str]]]) -> dict[str, list[str]]:
+    """여러 Task의 섹션을 합친다. 순서: 진행 현황 → 이슈 → 향후계획 → 그 밖 → 내용."""
+    merged: dict[str, list[str]] = {}
+    for part in parts:
+        for name, lines in part.items():
+            merged.setdefault(name, []).extend(lines)
+    rank = {name: i for i, name in enumerate(SECTION_ORDER)}
+    keys = sorted(merged, key=lambda k: (rank.get(k, len(rank) + (k == SECTION_BODY)),))
+    return {k: merged[k] for k in keys}
 
 
 # ---------------------------------------------------------------- 공통
@@ -295,7 +385,12 @@ def log_text(log: dict[str, Any], milestone_names: dict[str, str], mapping: dict
         stage = milestone_names.get(ref.get("id")) or ref.get("nameSnapshot") or "마일스톤 없음"
         when = _period(task.get("performedStart"), task.get("performedEnd"))
         lines.append(f"[수행] ({stage}) {task.get('title') or '제목 없음'} ({when})")
-        lines += [f"  {line}" for line in tiptap_lines(task.get("content"))]
+        # [Worklog 통합] 섹션(## 진행 현황 / ## 이슈 / ## 향후계획)별 한 줄씩 — 표시 없는 내용은 기존처럼 줄 단위
+        for name, body in merge_contents([task_contents(task)]).items():
+            if name == SECTION_BODY:
+                lines += [f"  {line}" for line in body]
+            else:
+                lines.append(f"  [{name}] " + " / ".join(line.strip() for line in body))
         if task.get("attachments"):
             lines.append(f"  (첨부 {len(task['attachments'])}건)")
     for key, label in (("achievements", None), ("issueRecords", "이슈"), ("todoRecords", "할 일")):
@@ -335,6 +430,7 @@ def to_dailies(export: dict[str, Any], project: dict[str, Any], mapping: dict[st
         daily_id = f"D-{day.strftime('%y%m%d')}-{key}-{counters[key]:02d}"
         refs: dict[str, Any] = {"log": log.get("id") or ""}
         refs["tasks"] = [t["id"] for t in log.get("tasks") or [] if t.get("id")]
+        contents = merge_contents([task_contents(t) for t in sorted(log.get("tasks") or [], key=lambda t: t.get("sortOrder", 0))])
         refs["records"] = [r["refId"] for k in ("issueRecords", "todoRecords", "achievements") for r in log.get(k) or []
                            if isinstance(r, dict) and r.get("refId")]
         dailies.append({
@@ -344,6 +440,7 @@ def to_dailies(export: dict[str, Any], project: dict[str, Any], mapping: dict[st
             "daily_id": daily_id, "date": export["date"], "tag": day.strftime("%y-%m-%d"), "author": key,
             "author_name": (log.get("author") or {}).get("name"), "project_id": export["project"]["id"], "category": None,
             "visibility": "project", "raw_text": text, "tables": [], "pics": [], "links": [], "deleted": False, "source_refs": refs,
+            "contents": contents,  # [Worklog 통합] Task 섹션 합본 (요약·PPT 입력)
         })
     return dailies
 

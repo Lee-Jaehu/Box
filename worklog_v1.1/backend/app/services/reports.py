@@ -188,8 +188,10 @@ class ServiceClient(ExaoneClient):
     def __init__(self, ws: Path, settings: Settings, not_before: str | None = None):
         super().__init__(ws, "live" if settings.ai_live else "mock", timeout=settings.ai_timeout_seconds, mock_dir=ws / "responses",
                          api_url=settings.ai_api_url, api_key=settings.ai_api_key, model=settings.ai_model,
-                         adapter=ChatCompletionsAdapter(json_mode=settings.ai_json_mode))
+                         adapter=ChatCompletionsAdapter(json_mode=settings.ai_json_mode, max_tokens=settings.ai_max_tokens))
         self.settings = settings
+        self.input_chars = settings.ai_input_chars
+        self.on_call = None  # 서버 AI 호출 직전 알림 (작업 단계 표시용): on_call(prompt_id, 입력 글자 수)
         self.not_before = not_before
         self.used: list[str] = []
 
@@ -211,9 +213,13 @@ class ServiceClient(ExaoneClient):
             except (json.JSONDecodeError, ResponseFormatError):
                 pass  # 손상된 저장 응답 → 새로 받는다
         if self.mode == "live":
+            if self.on_call:
+                self.on_call(prompt_id, len(prompt))
             payload = self._live(prompt_id, system, user)
             save_response(self.mock_dir, name, payload, sha, "live", _now(self.settings))
-            self.used.append(f"{PROMPT_LABEL.get(prompt_id, prompt_id)}: 서버 AI 호출 ({name})")
+            stat = self.call_log[-1]  # 입력 크기·걸린 시간·요청 횟수 (어느 단계가 무겁고 느린지 보이게)
+            self.used.append(f"{PROMPT_LABEL.get(prompt_id, prompt_id)}: 서버 AI 호출 ({name}) — 입력 {stat['chars']:,}자, "
+                             f"{stat['seconds']:g}초, 요청 {stat['sends']}회{', 끝난 이유 ' + str(stat['finish']) if stat['finish'] not in (None, 'stop') else ''}")
             return payload
         if prompt_id == "fit_to_budget":  # 붙여넣기 방식에서는 묻지 않는다 → 원문 유지 + (계속) 장
             raise MockResponseMissing("붙여넣기 방식에서는 분량 줄이기를 AI에 묻지 않음")
@@ -537,13 +543,19 @@ class _Run:
         self.ws = sync_workspace(self.st)
         not_before = job.get("createdAt") if (job.get("options") or {}).get("refreshAi") else None
         self.client = ServiceClient(self.ws, self.st, not_before)
+        self.client.on_call = self._on_call
         self.out = self.st.reports_dir / "output" / job["id"]
         self.check: list[str] = []
         self.problems: list[str] = []
         self.names: dict[str, str] = {}
 
     def stage(self, text: str) -> None:
+        self.current = text
         self.store.update(self.job["id"], stage=text)
+
+    def _on_call(self, prompt_id: str, chars: int) -> None:
+        base = getattr(self, "current", "").split(" (서버 AI", 1)[0]
+        self.stage(f"{base} (서버 AI {PROMPT_LABEL.get(prompt_id, prompt_id)} 응답 대기 · 입력 {chars:,}자)")
 
     def section(self, title: str, lines: list[str]) -> None:
         self.check += ["", f"===== {title} ====="] + (lines or ["(없음)"])
@@ -568,6 +580,8 @@ class _Run:
                 f"생성 시각: {_now(self.st)} / 요청: {(job.get('requestedBy') or {}).get('name')}"]
         head += [f"- {n}" for n in notes]
         self.section("AI 응답 사용 내역", self.client.used)
+        if self.client.notes:
+            self.section("AI 호출 중 자동 조치 (재요청 등)", self.client.notes)
         self.section("참고 슬라이드", appendix_notes)
         self.section("PPT 재검사 요약", self.problems or ["통과"])
         check_name = f"{pptx.stem}_검사보고서.txt"
@@ -772,7 +786,9 @@ def run_next(rt) -> str | None:
                          finishedAt=_now(rt.settings))
         except (ReportError, ValidationError, WorklogError, BudgetError, AIError, FileNotFoundError, ValueError) as exc:
             log.warning("report job %s failed: %s", jid, exc)
-            store.update(jid, status="failed", stage="실패", error=str(exc), finishedAt=_now(rt.settings))
+            where = (store.require(jid).get("stage") or "").split(" (서버 AI", 1)[0]
+            error = f"[{where}] {exc}" if isinstance(exc, AIError) and where else str(exc)  # 어느 과제·단계에서 실패했는지
+            store.update(jid, status="failed", stage="실패", error=error, finishedAt=_now(rt.settings))
         except Exception as exc:  # noqa: BLE001 - 작업 스레드는 계속 돈다
             log.exception("report job %s crashed", jid)
             store.update(jid, status="failed", stage="실패", error=f"내부 오류 ({type(exc).__name__}). 서버 로그를 확인하세요.",
