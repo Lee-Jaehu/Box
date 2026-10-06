@@ -1,25 +1,126 @@
 {
-  "headline": {"text": "금주(W40)에는 Normal Line 수평전개 완료, 2주 데이터로 개선 유지 확인", "source_ids": ["D-260928-ljh-01", "D-260930-khw-01"], "changed": true},
+  "headline": {
+    "text": "금주(W40)에는 Normal Line 수평전개를 완료했고, 추석 이후 2주 데이터로 개선 효과 유지를 확인했습니다",
+    "source_ids": [
+      "D-260928-ljh-01",
+      "D-260930-khw-01"
+    ],
+    "changed": true
+  },
   "progress": [
-    {"text": "ESWA MEB E77 0.171% → 0.139% (2주 평균, 4일 0.144% 대비 추가 감소)", "source_ids": ["D-260928-ljh-01"], "changed": true},
-    {"text": "ESMI1 #2-2·3 0.367% → 0.221% (2주 평균)", "source_ids": ["D-260928-ljh-01"], "changed": true},
-    {"text": "Normal Line 수평전개 완료(9/30): WA 4대(#21~#24), MI_HL 2대", "source_ids": ["D-260929-khw-01", "D-260930-khw-01"], "changed": true},
-    {"text": "수평전개 누적 적용 호기 26대", "source_ids": ["D-260930-khw-01"], "changed": true},
-    {"text": "북미 Site 수평전개 일정 10월초 → 10/13 확정 (현지 라인 가동 일정)", "source_ids": ["D-261001-ljh-01"], "changed": true}
+    {
+      "text": "추석 이후 2주 데이터 기준 ESWA MEB E77 불량률이 0.171% → 0.139%로, 4일 결과(0.144%)보다 더 감소했습니다. (09/28)",
+      "source_ids": [
+        "D-260928-ljh-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "ESMI1 #2-2·3 불량률도 2주 평균 0.367% → 0.221%로 감소해 단기 개선 효과가 유지되고 있습니다. (09/28)",
+      "source_ids": [
+        "D-260928-ljh-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "Normal Line 수평전개는 WA 4대(#21~#24) 적용 후 MI_HL 2대까지 적용해 전체 완료했습니다. (09/29~09/30)",
+      "source_ids": [
+        "D-260929-khw-01",
+        "D-260930-khw-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "WA 4대는 적용 후 첫날 알람이 없었으며, 수평전개 누적 적용 호기는 26대가 되었습니다. (09/29~09/30)",
+      "source_ids": [
+        "D-260929-khw-01",
+        "D-260930-khw-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "북미 법인과 협의해 현지 라인 가동 일정에 맞춰 북미 수평전개 일정을 10월초 → 10/13으로 확정했습니다. (10/01)",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ],
+      "changed": true
+    }
   ],
   "next_plan": [
-    {"text": "북미 Site 수평전개 적용 (10/13)", "source_ids": ["D-261001-ljh-01"], "changed": true},
-    {"text": "최종 효과 산출(~10/16) 및 완료 회고 작성", "source_ids": ["D-261002-ljh-01"], "changed": true},
-    {"text": "효과 유지 여부 한두 주 추가 모니터링", "source_ids": ["D-260928-ljh-01"], "changed": true}
+    {
+      "text": "북미 Site 수평전개를 적용하고, 적용 전 현지 PLC 보정 파라미터 이식을 검증할 예정입니다. (~10/13)",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "그룹장 보고용 최종 효과를 산출하고, 시작한 완료 회고 초안을 함께 마무리할 예정입니다. (~10/16)",
+      "source_ids": [
+        "D-261002-ljh-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "단기 개선 효과가 계속 유지되는지 한두 주 추가로 재료교체 불량률을 모니터링할 예정입니다",
+      "source_ids": [
+        "D-260928-ljh-01"
+      ],
+      "changed": true
+    }
   ],
   "issues": [
-    {"text": "북미 PLC 펌웨어 버전 상이 → 보정 파라미터 이식 전 검증 필요", "source_ids": ["D-261001-ljh-01"], "changed": true},
-    {"text": "원격 접속 지원 여부 IT팀 확인 요청 필요 (지원 요청)", "source_ids": ["D-261001-ljh-01"], "changed": true}
+    {
+      "text": "북미 현지 PLC 펌웨어 버전이 국내와 달라 보정 파라미터 이식 전에 별도 검증이 필요합니다. (10/01)",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ],
+      "changed": true
+    },
+    {
+      "text": "북미 PLC 검증을 위한 원격 접속 지원 가능 여부를 IT팀에 확인 요청드립니다 (지원 요청). (10/01)",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ],
+      "changed": true
+    }
   ],
   "milestone_updates": [
-    {"milestone_id": "M6-3", "field": "actual", "to": "2026-09-30", "reason": "Normal Line 수평전개 전체 완료", "source_ids": ["D-260930-khw-01"]},
-    {"milestone_id": "M6-3", "field": "status", "to": "완료", "reason": "Normal Line 수평전개 전체 완료", "source_ids": ["D-260930-khw-01"]},
-    {"milestone_id": "M6-4", "field": "plan", "to": "2026-10-13", "reason": "북미 법인 협의로 적용일 확정", "source_ids": ["D-261001-ljh-01"]},
-    {"milestone_id": "M6-4", "field": "note", "to": "PLC 펌웨어 검증 필요", "reason": "현지 PLC 펌웨어 버전 상이", "source_ids": ["D-261001-ljh-01"]}
+    {
+      "milestone_id": "M6-3",
+      "field": "actual",
+      "to": "2026-09-30",
+      "reason": "Normal Line 수평전개 전체 완료",
+      "source_ids": [
+        "D-260930-khw-01"
+      ]
+    },
+    {
+      "milestone_id": "M6-3",
+      "field": "status",
+      "to": "완료",
+      "reason": "Normal Line 수평전개 전체 완료",
+      "source_ids": [
+        "D-260930-khw-01"
+      ]
+    },
+    {
+      "milestone_id": "M6-4",
+      "field": "plan",
+      "to": "2026-10-13",
+      "reason": "북미 법인 협의로 적용일 확정",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ]
+    },
+    {
+      "milestone_id": "M6-4",
+      "field": "note",
+      "to": "PLC 펌웨어 검증 필요",
+      "reason": "현지 PLC 펌웨어 버전 상이",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ]
+    }
   ]
 }

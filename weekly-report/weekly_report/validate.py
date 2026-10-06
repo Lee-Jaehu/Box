@@ -23,7 +23,8 @@ from .codes import CodeTable
 
 ISO_DATE_RE = re.compile(r"(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)")
 MD_DATE_RE = re.compile(r"(?<![\d./])(\d{1,2})/(\d{1,2})(?![\d/])")
-RECORD_ID_RE = re.compile(r"(?<![A-Za-z0-9])(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|(?<![A-Za-z0-9])P-[A-Z]+-\d{3}|(?<![A-Za-z0-9])M\d+(?:-\d+)?(?![A-Za-z0-9])")
+# WorkLog 과제·원본 ID(UUID)도 기록 ID로 인식한다 (숫자로 잘못 읽지 않게)
+RECORD_ID_RE = re.compile(r"(?<![0-9A-Za-z-])[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![0-9A-Za-z-])|(?<![A-Za-z0-9])(?:D|CP|R)-\d{6}-[A-Za-z0-9]+(?:-\d+)?|(?<![A-Za-z0-9])P-[A-Z]+-\d{3}|(?<![A-Za-z0-9])M\d+(?:-\d+)?(?![A-Za-z0-9])")
 UNIT_RE = re.compile(r"#\d+(?:-\d+)?(?:[·,]\d+)*")
 CODE_RE = re.compile(r"(?<![A-Za-z0-9_])[A-Za-z_]+\d[A-Za-z0-9_]*")
 NUMBER_RE = re.compile(r"(?<![\d.])\d+(?:\.\d+)?%?")
@@ -137,11 +138,25 @@ class Evidence:
         return [(self.raw, "원문"), (self.master, "기준정보"), (self.computed, "계산값"), (self.prev, "이전요약")]
 
 
+DAILY_ID_DATE_RE = re.compile(r"^(?:D|CP|R)-\d{2}(\d{2})(\d{2})-")
+
+
+def id_dates(ids: Iterable[str]) -> list[str]:
+    """기록 ID에 담긴 작성일 (D-260922-ljh-01 → "9/22"). 문장 끝 진행 날짜의 근거로 쓴다."""
+    found = []
+    for value in ids:
+        match = DAILY_ID_DATE_RE.match(value)
+        if match:
+            found.append(f"{int(match[1])}/{int(match[2])}")
+    return sorted(set(found))
+
+
 def build_evidence(*, dailies: list[dict[str, Any]], project: dict[str, Any], prev_texts: Iterable[str] = (),
                    computed: Iterable[str] = (), allowed_ids: set[str], codes: CodeTable | None = None,
                    prev_level: str = "주의") -> Evidence:
     raw_texts: list[str] = []
     for daily in dailies:
+        raw_texts.append(daily.get("date", ""))  # 메모 작성일: 문장 끝 진행 날짜 "(MM/DD)"의 근거
         raw_texts.append(daily.get("raw_text", ""))
         for table in daily.get("tables", []):
             raw_texts.extend(str(c) for c in table.get("columns", []))

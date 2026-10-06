@@ -1,0 +1,19 @@
+[과제 기준정보]
+- 과제: {{project_id}} {{project_name}} ({{org}})
+- 기간: {{period}} / 상태: {{status}} / 건강도: {{health}}
+- 배경: {{background}}
+- 목적: {{purpose}}
+- KPI:
+{{kpi_lines}}
+
+[마일스톤 (이번 주까지 일정 변화 반영)]
+{{milestone_lines}}
+
+[누적 요약 ({{as_of_week}} 기준)]
+{{cumulative_lines}}
+
+[고정 사실 (수치·결정, 바꾸지 말 것)]
+{{pinned_lines}}
+
+[최근 주간 정리본]
+{{weekly_blocks}}

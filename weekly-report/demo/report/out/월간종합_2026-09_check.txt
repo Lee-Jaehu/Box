@@ -1,0 +1,19 @@
+월간 종합 보고: 제조DX그룹 ’26.9월 (W36~W39), 과제 6개
+
+[AI 응답 처리 (모델: mock)]
+- 대체 없음 (AI 응답 그대로 사용)
+
+[코드 계산값 (AI 수치 아님)]
+- P-ASM-001: 수평전개(Normal·조립) 09/30 (+5일)
+- P-APC-101: 지연 단계 없음
+- P-ROL-102: 사이트 적용(NB·조립) 09/30 (+5일)
+- P-INV-103: 지연 단계 없음
+- P-SYS-104: 지연 단계 없음
+- P-DAT-105: 지연 단계 없음
+
+[PPT 재검사]
+- 통과 (글꼴·영역 경계·글 분량)
+
+[처리 내역]
+- 테마 majorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+- 테마 minorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'

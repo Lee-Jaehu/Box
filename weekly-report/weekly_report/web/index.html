@@ -86,6 +86,13 @@
     <div class="buttons" style="margin-top:0">
       <button id="run" class="primary">실행</button>
       <button id="clear">이 주차 AI 응답 지우기</button>
+      <span style="flex:1"></span>
+      <select id="report-kind" title="보고 자료 (초안 템플릿)">
+        <option value="exec">경영진 1장 요약 (선택 과제·주차)</option>
+        <option value="monthly">월간 종합 보고 (이 주차가 속한 달, 전체 과제)</option>
+        <option value="team">팀 주간보고 (요약 + 과제별, 선택 과제의 팀)</option>
+      </select>
+      <button id="run-report">보고 자료 생성</button>
     </div>
     <p class="hint">AI 응답이 없으면 EXAONE에 보낼 프롬프트를 보여 줍니다. 사내 AI(또는 다른 AI)에 붙여 넣어 받은 JSON을 아래에 넣고 저장하면 이어서 진행합니다.</p>
     <div id="run-msg" class="msg"></div>
@@ -94,9 +101,10 @@
         <div><b>보낼 프롬프트</b> <span id="need-name" class="hint"></span>
           <textarea id="prompt" class="mono" readonly style="min-height:300px"></textarea>
           <div class="buttons"><button id="copy">프롬프트 복사</button></div></div>
-        <div><b>AI 응답 JSON 붙여넣기</b>
+        <div><b>AI 응답 JSON 붙여넣기</b> <span class="hint">필요한 형식: <code id="need-format"></code></span>
           <textarea id="response" class="mono" style="min-height:300px" placeholder="{ ... } 형식의 JSON (```json 표시가 있어도 됩니다)"></textarea>
-          <div class="buttons"><button id="save-response" class="primary">응답 저장 후 다시 실행</button></div></div>
+          <div class="buttons"><button id="save-response" class="primary">응답 저장 후 다시 실행</button></div>
+          <div id="response-msg" class="msg"></div></div>
       </div>
     </div>
   </section>
@@ -105,8 +113,8 @@
     <h2><span class="step">3</span> 결과</h2>
     <div class="files" id="files"></div>
     <div class="two" style="margin-top:12px">
-      <div><b>의미 검증 보고서</b> (AI 문장의 수치·근거 확인)<pre id="validation"></pre></div>
-      <div><b>PPT 재검사</b> (양식·색·글꼴·분량)<pre id="check"></pre></div>
+      <div><b id="validation-title">의미 검증 보고서</b><pre id="validation"></pre></div>
+      <div><b id="check-title">PPT 재검사</b><pre id="check"></pre></div>
     </div>
   </section>
 </main>
@@ -132,7 +140,7 @@ function iso(d) { return d.toISOString().slice(0, 10); }
 
 async function loadProjects() {
   const data = await api("/api/projects");
-  $("project").innerHTML = data.projects.map(p => `<option value="${p.project_id}">${p.project_id} · ${p.name}</option>`).join("");
+  $("project").innerHTML = data.projects.map(p => `<option value="${p.project_id}">${p.source === "worklog" ? `[WorkLog] ${p.name}` : `${p.project_id} · ${p.name}`}</option>`).join("");
 }
 async function loadDailies() {
   hide($("daily-msg"));
@@ -146,10 +154,12 @@ async function loadDailies() {
   for (const d of data.dailies) {
     const tr = document.createElement("tr");
     tr.className = "row" + (d.excluded ? " excluded" : "");
-    tr.innerHTML = `<td>${d.date}</td><td>${d.author}</td><td>${d.category || ""}</td><td></td>
-      <td>${d.excluded ? `<span class="tag x">제외 · ${d.excluded}</span>` : `<span class="tag">정리 대상</span>`}</td>`;
+    tr.innerHTML = `<td>${d.date}</td><td></td><td>${d.category || ""}</td><td></td>
+      <td>${d.excluded ? `<span class="tag x">제외 · ${d.excluded}</span>` : `<span class="tag">정리 대상</span>`}${d.readonly ? ` <span class="tag">WorkLog</span>` : ""}</td>`;
+    tr.children[1].textContent = d.author_name || d.author;
     tr.children[3].textContent = d.raw_text + (d.tables.length ? "  [표 포함]" : "");
-    tr.onclick = () => edit(d);
+    tr.children[3].style.whiteSpace = "pre-wrap";
+    tr.onclick = () => d.readonly ? show($("daily-msg"), `${d.daily_id}: WorkLog 업무일지는 WorkLog 웹에서 수정합니다 (여기서는 읽기만 함).`, "info") : edit(d);
     body.appendChild(tr);
   }
   if (!editingId) $("f-date").value = iso(mon);
@@ -181,15 +191,21 @@ async function deleteDaily() {
   try { await api("/api/daily/delete", {daily_id: editingId}); resetForm(); await loadDailies(); show($("daily-msg"), "삭제 표시했습니다.", "ok"); }
   catch (e) { show($("daily-msg"), e.message, "err"); }
 }
-async function run() {
-  $("run").disabled = true; show($("run-msg"), "실행 중…", "info");
+let lastRun = () => run();  // 붙여넣기 저장 후 다시 실행할 흐름 (주간 정리 또는 보고 자료)
+async function run(report = false) {
+  lastRun = () => run(report);
+  const button = report ? $("run-report") : $("run");
+  button.disabled = true; show($("run-msg"), "실행 중…", "info");
   try {
-    const r = await api("/api/run", {project_id: $("project").value, week: $("week").value.trim(), mode: $("mode").value});
+    const body = {project_id: $("project").value, week: $("week").value.trim(), mode: $("mode").value};
+    const r = report ? await api("/api/report", {...body, kind: $("report-kind").value}) : await api("/api/run", body);
     if (r.status === "need_response") {
       $("result").classList.add("hidden");
       $("need").classList.remove("hidden");
-      $("need-name").textContent = r.response_name; $("prompt").value = r.prompt; $("response").value = "";
-      show($("run-msg"), `AI 응답이 필요합니다 (${r.prompt_id}). 왼쪽 프롬프트를 AI에 보내고, 받은 JSON을 오른쪽에 붙여 넣어 주세요.`, "info");
+      $("need-name").textContent = r.response_name; $("prompt").value = r.prompt; $("need-format").textContent = r.format || "";
+      $("response").value = r.previous || ""; hide($("response-msg"));
+      if (r.error) show($("run-msg"), `저장된 ${r.prompt_id} 응답을 쓸 수 없습니다: ${r.error}\n오른쪽 응답을 고치거나, 왼쪽 프롬프트로 AI 응답을 다시 받아 붙여 넣어 주세요. (다른 단계 응답은 그대로 둡니다)`, "err");
+      else show($("run-msg"), `AI 응답이 필요합니다 (${r.prompt_id}). 왼쪽 프롬프트를 AI에 보내고, 받은 JSON을 오른쪽에 붙여 넣어 주세요.`, "info");
     } else if (r.status === "error") {
       $("result").classList.add("hidden");
       show($("run-msg"), `[${r.stage}] ${r.message}`, "err");
@@ -197,16 +213,24 @@ async function run() {
       $("need").classList.add("hidden");
       show($("run-msg"), r.problems.length ? `PPT를 만들었지만 재검사 문제 ${r.problems.length}건이 있습니다 (아래 보고서)` : "완료: PPT 생성·재검사 통과", r.problems.length ? "err" : "ok");
       const f = r.files, link = (p, label) => `<a href="/files/${encodeURI(p)}" target="_blank">${label}</a>`;
-      $("files").innerHTML = `<b>${link(f.pptx, "PPT 다운로드")}</b>` + link(f.weekly, "weekly JSON") + link(f.cumulative, "cumulative JSON") + link(f.validation, "검증 보고서") + link(f.ppt_check, "PPT 검사");
-      $("validation").textContent = r.validation; $("check").textContent = r.ppt_check;
+      if (report) {
+        $("files").innerHTML = `<b>${link(f.pptx, "보고 자료 PPT 다운로드")}</b>` + link(f.check, "검사 보고서");
+        $("validation-title").textContent = "보고 자료 검사"; $("check-title").textContent = "";
+        $("validation").textContent = r.check; $("check").textContent = "AI는 칸별 문장만 썼고, 표·숫자·색은 코드가 기준정보로 채웠습니다.\n검사를 통과하지 못한 칸은 [대체]로 표시되어 있습니다.";
+      } else {
+        $("files").innerHTML = `<b>${link(f.pptx, "PPT 다운로드")}</b>` + link(f.weekly, "weekly JSON") + link(f.cumulative, "cumulative JSON") + link(f.validation, "검증 보고서") + link(f.ppt_check, "PPT 검사");
+        $("validation-title").textContent = "의미 검증 보고서"; $("check-title").textContent = "PPT 재검사";
+        $("validation").textContent = r.validation; $("check").textContent = r.ppt_check;
+      }
       $("result").classList.remove("hidden");
     }
   } catch (e) { show($("run-msg"), e.message, "err"); }
-  $("run").disabled = false;
+  button.disabled = false;
 }
 async function saveResponse() {
-  try { await api("/api/response", {name: $("need-name").textContent, text: $("response").value}); await run(); }
-  catch (e) { show($("run-msg"), e.message, "err"); }
+  try { await api("/api/response", {name: $("need-name").textContent, text: $("response").value}); }
+  catch (e) { show($("response-msg"), e.message, "err"); return; }  // 저장 실패: 붙여넣기 칸을 그대로 두고 이유를 바로 아래에 표시
+  hide($("response-msg")); await lastRun();
 }
 async function clearResponses() {
   if (!confirm("이 과제·주차의 AI 응답을 지울까요? 다음 실행 때 프롬프트부터 다시 시작합니다.")) return;
@@ -215,15 +239,20 @@ async function clearResponses() {
   catch (e) { show($("run-msg"), e.message, "err"); }
 }
 async function resetWorkspace() {
-  if (!confirm("작업공간을 처음 상태(저장소 예시 + W40 데모)로 되돌릴까요? 입력한 메모와 응답이 지워집니다.")) return;
-  await api("/api/reset", {}); resetForm(); await loadProjects(); await loadDailies(); $("result").classList.add("hidden");
+  if (!confirm("작업공간을 처음 상태(저장소 예시 + W40 데모)로 되돌릴까요?\n입력한 메모·응답·결과는 workspace_backups 폴더에 백업한 뒤 지웁니다.")) return;
+  try {
+    const r = await api("/api/reset", {}); resetForm(); clearRun(); await loadProjects(); await loadDailies();
+    let text = "작업공간을 초기화했습니다." + (r.backup ? `\n백업: ${r.backup}` : "");
+    if (r.locked.length) text += `\n열려 있어 지우지 못한 파일(그대로 둠): ${r.locked.join(", ")} — PowerPoint 등에서 닫은 뒤 필요하면 다시 초기화하세요.`;
+    show($("daily-msg"), text, r.locked.length ? "info" : "ok");
+  } catch (e) { show($("daily-msg"), e.message, "err"); }
 }
 
 function clearRun() { $("result").classList.add("hidden"); $("need").classList.add("hidden"); hide($("run-msg")); }
 $("load").onclick = () => { resetForm(); clearRun(); loadDailies(); };
 $("project").onchange = () => { resetForm(); clearRun(); loadDailies(); };
 $("save").onclick = saveDaily; $("new").onclick = resetForm; $("delete").onclick = deleteDaily;
-$("run").onclick = run; $("save-response").onclick = saveResponse; $("clear").onclick = clearResponses;
+$("run").onclick = () => run(false); $("run-report").onclick = () => run(true); $("save-response").onclick = saveResponse; $("clear").onclick = clearResponses;
 $("copy").onclick = async () => { $("prompt").select(); try { await navigator.clipboard.writeText($("prompt").value); } catch { document.execCommand("copy"); } };
 $("reset").onclick = resetWorkspace;
 loadProjects().then(loadDailies).catch(e => show($("daily-msg"), e.message, "err"));

@@ -1,8 +1,8 @@
 @echo off
+chcp 65001 >nul
 rem Worklog manual launcher. Order: Conda env -> embedded Python -> .venv (see scripts\select-python.ps1).
 rem No auto-start at boot, no service, no auto-restart. If the app fails, the cause is printed and it stops.
 rem Test hooks: WORKLOG_DRY_RUN=1 prints the selected Python and exits. WORKLOG_NO_PAUSE=1 skips the final pause.
-chcp 65001 >nul
 setlocal EnableExtensions
 set "APP_ROOT=%~dp0"
 if "%APP_ROOT:~-1%"=="\" set "APP_ROOT=%APP_ROOT:~0,-1%"

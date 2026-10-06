@@ -37,7 +37,7 @@ def test_mock_payload_becomes_contract_json_without_touching_inputs(repo, tmp_pa
     weekly_path, cum_path, report = run_weekly(repo, PID, WEEK, tmp_path / "out")
     weekly, cum = read(weekly_path), read(cum_path)
     assert weekly["meta"]["schema"] == "weekly" and weekly["range"] == {"from": "2026-09-21", "to": "2026-09-27"}
-    assert weekly["ai"]["prompt_version"] == "v0.3" and weekly["ai"]["input_revisions"] == {"D-260922-ljh-01": 2}
+    assert weekly["ai"]["prompt_version"] == "v0.7" and weekly["ai"]["input_revisions"] == {"D-260922-ljh-01": 2}
     assert weekly["no_change"] is False and weekly["review_state"] == "draft"
     assert "new_pinned_facts" not in cum and len(cum["pinned_facts"]) == 2
     text = report.read_text(encoding="utf-8")
@@ -57,7 +57,7 @@ def test_week_without_dailies_skips_ai_and_keeps_cumulative(repo, tmp_path):
     # mock 파일이 없는 주차여도 AI를 부르지 않으므로 성공해야 한다
     weekly_path, cum_path, _ = run_weekly(repo, PID, "2026-W40", tmp_path)
     weekly = read(weekly_path)
-    assert weekly["no_change"] is True and weekly["headline"]["text"] == "금주(W40) 변경 없음"
+    assert weekly["no_change"] is True and weekly["headline"]["text"] == "금주(W40)에는 변경 사항이 없습니다"
     assert weekly["progress"] == [] and weekly["ai"]["model"].startswith("AI 호출 없음")
     prev = read(repo / "data/derived/cumulative/P-ASM-001/2026-W39.json")
     assert read(cum_path)["items"] == prev["items"] and read(cum_path)["pinned_facts"] == prev["pinned_facts"]
@@ -120,3 +120,9 @@ def test_inputs_from_repo_are_unchanged_by_real_root_run(tmp_path):
     run_weekly(ROOT, PID, WEEK, tmp_path)
     assert digests(ROOT) == protected
     assert {p: p.read_bytes() for p in (ROOT / "data/derived").rglob("*.json")} == examples
+
+
+def test_date_from_record_id_is_accepted_as_evidence():
+    from weekly_report.validate import id_dates
+
+    assert id_dates({"D-260922-ljh-01", "P-ASM-001", "CP-261008-001"}) == ["10/8", "9/22"]

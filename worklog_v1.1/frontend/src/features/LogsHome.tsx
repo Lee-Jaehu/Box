@@ -17,12 +17,14 @@ const AUTHOR_KEY = 'worklog.logAuthorScope';
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
 /** 업무일지 탭의 시작 화면: 왼쪽 달력, 오른쪽에 선택한 날의 일지 목록. 작성은 ‘업무일지 작성’에서 프로젝트를 고른 뒤 시작한다. */
-export function LogsHome({ initialDate }: { initialDate?: string }) {
+export function LogsHome({ initialDate, projectId: fixedProject, authorId: fixedAuthor }: { initialDate?: string; projectId?: string; authorId?: string }) {
   const { actor } = useSession();
   const [date, setDate] = useState(initialDate || todayLocal());
   const [ym, setYm] = useState(() => { const d = initialDate || todayLocal(); return { year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) }; });
   const [filters, setFilters] = usePickerFilters();
-  const [projectId, setProjectId] = useState('');
+  // 왼쪽 트리의 PJT ▸ Worklog(#/logs?project=<id>)로 오면 그 과제로 시작한다
+  const [projectId, setProjectId] = useState(fixedProject ?? '');
+  const scoped = !!fixedProject && projectId === fixedProject;
   const [authorMe, setAuthorMe] = useState<boolean>(() => { try { return localStorage.getItem(AUTHOR_KEY) === 'me'; } catch { return false; } });
   useEffect(() => { try { localStorage.setItem(AUTHOR_KEY, authorMe ? 'me' : 'all'); } catch { /* 무시 */ } }, [authorMe]);
   const [creating, setCreating] = useState(false);
@@ -32,11 +34,14 @@ export function LogsHome({ initialDate }: { initialDate?: string }) {
   const all = projects.data?.items ?? [];
 
   // 서버에 보내는 조회 조건: 달력과 목록이 같은 조건을 쓴다
-  const q = useMemo(() => ({
-    memberId: filters.scope === 'mine' && actor ? actor.id : '',
-    divisionId: filters.divisionId, teamId: filters.teamId, status: filters.status, q: filters.q.trim(),
-    projectId, authorId: authorMe && actor ? actor.id : '',
-  }), [filters, projectId, authorMe, actor]);
+  // 트리에서 고른 과제 화면이면 필터(담당·팀·상태 등) 대신 그 과제만 본다 (완료 과제도 보이게)
+  const q = useMemo(() => (scoped
+    ? { memberId: '', divisionId: '', teamId: '', status: '', q: '', projectId, authorId: fixedAuthor ?? (authorMe && actor ? actor.id : '') }
+    : {
+      memberId: filters.scope === 'mine' && actor ? actor.id : '',
+      divisionId: filters.divisionId, teamId: filters.teamId, status: filters.status, q: filters.q.trim(),
+      projectId, authorId: authorMe && actor ? actor.id : '',
+    }), [filters, projectId, authorMe, actor, scoped, fixedAuthor]);
   const qKey = JSON.stringify(q);
   const range = monthRange(ym.year, ym.month);
   const cal = useAsync(() => api.get<{ days: { date: string; count: number }[] }>(`/logs/calendar${qs({ dateFrom: range.from, dateTo: range.to, ...q })}`), [range.from, qKey]);
@@ -48,7 +53,7 @@ export function LogsHome({ initialDate }: { initialDate?: string }) {
   const pick = (d: string) => {
     setDate(d);
     if (Number(d.slice(5, 7)) !== ym.month) setYm({ year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
-    window.history.replaceState(null, '', `#/logs?date=${d}`);
+    window.history.replaceState(null, '', `#/logs?${fixedProject ? `project=${fixedProject}&` : ''}${fixedAuthor ? `author=${fixedAuthor}&` : ''}date=${d}`);
   };
   const items = list.data?.items ?? [];
 
@@ -61,7 +66,7 @@ export function LogsHome({ initialDate }: { initialDate?: string }) {
 
       <div className="row filters">
         <ProjectPicker projects={all} value={projectId} onChange={setProjectId} filters={filters} onFiltersChange={setFilters} allowAll label="프로젝트"
-          author={{ me: authorMe, onChange: setAuthorMe }} />
+          author={scoped && fixedAuthor ? undefined : { me: authorMe, onChange: setAuthorMe }} />
       </div>
 
       <div className="logs-layout">
@@ -127,18 +132,18 @@ export function LogsHome({ initialDate }: { initialDate?: string }) {
         </div>
       </div>
 
-      {creating && <NewLog projects={all} date={date} onClose={() => setCreating(false)} />}
+      {creating && <NewLog projects={all} date={date} initialProject={projectId} onClose={() => setCreating(false)} />}
       {viewId && <LogView logId={viewId} onClose={() => setViewId(null)} />}
     </section>
   );
 }
 
 /** 작성 시작: 프로젝트(드롭박스 + 필터)와 날짜를 고른 뒤 작성 화면으로 이동 */
-function NewLog({ projects, date, onClose }: { projects: Project[]; date: string; onClose: () => void }) {
+function NewLog({ projects, date, initialProject, onClose }: { projects: Project[]; date: string; initialProject?: string; onClose: () => void }) {
   const toast = useToast();
   const { actor } = useSession();
   const [filters, setFilters] = usePickerFilters();
-  const [pid, setPid] = useState('');
+  const [pid, setPid] = useState(initialProject ?? '');
   const [d, setD] = useState(date);
   const [existing, setExisting] = useState<boolean | null>(null);
   useEffect(() => {

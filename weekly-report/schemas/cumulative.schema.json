@@ -130,7 +130,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^(D|P|CP|R)-"
+        "pattern": "^((D|P|CP|R)-|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$)"
       },
       "description": "근거 레코드 ID (Daily, 기준정보, 변경 제안 등)"
     },

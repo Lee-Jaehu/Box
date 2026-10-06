@@ -18,9 +18,9 @@ SECTION_SPEC = (
     ("next_plan", "향후 계획", 3),
     ("issues", "이슈·지원 요청", 2),
 )
-NO_ISSUE = "특이사항 없음"
-NO_PROGRESS = "금주 변경 사항 없음"
-NO_PLAN = "해당 없음"
+NO_ISSUE = "금주에는 특이사항이 없습니다"
+NO_PROGRESS = "금주에는 변경 사항이 없습니다"
+NO_PLAN = "향후 계획은 해당 사항이 없습니다"
 MAX_MS_ROWS = 9
 
 
@@ -71,7 +71,8 @@ def overdue_notes(project: dict[str, Any], codes: CodeTable, changed: set[tuple[
         elif m.get("plan") and date.fromisoformat(m["plan"]) > target:
             label = md(date.fromisoformat(m["plan"]))
         if label:
-            scope = re.split(r"[·,]", codes.scope_label(m["scope"]))[0].strip()
+            # WorkLog 단계는 적용 범위가 없어(계획 기간으로 대체) 단계 이름으로 병기한다
+            scope = m["name"] if m.get("source_id") else re.split(r"[·,]", codes.scope_label(m["scope"]))[0].strip()
             blue = bool({(m["milestone_id"], "plan"), (m["milestone_id"], "plan_text")} & changed)
             runs.append(Run(f"({scope} {label})", blue=blue))
     return runs
@@ -141,7 +142,7 @@ def build_content(project: dict[str, Any], weekly: dict[str, Any], cumulative: d
         notes.append("일정 칸 병기(목표일 초과 단계): " + ", ".join(r.text for r in overdue))
     main = {
         "name": Run(project["name"]),
-        "target": Run(codes.target_label(project["target"])),
+        "target": Run(codes.target_label(project["target"]) or project.get("target_label") or "-"),
         "week_header": Run(f"금주 진행사항 ({week_label})  ({md(start)}~{md(end)})"),
         "headline": Run(weekly["headline"]["text"], blue=True),  # 한 줄 요약은 매주 새로 작성 → 항상 파란색
         # 목표 일정(검정) + 목표일을 넘는 단계 병기 (이번 주 바뀐 것만 파랑)
@@ -154,7 +155,7 @@ def build_content(project: dict[str, Any], weekly: dict[str, Any], cumulative: d
             notes.append(f"대상 코드표 미등록: {', '.join(unknown)} (코드 그대로 표시)")
     missing = people.missing([project["owner"], *project.get("members", [])])
     if missing:
-        notes.append(f"config/people.json에 없는 사용자 ID는 그대로 표시: {', '.join(missing)}")
+        notes.append(f"이름을 찾지 못한 사용자 ID는 그대로 표시: {', '.join(missing)}")
 
     return SlideContent(
         project_id=project["project_id"],

@@ -11,6 +11,7 @@
    - venv: PowerShell 에서 `.\scripts\setup-venv.ps1` (오프라인이면 개발 PC 에서 `.\scripts\make-wheelhouse.ps1` 로 만든 `wheels\` 를 복사하고 `-WheelDir .\wheels`)
    - embedded: `runtime\python\python.exe` (직접 구성. `_pth`/site-packages/네이티브 wheel 포함 여부를 §E 로 확인)
 4. (선택) 운영 서버와 별도로 시험하려면 테스트실행.bat [포트] 를 쓴다(데이터는 data_test\ 로 분리).
+   - `.bat` 파일은 **CRLF 줄바꿈**이어야 한다. LF만 있으면 cmd 가 줄 경계를 잘못 읽어 `'…'은(는) 내부 또는 외부 명령… 이 아닙니다` 가 줄 조각마다 나온다(특히 `chcp 65001` + 한글). 저장소는 `.gitattributes`(`*.bat -text`)로 CRLF 그대로 저장하므로 GitHub ZIP·clone 어느 쪽으로 받아도 CRLF 다. 편집기로 고칠 때 LF 로 바꾸지 않는다.
 5. 포트 확인: `netsh interface ipv4 show excludedportrange protocol=tcp` 에 사용할 포트(기본 8000)가 **없어야** 한다. 있으면 `config.json` 의 `PORT` 변경(예약 포트는 `WinError 10013` 으로 서버가 종료된다).
 
 - ☐ 3 의 방법으로 만든 환경에서 `실행.bat` 이 `[Worklog] Python (conda|embedded|venv): …` 를 출력하고 서버가 시작된다

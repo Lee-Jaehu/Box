@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,10 @@ from .ai import ExaoneClient
 from .codes import CodeTable
 from .core import KST, ValidationError, atomic_json, load_json, previous_week, render_prompt, validate_schema, week_range
 from .ppt.compose import norm_text
-from .validate import Issue, build_evidence, check_item, check_milestone_updates, sort_issues
+from .textmetrics import SENTENCE_MAX, sentence_problems
+from . import sources
+from .worklog import is_managed, milestone_snapshot, snapshot_changes
+from .validate import Issue, build_evidence, id_dates, check_item, check_milestone_updates, sort_issues
 
 ITEM_KEYS = ("text", "source_ids", "kind", "changed")
 KINDS = {"fact", "judgement", "plan", "issue"}
@@ -27,10 +30,19 @@ MAX_CUMULATIVE_ITEMS = 7
 MAX_NEW_PINNED = 2
 
 
-def select_dailies(root: Path, project_id: str, week: str, warnings: list[str] | None = None) -> list[dict[str, Any]]:
-    """project_id 일치 + visibility=project + deleted가 아님 + Daily.date가 해당 ISO 주(월~일)인 것."""
+def select_dailies(root: Path, project_id: str, week: str, warnings: list[str] | None = None,
+                   project: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """project_id 일치 + visibility=project + deleted가 아님 + Daily.date가 해당 ISO 주(월~일)인 것.
+
+    내부 형식 Daily(data/raw/daily)와 WorkLog 업무일지(log 1건 = Daily 1건으로 변환)를 함께 고른다.
+    """
     start, end = week_range(week)
     selected = []
+    if project is None:
+        project = sources.load_project(root, project_id, warnings)
+    for daily in sources.worklog_dailies(root, project, warnings):
+        if start <= date.fromisoformat(daily["date"]) <= end:
+            selected.append(daily)
     for path in sorted((root / "data/raw/daily").rglob("*.json")):
         daily = load_json(path)
         relevant = isinstance(daily, dict) and daily.get("project_id") == project_id
@@ -103,6 +115,33 @@ def build_weekly_payload(payload: Any, notes: list[Issue]) -> dict[str, Any]:
     return content
 
 
+MILESTONE_POLICY = {
+    "ai": "이번 주 메모에서 확인된 마일스톤 일정·상태 변화",
+    "managed": "항상 []로 둔다. 일정·상태는 업무기록 시스템(WorkLog)이 관리하며 코드가 시스템 값을 그대로 쓴다",
+}
+
+
+def managed_updates(project: dict[str, Any], snapshot: dict[str, Any], prev_weekly: dict[str, Any] | None,
+                    ai_updates: list[dict[str, Any]], notes: list[Issue]) -> list[dict[str, Any]]:
+    """WorkLog 관리 과제: AI 일정 변화는 버리고, 지난주 snapshot 대비 바뀐 시스템 값만 변경으로 기록한다 (PPT 파란색)."""
+    if ai_updates:
+        notes.append(Issue("milestone_updates", "정보", f"WorkLog가 일정을 관리하는 과제 → AI가 낸 일정 변화 {len(ai_updates)}건 무시"))
+    previous = (prev_weekly or {}).get("milestone_snapshot")
+    if not previous:
+        notes.append(Issue("milestone_updates", "정보", "지난주 마일스톤 snapshot 없음 → 이번 주는 변경 표시 없이 현재 값만 저장"))
+        return []
+    rev = (project.get("source") or {}).get("revision")
+    updates = []
+    for sid, fld, old, new in snapshot_changes(snapshot, previous):
+        if fld == "baseline" or new is None:
+            notes.append(Issue("milestone_updates", "정보", f"{snapshot[sid]['name']}.{fld}: {old or '-'} → {new or '-'} (표의 변경 표시 대상 아님)"))
+            continue
+        updates.append({"milestone_id": snapshot[sid]["milestone_id"], "field": fld, "to": new,
+                        "reason": f"WorkLog rev {rev}: {old or '-'} → {new}", "source_ids": [project["project_id"]]})
+    notes.append(Issue("milestone_updates", "정보", f"WorkLog 일정 변경 {len(updates)}건 (지난주 snapshot 대비)"))
+    return updates
+
+
 def apply_changed_rule(content: dict[str, Any], prev_weekly: dict[str, Any] | None, notes: list[Issue]) -> None:
     """지난주 정리본에 같은 문장이 있으면 changed=false, 아니면 true. headline은 항상 true."""
     prev = {norm_text(v["text"]) for slot in ("progress", "next_plan", "issues") for v in (prev_weekly or {}).get(slot, [])}
@@ -145,6 +184,11 @@ def merge_pinned(prev: list[dict[str, Any]], payload_pinned: list[Any], new_pinn
     return result
 
 
+def style_issues(path: str, value: dict[str, Any], *, need_date: bool) -> list[Issue]:
+    """문장 규칙(40~60자, 경어체, 진행 날짜) 위반은 '주의'로 보고한다. 저장·PPT 생성은 막지 않는다."""
+    return [Issue(f"{path}.text", "주의", f"문장 규칙: {problem}") for problem in sentence_problems(value["text"], need_date=need_date)]
+
+
 def _short(path: Path | None, *bases: Path) -> str:
     """보고서용 경로: 실행 위치(out_root/root) 기준 상대 경로."""
     if path is None:
@@ -170,10 +214,10 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
                client: ExaoneClient | None = None) -> tuple[Path, Path, Path]:
     client = client or ExaoneClient(root, mode)
     codes = CodeTable.load(root)
-    project = load_json(root / f"data/master/projects/{project_id}.json")
-    validate_schema(project, root / "schemas/project.schema.json")
     skipped: list[str] = []
-    dailies = select_dailies(root, project_id, week, skipped)
+    project = sources.load_project(root, project_id, skipped)
+    managed = is_managed(project)
+    dailies = select_dailies(root, project_id, week, skipped, project)
     start, end = week_range(week)
     week_label = f"W{week[-2:]}"
     now = datetime.now(KST).replace(microsecond=0).isoformat()
@@ -194,11 +238,14 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
     from .ppt.milestones import apply_history, load_prior_weeklies
 
     prior_weeklies = load_prior_weeklies(project_id, week, out_root, root)
-    current_project, _, _ = apply_history(project, prior_weeklies, {"week": week, "milestone_updates": []})
+    if managed:  # WorkLog: 일정·상태는 시스템 값이 이미 최신 (AI·이전 주 덧씌움 없음)
+        current_project = project
+    else:
+        current_project, _, _ = apply_history(project, prior_weeklies, {"week": week, "milestone_updates": []})
 
     # ---------------------------------------------------------------- weekly
     if not dailies:
-        content = {"headline": {"text": f"금주({week_label}) 변경 없음", "source_ids": [], "kind": "fact", "changed": True},
+        content = {"headline": {"text": f"금주({week_label})에는 변경 사항이 없습니다", "source_ids": [], "kind": "fact", "changed": True},
                    "progress": [], "next_plan": [], "issues": [], "milestone_updates": []}
         weekly_ai_model = "AI 호출 없음 (Daily 없음)"
     else:
@@ -206,19 +253,26 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
                      "budget_issues": BUDGET["issues"], "project_id": project_id, "project_name": project["name"],
                      "range_from": start.isoformat(), "range_to": end.isoformat(),
                      "milestone_lines": pv.milestone_lines(current_project["milestones"], codes),
+                     "milestone_policy": MILESTONE_POLICY["managed" if managed else "ai"],
                      "prev_weekly_lines": pv.prev_weekly_lines(prev_weekly), "daily_blocks": pv.daily_blocks(dailies)}
         system, user = render_prompt(root, "weekly_rollup", variables)
         content = build_weekly_payload(client.complete("weekly_rollup", project_id, week, system, user), weekly_notes)
         apply_changed_rule(content, prev_weekly, weekly_notes)
         weekly_ai_model = client.model_label
+    snapshot = None
+    if managed:
+        snapshot = milestone_snapshot(project)
+        content["milestone_updates"] = managed_updates(project, snapshot, prev_weekly, content.get("milestone_updates", []), weekly_notes)
 
     weekly = {
         "meta": {"schema": "weekly", "schema_version": "0.1", "revision": 1, "created_at": now, "updated_at": now, "updated_by": "pipeline"},
         "project_id": project_id, "week": week, "range": {"from": start.isoformat(), "to": end.isoformat()},
         "source_daily_ids": [d["daily_id"] for d in dailies], **content, "no_change": not dailies,
-        "budget": {"max_chars_per_line": 50, "lines": dict(BUDGET)}, "review_state": "draft",
+        "budget": {"max_chars_per_line": int(SENTENCE_MAX), "lines": dict(BUDGET)}, "review_state": "draft",
         "ai": {"model": weekly_ai_model, "prompt_id": "weekly_rollup", "prompt_version": version, "generated_at": now, "input_revisions": revisions},
     }
+    if snapshot is not None:
+        weekly["milestone_snapshot"] = snapshot
     validate_schema(weekly, root / "schemas/weekly.schema.json")  # 구조 오류면 여기서 중단 (저장하지 않음)
 
     # ---------------------------------------------------------------- cumulative
@@ -265,20 +319,25 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
     prev_cum_texts = [v["text"] for v in prev_items + [_cum_item(p) for p in prev_pinned]]
     computed = [week_label, f"{start.month}/{start.day}", f"{end.month}/{end.day}"]
     if dailies:
-        ev_week = build_evidence(dailies=dailies, project=project, prev_texts=prev_texts + prev_cum_texts, computed=computed,
+        ev_week = build_evidence(dailies=dailies, project=project, prev_texts=prev_texts + prev_cum_texts, computed=computed + id_dates(daily_ids),
                                  allowed_ids=daily_ids | {project_id}, codes=codes, prev_level="주의")
         weekly_notes += check_item("headline", weekly["headline"], ev_week)
+        weekly_notes += style_issues("headline", weekly["headline"], need_date=False)
         for slot in ("progress", "next_plan", "issues"):
             for index, value in enumerate(weekly[slot]):
                 weekly_notes += check_item(f"{slot}[{index}]", value, ev_week)
-        weekly_notes += check_milestone_updates(weekly["milestone_updates"], project, ev_week)
+                weekly_notes += style_issues(f"{slot}[{index}]", value, need_date=slot != "next_plan")
+        if not managed:  # WorkLog 일정 변화는 코드가 시스템 값으로 만든 것 → 근거 검사 대상 아님
+            weekly_notes += check_milestone_updates(weekly["milestone_updates"], project, ev_week)
 
         prev_ids = {s for v in prev_items + prev_pinned for s in v.get("source_ids", [])}
-        ev_cum = build_evidence(dailies=dailies, project=project, prev_texts=prev_cum_texts, computed=computed,
+        ev_cum = build_evidence(dailies=dailies, project=project, prev_texts=prev_cum_texts, computed=computed + id_dates(daily_ids | prev_ids),
                                 allowed_ids=daily_ids | {project_id} | prev_ids, codes=codes, prev_level="정보")
         for key in ("items", "pinned_facts"):
             for index, value in enumerate(cumulative[key]):
                 cum_notes += check_item(f"{key}[{index}]", value, ev_cum)
+        for index, value in enumerate(cumulative["items"]):  # 고정 사실은 지난 문장 그대로라 문체 검사 제외
+            cum_notes += style_issues(f"items[{index}]", value, need_date=True)
 
     # 저장: 두 파일 모두 구조 검증을 통과한 뒤에만 쓴다
     weekly_path = out_root / f"data/derived/weekly/{project_id}/{week}.json"

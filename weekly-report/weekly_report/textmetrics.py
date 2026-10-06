@@ -6,6 +6,15 @@
 
 from __future__ import annotations
 
+import re
+
+# 본문·요약 문장 규칙 (2026-10-04 결정): 한 항목 = PPT 한 줄, 40~60자(끝의 날짜 포함), 경어체 종결,
+# 진행 현황·이슈·누적 요약은 끝에 진행 날짜 "(MM/DD)" 또는 "(MM/DD~MM/DD)"
+SENTENCE_MIN = 40.0
+SENTENCE_MAX = 60.0
+_DATE_NOTE_RE = re.compile(r"^\(~?\d{1,2}/\d{1,2}(?:~(?:\d{1,2}/\d{1,2})?)?\)$")  # (10/08) (~10/16) (09/28~09/30) (09/04~)
+_TRAILING_NOTE_RE = re.compile(r"(\s*\.?\s*\([^()]*\))+\s*$")  # 끝의 "(판단)", "(지원 요청)" 같은 표시
+
 WIDE_RANGES = (
     ("가", "힣"),  # 한글 음절
     ("ᄀ", "ᇿ"),  # 한글 자모
@@ -55,3 +64,31 @@ def line_count(text: str, width: float = 50.0) -> int:
 # 하위 호환: 기존 core.wrapped_lines 사용처
 def wrapped_lines(text: str, width: float = 50.0) -> int:
     return line_count(text, width)
+
+
+def is_polite(text: str) -> bool:
+    """경어체("~습니다/~니다")로 끝나는지. 끝의 괄호 표시와 마침표는 무시한다."""
+    body = _TRAILING_NOTE_RE.sub("", text.strip().rstrip(" .")).rstrip(" .")
+    return body.endswith("니다")
+
+
+def has_date_note(text: str) -> bool:
+    """문장 끝 괄호 표시 중에 진행 날짜 "(MM/DD)"가 있는지."""
+    match = _TRAILING_NOTE_RE.search(text.strip())
+    notes = re.findall(r"\([^()]*\)", match.group(0)) if match else []
+    return any(_DATE_NOTE_RE.match(note.replace(" ", "")) for note in notes)
+
+
+def sentence_problems(text: str, *, need_date: bool = False) -> list[str]:
+    """문장 규칙 위반 설명 (없으면 빈 목록)."""
+    problems = []
+    length = weighted_length(text)
+    if length < SENTENCE_MIN:
+        problems.append(f"{length:.1f}자 < 최소 {SENTENCE_MIN:g}자 (함축적이라 이해하기 어려울 수 있음)")
+    elif length > SENTENCE_MAX:
+        problems.append(f"{length:.1f}자 > 최대 {SENTENCE_MAX:g}자 (PPT 한 줄 초과)")
+    if not is_polite(text):
+        problems.append('경어체 종결("~했습니다/~입니다") 아님')
+    if need_date and not has_date_note(text):
+        problems.append('문장 끝 진행 날짜 "(MM/DD)" 없음')
+    return problems

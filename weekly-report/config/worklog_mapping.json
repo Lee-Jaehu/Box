@@ -1,0 +1,34 @@
+{
+  "description": "WorkLog export 값 → 내부 값 대응표 (docs/WorkLog_연동.md). 모르는 값은 변환 경고로 남기고 기본값을 쓴다.",
+  "schema_versions": ["1.0"],
+  "project_status": {
+    "preparing": "예정",
+    "planned": "예정",
+    "in_progress": "진행",
+    "active": "진행",
+    "completed": "완료",
+    "done": "완료",
+    "on_hold": "보류",
+    "paused": "보류",
+    "cancelled": "취소",
+    "canceled": "취소"
+  },
+  "project_status_default": "진행",
+  "milestone_status": {
+    "planned": "예정",
+    "in_progress": "진행",
+    "delayed": "지연",
+    "completed": "완료",
+    "on_hold": "보류",
+    "cancelled": "취소",
+    "canceled": "취소"
+  },
+  "milestone_status_default": "예정",
+  "record_status": {
+    "open": "미해결",
+    "in_progress": "진행 중",
+    "resolved": "해결",
+    "closed": "종료",
+    "done": "완료"
+  }
+}

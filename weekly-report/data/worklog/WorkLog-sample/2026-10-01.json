@@ -1,0 +1,127 @@
+{
+  "fileType": "WORKLOG_DAILY_EXPORT",
+  "schemaVersion": "1.0",
+  "documentVersion": 1,
+  "generatedAt": "2026-10-01T18:10:00+09:00",
+  "sourceRevision": 3,
+  "timezone": "Asia/Seoul",
+  "project": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "name": "WorkLog",
+    "deletedAt": null
+  },
+  "date": "2026-10-01",
+  "logs": [
+    {
+      "createdAt": "2026-10-01T17:40:00+09:00",
+      "updatedAt": "2026-10-01T18:10:00+09:00",
+      "todoRecords": [
+        {
+          "refId": "00000000-0000-4000-8000-000000000210",
+          "trackerId": "00000000-0000-4000-8000-000000001210",
+          "clientEntryId": "00000000-0000-4000-8000-000000002210",
+          "originalSnapshot": {
+            "content": {
+              "documentVersion": 1,
+              "format": "tiptap-json",
+              "doc": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "업무기록 JSON 내보내기 형식 확정"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "status": "open",
+            "assigneeId": null,
+            "assigneeName": "김예시",
+            "dueDate": "2026-10-04",
+            "impact": null,
+            "response": null,
+            "registeredAt": "2026-10-04T06:07:25.653242Z"
+          }
+        }
+      ],
+      "issueRecords": [],
+      "achievements": [],
+      "lessonLearned": null,
+      "note": null,
+      "collaborators": [],
+      "id": "00000000-0000-4000-8000-000000000310",
+      "revision": 1,
+      "author": {
+        "id": "00000000-0000-4000-8000-000000000011",
+        "name": "이샘플",
+        "employeeNumber": "00000011",
+        "teamId": "00000000-0000-4000-8000-000000000002",
+        "teamName": "예시DX팀"
+      },
+      "tasks": [
+        {
+          "id": "00000000-0000-4000-8000-000000000311",
+          "title": "보고 업무 요건 인터뷰 정리",
+          "milestone": {
+            "id": "00000000-0000-4000-8000-000000000101",
+            "nameSnapshot": "요건 분석"
+          },
+          "performedStart": "2026-10-01",
+          "performedEnd": "2026-10-01",
+          "sortOrder": 0,
+          "content": {
+            "documentVersion": 1,
+            "format": "tiptap-json",
+            "doc": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "팀원 5명 인터뷰 결과 정리, 반복 보고 업무 3종 도출"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "요건 분석 단계 완료"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph"
+                }
+              ]
+            }
+          },
+          "attachments": []
+        }
+      ]
+    }
+  ]
+}

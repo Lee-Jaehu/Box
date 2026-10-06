@@ -1,10 +1,10 @@
 @echo off
+chcp 65001 >nul
 rem Worklog deploy: copy the new program version into another folder (test PC / operating folder) WITHOUT touching its data and settings.
 rem   배포.bat "C:\Users\me\Desktop\tft_test"            apply
 rem   배포.bat "C:\Users\me\Desktop\tft_test" -DryRun    only list what would change
 rem Preserved in the target: data\, data_test\, config\config.json, .venv\, runtime\, backups. The target's server must be stopped.
 rem Test hook: WORKLOG_NO_PAUSE=1 skips the final pause.
-chcp 65001 >nul
 setlocal EnableExtensions
 set "APP_ROOT=%~dp0"
 if "%APP_ROOT:~-1%"=="\" set "APP_ROOT=%APP_ROOT:~0,-1%"

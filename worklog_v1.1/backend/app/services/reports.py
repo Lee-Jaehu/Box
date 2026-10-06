@@ -37,14 +37,19 @@ from .report_slides import STATUS_COLOR, AppendixGroup, Block, GanttBlock, Gantt
 
 from weekly_report import prompt_vars as pv
 from weekly_report import sources as wr_sources
-from weekly_report.ai import RESPONSE_SHAPES, AIError, ExaoneClient, MockResponseMissing, ResponseFormatError, read_payload
+from weekly_report.ai import RESPONSE_SHAPES, AIError, ChatCompletionsAdapter, ExaoneClient, MockResponseMissing, ResponseFormatError, read_payload
 from weekly_report.core import ValidationError, load_json, week_range
 from weekly_report.ppt.budget import BudgetError
-from weekly_report.ppt.render import duplicate_slide, fill_slide, fix_theme_fonts, open_template
+from weekly_report.codes import PeopleTable
+from weekly_report.ppt.compose import updated_at_label
+from weekly_report.ppt.render import open_deck_template
 from weekly_report.pptgen import find_template, generate_ppt, prepare_ppt
 from weekly_report.report.generate import exec_fill, generate_monthly
 from weekly_report.report.render import find_report_template, inspect_report, render_report
 from weekly_report.report_vars import month_weeks
+from weekly_report.summary import run_summary
+from weekly_report.team import (FONT_SIZES, ITEM_MAR_IN, Block as SummaryBlock, SummaryGeometry, TeamSection, inspect_summary,
+                                layout_summary, lines_per_project, render_team_report, summary_geometry, summary_titles)
 from weekly_report.weekly import iso_week, run_weekly
 from weekly_report.worklog import WorklogError
 
@@ -56,7 +61,8 @@ TEMPLATES = ("weekly", "exec")
 KIND_LABEL = {"weekly": "주간 보고", "period": "기간 보고", "monthly": "월간 종합"}
 TEMPLATE_LABEL = {"weekly": "주간업무 양식", "exec": "경영진 1장 요약 양식", "monthly": "월간 종합 양식"}
 PROMPT_LABEL = {"weekly_rollup": "주간 정리", "period_rollup": "기간 정리", "cumulative_update": "누적 요약",
-                "report_exec_summary": "경영진 1장 요약", "report_monthly": "월간 종합", "fit_to_budget": "분량 줄이기"}
+                "report_exec_summary": "경영진 1장 요약", "report_monthly": "월간 종합", "fit_to_budget": "분량 줄이기",
+                "project_summary": "팀장 요약"}
 MS_STATUS_KO = {"planned": "예정", "in_progress": "진행", "on_hold": "보류", "completed": "완료", "cancelled": "취소"}
 MAX_LOG_BLOCKS = 15
 MAX_PROJECTS = 30
@@ -181,7 +187,8 @@ class ServiceClient(ExaoneClient):
 
     def __init__(self, ws: Path, settings: Settings, not_before: str | None = None):
         super().__init__(ws, "live" if settings.ai_live else "mock", timeout=settings.ai_timeout_seconds, mock_dir=ws / "responses",
-                         api_url=settings.ai_api_url, api_key=settings.ai_api_key, model=settings.ai_model)
+                         api_url=settings.ai_api_url, api_key=settings.ai_api_key, model=settings.ai_model,
+                         adapter=ChatCompletionsAdapter(json_mode=settings.ai_json_mode))
         self.settings = settings
         self.not_before = not_before
         self.used: list[str] = []
@@ -347,6 +354,7 @@ def create_job(s, settings: Settings, actor, body: Any) -> dict:
         if p is None or p.deleted_at is not None:
             raise ApiError(409, "PROJECT_UNAVAILABLE", "삭제되었거나 없는 프로젝트가 포함되어 있습니다. 목록을 새로고침하세요.")
         names.append(p.name)
+    team_summary = body.include_team_summary and body.kind in ("weekly", "period") and template == "weekly"
     now = _now(settings)
     job = {
         "id": uuid.uuid4().hex, "kind": body.kind, "kindLabel": KIND_LABEL[body.kind], "template": template,
@@ -354,7 +362,9 @@ def create_job(s, settings: Settings, actor, body: Any) -> dict:
         "rangeFrom": start.isoformat(), "rangeTo": end.isoformat(),
         "projectIds": ids, "projectNames": names, "orgLabel": (body.org_label or "").strip() or None,
         "options": {"includeTables": body.include_tables, "includeGantts": body.include_gantts,
-                    "includeMilestoneGantt": body.include_milestone_gantt, "refreshAi": body.refresh_ai},
+                    "includeMilestoneGantt": body.include_milestone_gantt, "refreshAi": body.refresh_ai,
+                    "includeTeamSummary": team_summary,
+                    "summaryAuthor": ((body.summary_author or "").strip() or None) if team_summary else None},
         "aiMode": "live" if settings.ai_live else "paste",
         "status": "queued", "stage": "대기 중", "need": None, "result": None, "error": None, "responsesReceived": 0,
         "requestedBy": {"id": actor.id, "name": actor.name}, "createdAt": now, "queuedAt": now, "updatedAt": now,
@@ -516,21 +526,8 @@ def appendix_blocks(rt, pid: str, d_from: date, d_to: date, options: dict, marke
 # ── 실행 ─────────────────────────────────────────────────────────────────────
 
 def render_weekly_deck(template: Path, prepared: list[dict], output: Path) -> list[str]:
-    """여러 과제의 주간업무 슬라이드를 한 파일로 (템플릿 슬라이드를 먼저 모두 복제한 뒤 채운다 — 원본 render와 같은 순서)."""
-    prs = open_template(template)
-    notes = fix_theme_fonts(prs)
-    base = prs.slides[0]
-    total = sum(len(p["pages"]) for p in prepared)
-    slides = [base] + [duplicate_slide(prs, base) for _ in range(max(total, 1) - 1)]
-    it = iter(slides)
-    for p in prepared:
-        for page in p["pages"]:
-            fill_slide(next(it), page, p["content"], p["geom"])
-    output.parent.mkdir(parents=True, exist_ok=True)
-    tmp = output.with_name(f".{output.name}.tmp")
-    prs.save(str(tmp))
-    tmp.replace(output)
-    return notes
+    """여러 과제의 주간업무 슬라이드를 한 파일로 (팀장 요약 없이). render_team_report의 하위 호환 래퍼."""
+    return render_team_report(template, [TeamSection("", prepared)], output).notes
 
 
 class _Run:
@@ -600,26 +597,76 @@ class _Run:
         self.section(f"{self.names[pid]} · {label} 의미 검증", lines)
         return wpath, cpath
 
-    def _weekly_template(self, items: list[tuple[str, Path, Path]]) -> tuple[Path, list[tuple[str, int]]]:
+    def _weekly_template(self, items: list[tuple[str, Path, Path]], *, out_root: Path | None = None,
+                         period: tuple[date, date] | None = None, key: str | None = None) -> tuple[Path, list[tuple[str, int]]]:
+        """주간업무 양식 한 파일. 팀장 요약을 켜면 팀별로 [팀장 요약 페이지 → 그 팀 과제 장표] 순서로 묶는다."""
         template = find_template(self.ws)
-        prepared = []
-        for i, (pid, wpath, cpath) in enumerate(items, 1):
-            self.stage(f"{self.names[pid]} · PPT 구성")
-            project = wr_sources.load_project(self.ws, pid)
-            p = prepare_ppt(self.ws, project, wpath, cpath, template, client=self.client, project_index=i, project_total=len(items))
-            part = self.out / "parts" / f"{i:02d}.pptx"
-            notes = generate_ppt(self.ws, project, wpath, cpath, template, part, client=self.client, prepared=p)
-            self.problems += [f"{self.names[pid]}: {n[len('PPT 검사 문제: '):]}" for n in notes if n.startswith("PPT 검사 문제")]
-            self.section(f"{self.names[pid]} · PPT 처리", part.with_name(f"{part.stem}_ppt_check.txt").read_text(encoding="utf-8").splitlines())
-            prepared.append(p)
+        with_summary = bool((self.job.get("options") or {}).get("includeTeamSummary"))
+        projects = {pid: wr_sources.load_project(self.ws, pid) for pid, _w, _c in items}
+        grouped: list[tuple[str, list[tuple[str, Path, Path]]]] = [("", items)]
+        if with_summary:  # 팀 순서 = 선택 목록에서 처음 나온 순서, 팀 안 순서 = 선택 순서
+            teams: dict[str, list[tuple[str, Path, Path]]] = {}
+            for item in items:
+                teams.setdefault((projects[item[0]].get("org") or {}).get("team") or "팀 미지정", []).append(item)
+            grouped = list(teams.items())
+            sgeom = summary_geometry(self.ws, open_deck_template(template)[1])
+        sections: list[TeamSection] = []
+        order: list[str] = []
+        part_no = 0
+        for team, team_items in grouped:
+            prepared = []
+            for i, (pid, wpath, cpath) in enumerate(team_items, 1):  # 과제 번호 (n/N): 요약을 켜면 팀 안에서
+                self.stage(f"{self.names[pid]} · PPT 구성")
+                project = projects[pid]
+                p = prepare_ppt(self.ws, project, wpath, cpath, template, client=self.client, project_index=i, project_total=len(team_items))
+                part_no += 1
+                part = self.out / "parts" / f"{part_no:02d}.pptx"
+                notes = generate_ppt(self.ws, project, wpath, cpath, template, part, client=self.client, prepared=p)
+                self.problems += [f"{self.names[pid]}: {n[len('PPT 검사 문제: '):]}" for n in notes if n.startswith("PPT 검사 문제")]
+                self.section(f"{self.names[pid]} · PPT 처리", part.with_name(f"{part.stem}_ppt_check.txt").read_text(encoding="utf-8").splitlines())
+                prepared.append(p)
+                order.append(pid)
+            section = TeamSection(team, prepared)
+            if with_summary:
+                self._team_summary(section, team_items, projects, sgeom, out_root or self.ws, period, key)
+            sections.append(section)
         pptx = self.out / f"{self._stem()}.pptx"
-        render_weekly_deck(template, prepared, pptx)
+        layout = render_team_report(template, sections, pptx)
         shutil.rmtree(self.out / "parts", ignore_errors=True)
-        groups, at = [], 0
-        for (pid, _w, _c), p in zip(items, prepared):
-            at += len(p["pages"])
-            groups.append((pid, at))
-        return pptx, groups
+        if with_summary:
+            from pptx import Presentation
+            saved = Presentation(str(pptx))
+            for section, start in zip(sections, layout.summary_starts):
+                found = inspect_summary(saved, start, section.pages, section.geom, section.titles)
+                self.problems += [f"팀장 요약 · {section.team}: {f}" for f in found]
+                self.section(f"팀장 요약 · {section.team} PPT 재검사", [f"문제: {f}" for f in found] or ["통과 (제목·글꼴·글자 크기·색·파랑=대상 기간 근거·영역 경계)"])
+        return pptx, list(zip(order, layout.groups))
+
+    def _team_summary(self, section: "TeamSection", team_items: list[tuple[str, Path, Path]], projects: dict[str, dict],
+                      sgeom: "SummaryGeometry", out_root: Path, period: tuple[date, date] | None, key: str | None) -> None:
+        """팀 과제마다 AI 요약(project_summary)을 받아 요약 페이지를 배치한다. 붙여넣기 모드면 여기서 'AI 응답 필요'로 멈춘다."""
+        budget = lines_per_project(sgeom, len(team_items))
+        line_chars = sgeom.chars(FONT_SIZES[0], ITEM_MAR_IN)
+        blocks, stamps = [], []
+        for number, (pid, wpath, _c) in enumerate(team_items, 1):
+            self.stage(f"{self.names[pid]} · 팀장 요약")
+            weekly = load_json(wpath)
+            stamps.append(weekly["meta"]["updated_at"])
+            result = run_summary(self.ws, projects[pid], weekly["week"], out_root, client=self.client, max_lines=budget,
+                                 line_chars=line_chars, period=period, response_key=key)
+            mode = "서버 AI" if self.client.mode == "live" else "붙여넣기 응답"
+            lines = [f"AI 모드: {mode}{line[len('AI 모드: mock'):]}" if line.startswith("AI 모드: mock") else line
+                     for line in result.check.read_text(encoding="utf-8").splitlines()]
+            self.section(f"{self.names[pid]} · 팀장 요약 의미 검증", lines)
+            blocks.append(SummaryBlock(number, result.summary["project_name"], result.summary["items"]))
+        pages, notes = layout_summary(blocks, sgeom)
+        first = projects[team_items[0][0]]
+        author = (self.job.get("options") or {}).get("summaryAuthor")
+        section.author = f"작성자 : {author or PeopleTable.load(self.ws).with_project(first).name_with_title(first['owner'])}"
+        section.updated_at = updated_at_label(max(stamps))
+        section.pages, section.geom, section.titles = pages, sgeom, summary_titles(section.team, len(pages))
+        self.section(f"팀장 요약 · {section.team}", [f"과제 {len(team_items)}건, 과제당 {budget}줄 배정 (한 줄 약 {int(line_chars)}자)",
+                                                    section.author + (" (입력값)" if author else " (입력 없음 → 첫 과제 담당자)")] + notes)
 
     def _exec_template(self, fills: list[tuple[str, Any]]) -> tuple[Path, list[tuple[str, int]]]:
         pptx = self.out / f"{self._stem()}.pptx"
@@ -653,7 +700,7 @@ class _Run:
             wpath, cpath = self._rollup(pid, week, pdir, f"기간 정리 {start}~{end}", period=(start, end), response_key=key)
             items.append((pid, wpath, cpath))
         if self.job["template"] == "weekly":
-            return self._weekly_template(items)
+            return self._weekly_template(items, out_root=pdir, period=(start, end), key=key)
         fills = []
         for pid, wpath, _c in items:
             block = f"■ {pid} 기간 {start.isoformat()} ~ {end.isoformat()}\n" + pv.prev_weekly_lines(load_json(wpath))

@@ -1,0 +1,17 @@
+[과제]
+- 과제 ID / 과제명: {{project_id}} / {{project_name}}
+- 배경: {{background}}
+- 목적: {{purpose}}
+- 이 과제에 쓸 수 있는 줄 수: {{max_lines}}줄 (한 줄 약 {{line_chars}}자)
+
+[마일스톤 (현재)]
+{{milestone_lines}}
+
+[지난주까지 누적 요약] (기존 → 검정, 합쳐서 짧게)
+{{cumulative_lines}}
+
+[이번 주 주간 정리본] ({{week_label}}, {{range_from}} ~ {{range_to}})
+{{weekly_lines}}
+
+[이번 주 업무 기록 원문] (이슈·잘한점은 여기서 자세히)
+{{daily_blocks}}

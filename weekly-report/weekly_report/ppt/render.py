@@ -27,7 +27,7 @@ A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 REQUIRED_SHAPES = ("slide_title", "pjt_header", "author", "updated_at", "main_table", "body_top", "ms_table", "body_main")
 SLIDE_SIZE_IN = (10.83, 7.5)
-BLUE, BLACK = "0000FF", "000000"
+BLUE, BLACK, HIGHLIGHT = "0000FF", "000000", "FFFF00"
 EA_FONT = EA_REGULAR  # TTF nameID 1과 같은 이름이어야 PowerPoint가 LG스마트체를 쓴다
 
 
@@ -37,27 +37,83 @@ def a(tag: str) -> str:
 
 # ---------------------------------------------------------------- 템플릿 검사
 
-def open_template(template: Path):
+SUMMARY_SHAPES = ("slide_title", "author", "updated_at", "pjt_header")
+
+
+def _is_weekly(slide) -> bool:
+    shapes = shape_map(slide)
+    return all(name in shapes for name in REQUIRED_SHAPES) and shapes["main_table"].has_table
+
+
+def _is_summary(slide) -> bool:
+    shapes = shape_map(slide)
+    return all(name in shapes for name in SUMMARY_SHAPES) and "main_table" not in shapes
+
+
+def drop_slide(prs, slide) -> None:
+    """프레젠테이션에서 슬라이드를 뺀다 (출력 파일에서만)."""
+    sld_ids = prs.slides._sldIdLst
+    for sld_id in list(sld_ids):
+        if prs.part.related_part(sld_id.rId) is slide.part:
+            prs.part.drop_rel(sld_id.rId)
+            sld_ids.remove(sld_id)
+            return
+
+
+def _check_weekly(slide) -> None:
+    shapes = shape_map(slide)
+    main, ms = shapes["main_table"].table, shapes["ms_table"].table
+    if (len(main.rows), len(main.columns)) != (3, 5):
+        raise ValidationError(f"main_table 크기 {len(main.rows)}×{len(main.columns)} ≠ 3×5")
+    if len(ms.columns) != 7 or len(ms.rows) < 2:
+        raise ValidationError(f"ms_table 크기 {len(ms.rows)}×{len(ms.columns)} (7열, 데이터 행 1개 이상 필요)")
+
+
+def template_roles(prs):
+    """템플릿 안 슬라이드 역할을 도형 이름으로 찾는다.
+
+    주간 장표 = 필수 도형(main_table 등)이 있는 첫 장, 팀 요약 장표 = slide_title·author·updated_at·pjt_header만 있는 첫 장.
+    그 밖의 장(작성 예시·참고)은 출력에 쓰지 않는다. 템플릿 파일 자체는 바꾸지 않는다.
+    """
+    weekly = next((s for s in prs.slides if _is_weekly(s)), None)
+    summary = next((s for s in prs.slides if _is_summary(s)), None)
+    return weekly, summary
+
+
+def _open(template: Path):
     if not template.exists():
         raise FileNotFoundError(f"공식 템플릿 누락: {template}; 필수 도형: {', '.join(sorted(REQUIRED_SHAPES))}")
     prs = Presentation(str(template))
     size = (round(prs.slide_width / Inches(1), 2), round(prs.slide_height / Inches(1), 2))
     if size != SLIDE_SIZE_IN:
         raise ValidationError(f"템플릿 슬라이드 크기 {size[0]} × {size[1]}인치 ≠ 10.83 × 7.5인치")
-    if len(prs.slides) != 1:
-        raise ValidationError(f"템플릿 슬라이드 수 {len(prs.slides)} ≠ 1")
-    shapes = shape_map(prs.slides[0])
-    missing = [name for name in REQUIRED_SHAPES if name not in shapes]
-    if missing:
-        raise ValidationError(f"템플릿 필수 도형 누락: {', '.join(missing)}")
-    if not shapes["main_table"].has_table or not shapes["ms_table"].has_table:
-        raise ValidationError("main_table/ms_table이 표가 아님")
-    main, ms = shapes["main_table"].table, shapes["ms_table"].table
-    if (len(main.rows), len(main.columns)) != (3, 5):
-        raise ValidationError(f"main_table 크기 {len(main.rows)}×{len(main.columns)} ≠ 3×5")
-    if len(ms.columns) != 7 or len(ms.rows) < 2:
-        raise ValidationError(f"ms_table 크기 {len(ms.rows)}×{len(ms.columns)} (7열, 데이터 행 1개 이상 필요)")
+    weekly, summary = template_roles(prs)
+    if weekly is None:
+        found = sorted({n for sl in prs.slides for n in shape_map(sl)})
+        missing = [n for n in REQUIRED_SHAPES if n not in found]
+        raise ValidationError(f"템플릿 필수 도형 누락: {', '.join(missing) or '한 슬라이드에 모두 있어야 함'}")
+    _check_weekly(weekly)
+    return prs, weekly, summary
+
+
+def open_template(template: Path):
+    """주간 장표 1장만 남긴 프레젠테이션 (과제별 주간 PPT용)."""
+    prs, weekly, _summary = _open(template)
+    for slide in list(prs.slides):
+        if slide is not weekly:
+            drop_slide(prs, slide)
     return prs
+
+
+def open_deck_template(template: Path):
+    """팀 요약 장표 + 주간 장표만 남긴 프레젠테이션 (팀 주간보고 묶음용). (prs, 요약 장, 주간 장)"""
+    prs, weekly, summary = _open(template)
+    if summary is None:
+        raise ValidationError(f"템플릿에 팀 요약 장표가 없음 (도형: {', '.join(SUMMARY_SHAPES)}, main_table 없음)")
+    for slide in list(prs.slides):
+        if slide is not weekly and slide is not summary:
+            drop_slide(prs, slide)
+    return prs, summary, weekly
 
 
 def shape_map(slide) -> dict:
@@ -136,6 +192,19 @@ def _set_color(rpr, color: str) -> None:
     rpr.insert(list(rpr).index(ln) + 1 if ln is not None else 0, fill)
 
 
+def _set_highlight(rpr, color: str = HIGHLIGHT) -> None:
+    """글자 형광 표시. rPr 자식 순서상 highlight는 latin 앞에 둔다."""
+    for old in rpr.findall(a("highlight")):
+        rpr.remove(old)
+    node = etree.Element(a("highlight"))
+    etree.SubElement(node, a("srgbClr")).set("val", color)
+    latin = rpr.find(a("latin"))
+    if latin is not None:
+        latin.addprevious(node)
+    else:
+        rpr.append(node)
+
+
 def _set_fonts(rpr) -> None:
     latin = rpr.find(a("latin"))
     if latin is None:
@@ -172,9 +241,13 @@ def write_paras(tx_body, paras: list[Para], *, recolor: bool = True, proto: Prot
                 continue
             r = etree.SubElement(p, a("r"))
             rpr = proto.run_props(run.bold)
-            if recolor or run.blue:
+            if run.color:
+                _set_color(rpr, run.color)
+            elif recolor or run.blue:
                 _set_color(rpr, BLUE if run.blue else BLACK)
             _set_fonts(rpr)
+            if run.highlight:
+                _set_highlight(rpr)
             r.append(rpr)
             etree.SubElement(r, a("t")).text = run.text
         end = deepcopy(proto.end) if proto.end is not None else etree.Element(a("endParaRPr"))
@@ -296,6 +369,14 @@ def fix_theme_fonts(prs) -> list[str]:
         if changed:
             part._blob = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
     return fixed
+
+
+def add_weekly_pages(prs, template_slide, content: SlideContent, pages: list[PageModel], geom: Geometry) -> list:
+    """묶음 PPT: 깨끗한 주간 장표(template_slide)를 페이지 수만큼 복제해 맨 뒤에 붙이고 채운다."""
+    slides = [duplicate_slide(prs, template_slide) for _ in pages]
+    for slide, page in zip(slides, pages):
+        fill_slide(slide, page, content, geom)
+    return slides
 
 
 def render(template: Path, content: SlideContent, pages: list[PageModel], output: Path,

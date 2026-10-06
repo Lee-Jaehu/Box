@@ -1,0 +1,15 @@
+경영진 1장 요약: P-ASM-001 ESWA 재료교체 불량 개선 (2026-W40 기준)
+
+[AI 응답 처리 (모델: mock)]
+- 대체 없음 (AI 응답 그대로 사용)
+
+[코드 계산값 (AI 수치 아님)]
+- KPI 변화: E77 재료교체 위치 불량률 Δ0.045%p
+- 일정: 수평전개(북미·조립) 10/13 (+18일) (코드 계산)
+
+[PPT 재검사]
+- 통과 (글꼴·영역 경계·글 분량)
+
+[처리 내역]
+- 테마 majorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+- 테마 minorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'

@@ -4,13 +4,13 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import Settings
 from ..documents import require_valid
 from ..errors import ApiError, conflict, validation
-from ..models import Milestone, Organization, Project, ProjectKpi, ProjectMember, User, utcnow
+from ..models import DailyLog, Milestone, Organization, Project, ProjectKpi, ProjectMember, User, utcnow
 from ..schemas import (BaselineConfirm, KpiCreate, KpiPatch, MilestoneCreate, MilestonePatch, ProjectCopy,
                        ProjectCreate, ProjectPatch)
 from .common import audit, bump, check_revision, get_or_404, iso, iso_date, mark_export, stamp_new
@@ -55,7 +55,50 @@ def _members(s: Session, project_id: str) -> list[str]:
     return [r for r in s.execute(select(ProjectMember.user_id).where(ProjectMember.project_id == project_id)).scalars()]
 
 
-def ser_project(s: Session, p: Project, *, detail: bool = False) -> dict:
+def milestone_summaries(s: Session, project_ids: list[str]) -> dict[str, dict]:
+    """과제별 마일스톤 집계 {total, completed, cancelled} (일반·수시 업무와 삭제된 마일스톤 제외). 쿼리 1번."""
+    out = {pid: {"total": 0, "completed": 0, "cancelled": 0} for pid in project_ids}
+    if not project_ids:
+        return out
+    rows = s.execute(select(Milestone.project_id, Milestone.status, func.count())
+                     .where(Milestone.project_id.in_(project_ids), Milestone.deleted_at.is_(None), Milestone.is_general.is_(False))
+                     .group_by(Milestone.project_id, Milestone.status))
+    for pid, status, n in rows:
+        out[pid]["total"] += n
+        if status in ("completed", "cancelled"):
+            out[pid][status] += n
+    return out
+
+
+def project_people(s: Session, projects: list[Project]) -> dict[str, list[dict]]:
+    """과제별 사람 목록 (왼쪽 트리 PJT ▸ User ▸ Worklog): 대표 → 참여자(이름순) → 참여자가 아니지만 일지를 쓴 사람(이름순).
+
+    일지 작성자는 삭제되지 않은 일지 기준. 페이지 단위로 참여자 1번·작성자 1번·이름 1번 조회.
+    """
+    ids = [p.id for p in projects]
+    if not ids:
+        return {}
+    members: dict[str, list[str]] = {pid: [] for pid in ids}
+    for pid, uid in s.execute(select(ProjectMember.project_id, ProjectMember.user_id).where(ProjectMember.project_id.in_(ids))):
+        members[pid].append(uid)
+    authors: dict[str, list[str]] = {pid: [] for pid in ids}
+    for pid, uid in s.execute(select(DailyLog.project_id, DailyLog.author_id).where(DailyLog.project_id.in_(ids), DailyLog.deleted_at.is_(None)).distinct()):
+        authors[pid].append(uid)
+    every = {p.owner_user_id for p in projects} | {u for v in members.values() for u in v} | {u for v in authors.values() for u in v}
+    names = dict(s.execute(select(User.id, User.name).where(User.id.in_(every))).all()) if every else {}
+    out = {}
+    for p in projects:
+        by_name = lambda uid: (names.get(uid) or "", uid)  # noqa: E731
+        member_ids = sorted({u for u in members[p.id] if u != p.owner_user_id}, key=by_name)
+        author_ids = sorted({u for u in authors[p.id] if u != p.owner_user_id and u not in member_ids}, key=by_name)
+        out[p.id] = ([{"id": p.owner_user_id, "name": names.get(p.owner_user_id), "role": "owner"}]
+                     + [{"id": u, "name": names.get(u), "role": "member"} for u in member_ids]
+                     + [{"id": u, "name": names.get(u), "role": "author"} for u in author_ids])
+    return out
+
+
+def ser_project(s: Session, p: Project, *, detail: bool = False, summary: dict | None = None,
+                people: list[dict] | None = None) -> dict:
     team = s.get(Organization, p.team_id)
     division = s.get(Organization, team.parent_id) if team and team.parent_id else None
     owner = s.get(User, p.owner_user_id)
@@ -66,6 +109,10 @@ def ser_project(s: Session, p: Project, *, detail: bool = False) -> dict:
         "isShortTerm": p.is_short_term, "status": p.status, "startDate": iso_date(p.start_date),
         "endDate": iso_date(p.end_date), "revision": p.revision, "deletedAt": iso(p.deleted_at),
         "memberIds": _members(s, p.id),
+        # 내비게이션 트리의 완료(검회색) 판정용: 일반·수시 업무를 뺀 마일스톤 상태 집계
+        "milestoneSummary": summary if summary is not None else milestone_summaries(s, [p.id])[p.id],
+        # 왼쪽 트리 PJT ▸ User: 대표·참여자·일지 작성자
+        "people": people if people is not None else project_people(s, [p])[p.id],
     }
     if detail:
         d.update(backgroundDoc=p.background_doc, purposeDoc=p.purpose_doc, retrospectiveDoc=p.retrospective_doc)
@@ -138,7 +185,9 @@ def list_projects(s: Session, *, division_id: str | None, team_id: str | None, o
     if q:
         stmt = stmt.where(Project.name.like(f"%{q.strip()}%"))
     rows, nxt = paginate(s, stmt, limit, cursor)
-    return {"items": [ser_project(s, p) for p in rows], "nextCursor": nxt}
+    summaries = milestone_summaries(s, [p.id for p in rows])
+    people = project_people(s, rows)
+    return {"items": [ser_project(s, p, summary=summaries[p.id], people=people[p.id]) for p in rows], "nextCursor": nxt}
 
 
 def get_project(s: Session, project_id: str) -> dict:

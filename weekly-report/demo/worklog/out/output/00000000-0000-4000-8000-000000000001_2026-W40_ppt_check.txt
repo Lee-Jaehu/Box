@@ -1,0 +1,22 @@
+PPT: 00000000-0000-4000-8000-000000000001_2026-W40.pptx
+템플릿: 주간업무PPT_Template_v2.pptx
+슬라이드: 1장
+
+[처리 내역]
+- WorkLog 일정 기준 (rev 18, 그 주 snapshot 적용) — 지난주 대비 바뀐 값 0개 파란색
+- 고정 사실을 누적 요약에 추가: 반복 보고 업무 3종 도출 (팀원 5명 인터뷰)
+- 1장: 본문 17/28줄 사용 (36줄 규칙 기준 총 25줄)
+- 테마 majorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+- 테마 minorFont ea 'LG Smart Regular' → 'LG스마트체 Regular'
+
+[글꼴]
+- LG스마트체 Bold: LGSMHAB_V1.4_151215.TTF (한글 폭 0.905em, 줄 높이 1.085em)
+- LG스마트체 Light: LGSMHAL_V1.4_151215.TTF (한글 폭 0.884em, 줄 높이 1.085em)
+- LG스마트체 Regular: LGSMHAR_V1.4_151215.TTF (한글 폭 0.891em, 줄 높이 1.085em)
+- LG스마트체 SemiBold: LGSMHASB_V1.4_151215.TTF (한글 폭 0.898em, 줄 높이 1.085em)
+
+[코드 계산값 (AI 수치 아님)]
+- 없음
+
+[PPT 재검사]
+- 통과 (색·글꼴·9pt·표 값·상태 배경·슬라이드 수·영역 경계)

@@ -144,6 +144,52 @@
     },
     "ai": {
       "$ref": "#/$defs/ai"
+    },
+    "milestone_snapshot": {
+      "type": "object",
+      "description": "WorkLog 관리 과제: 이 주의 마일스톤 값 (다음 주 변경 표시 비교용, 키 = 원본 마일스톤 ID)",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "milestone_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "baseline": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actual": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false,
@@ -220,7 +266,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^(D|P|CP|R)-"
+        "pattern": "^((D|P|CP|R)-|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$)"
       },
       "description": "근거 레코드 ID (Daily, 기준정보, 변경 제안 등)"
     },

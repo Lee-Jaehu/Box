@@ -118,8 +118,10 @@ def test_missing_template_reports_required_shapes(tmp_path):
 
 def test_template_missing_shape_is_reported(tmp_path):
     prs = Presentation(str(TEMPLATE))
-    s = shapes(prs.slides[0])
-    s["body_main"]._element.getparent().remove(s["body_main"]._element)
+    for slide in prs.slides:  # 새 템플릿은 4장(요약·참고·주간·예시) → 주간 장표가 있는 모든 장에서 제거
+        s = shapes(slide)
+        if "body_main" in s:
+            s["body_main"]._element.getparent().remove(s["body_main"]._element)
     broken = tmp_path / "broken.pptx"
     prs.save(str(broken))
     with pytest.raises(ValueError, match="필수 도형 누락: body_main"):
@@ -219,7 +221,7 @@ def test_no_issue_shows_default_text(tmp_path):
     weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
     weekly["issues"] = []
     out, _ = build(ROOT, tmp_path, weekly=weekly)
-    assert "특이사항 없음" in shapes(Presentation(str(out)).slides[0])["body_main"].text_frame.text
+    assert "금주에는 특이사항이 없습니다" in shapes(Presentation(str(out)).slides[0])["body_main"].text_frame.text
 
 
 def test_project_week_mismatch_is_rejected(tmp_path):
@@ -258,7 +260,7 @@ def test_missing_people_mapping_falls_back_to_id(repo, tmp_path):
     out, notes = build(repo, tmp_path)
     s = shapes(Presentation(str(out)).slides[0])
     assert s["author"].text_frame.text == "작성자 : ljh"
-    assert any("config/people.json에 없는 사용자 ID" in n for n in notes)
+    assert any("이름을 찾지 못한 사용자 ID" in n for n in notes)
 
 
 def test_prior_week_milestone_updates_accumulate_in_black(tmp_path):
@@ -316,3 +318,13 @@ def test_estimate_cumulative_items_without_template(tmp_path):
     project = read(ROOT / "data/master/projects/P-ASM-001.json")
     weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
     assert estimate_cumulative_items(tmp_path, project, [], weekly)[0] == 7
+
+
+def test_four_slide_template_outputs_only_weekly_pages(tmp_path):
+    """2026-10-06 템플릿: 0 팀 요약 양식, 1 요약 작성 예시, 2 주간 양식, 3 주간 예시 → 과제 PPT에는 주간 장만."""
+    assert len(Presentation(str(TEMPLATE)).slides) == 4
+    out, _ = build(ROOT, tmp_path)
+    prs = Presentation(str(out))
+    assert all("main_table" in shapes(slide) for slide in prs.slides)
+    text = " ".join(sh.text_frame.text for slide in prs.slides for sh in slide.shapes if sh.has_text_frame)
+    assert "자동보정선행개발팀" not in text and "과제 진행 현황_OOOO팀" not in text

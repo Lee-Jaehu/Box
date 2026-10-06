@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 rem Worklog first-time setup: prepares a Python environment in the same order the launcher uses (Conda -> embedded -> venv).
 rem   초기설정.bat                 auto (stops at the first option that works)
 rem   초기설정.bat -Only venv      one option only (conda | embedded | venv)
@@ -7,7 +8,6 @@ rem   초기설정.bat -Dev            development PC (test packages, Node.js in
 rem   초기설정.bat -DryRun         show the plan only
 rem Never changes the conda base environment, PATH, registry, firewall or services. Data and config are not touched.
 rem Test hook: WORKLOG_NO_PAUSE=1 skips the final pause.
-chcp 65001 >nul
 setlocal EnableExtensions
 set "APP_ROOT=%~dp0"
 if "%APP_ROOT:~-1%"=="\" set "APP_ROOT=%APP_ROOT:~0,-1%"

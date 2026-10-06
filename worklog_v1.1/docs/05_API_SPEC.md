@@ -26,7 +26,7 @@ Base `/api/v1`. JSON camelCase. 로그인 토큰 없음. 변경 요청에 `X-Act
 | POST /imports/masters/preview | Excel/CSV 업로드·열 연결·검증 |
 | POST /imports/masters/commit | previewToken으로 원자적 적용 |
 | GET /imports/masters/template | 가져오기 양식 다운로드 |
-| GET/POST /projects | 목록·등록; 기본 general milestone 함께 생성 |
+| GET/POST /projects | 목록·등록; 기본 general milestone 함께 생성. 목록·상세 항목에 `milestoneSummary {total, completed, cancelled}`(일반·수시 업무·삭제 제외, 왼쪽 트리 완료 표시용), `people [{id, name, role: owner|member|author}]`(대표 → 참여자 → 일지 작성자, 왼쪽 트리 PJT ▸ User) |
 | GET/PATCH/DELETE /projects/{id} | 상세·수정·휴지통 |
 | POST /projects/{id}/copy | 선택 기준정보 복사, 새 IDs |
 | GET/POST /projects/{id}/milestones | 목록·빠른 등록 |
@@ -154,7 +154,8 @@ preview에 original row number, normalized values, new/update/ambiguous/error, e
 
 **보고자료(PPT)** — 작업은 서버 작업 스레드가 처리하고 화면은 상태를 조회한다. 응답 형식은 `{data, meta}` 동일.
 - `GET /reports/config` → `aiMode`(`live`|`paste`), `aiModel`, `aiUrlConfigured`, `aiKeyConfigured`(키 값은 내보내지 않음), `fonts`, `maxProjects`.
-- `POST /reports/jobs`(`Idempotency-Key`·`X-Actor-Id` 필요, 202) 본문 `{kind: weekly|period|monthly, template: weekly|exec, week:"2026-W40" | dateFrom,dateTo | month:"2026-10", projectIds[], orgLabel?, includeTables, includeGantts, includeMilestoneGantt, refreshAi}`. 기간은 최대 366일, 프로젝트는 최대 30개. 형식 오류 422, 삭제·없는 프로젝트 409.
+- `POST /reports/jobs`(`Idempotency-Key`·`X-Actor-Id` 필요, 202) 본문 `{kind: weekly|period|monthly, template: weekly|exec, week:"2026-W40" | dateFrom,dateTo | month:"2026-10", projectIds[], orgLabel?, includeTables, includeGantts, includeMilestoneGantt, refreshAi, includeTeamSummary?, summaryAuthor?}`. 기간은 최대 366일, 프로젝트는 최대 30개.
+  `includeTeamSummary`(기본 false, 화면은 기본 켜서 보냄)는 주간·기간 보고 + 주간업무 양식에서만 적용되고 그 밖에는 false로 저장된다. `summaryAuthor`(최대 40자)는 팀장 요약 페이지 작성자 칸(비우면 그 팀 첫 과제 담당자). 작업의 `options`에 그대로 돌려준다. 붙여넣기 모드에서는 과제마다 `promptId: project_summary`(`promptLabel` "팀장 요약") 응답을 한 번 더 묻는다. 형식 오류 422, 삭제·없는 프로젝트 409.
 - `GET /reports/jobs?limit=` 최근 작업(프롬프트 원문 제외), `GET /reports/jobs/{id}` 상세. `status`: `queued`→`running`→`need_response`|`succeeded`|`failed`|`cancelled`. `need_response` 이면 `need{promptId, promptLabel, responseName, projectName, prompt, format}`.
 - `POST /reports/jobs/{id}/response` `{responseName, text}` — 붙여넣은 AI 응답(설명 문장·```json 섞여도 됨)을 형식 검사 후 저장하고 다시 대기열로. 다른 단계 응답·JSON 아님 422(저장 안 함), 기다리는 응답이 아니면 409.
 - `POST /reports/jobs/{id}/retry`, `POST /reports/jobs/{id}/cancel`.

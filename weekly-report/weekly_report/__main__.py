@@ -5,6 +5,10 @@ python -m weekly_report pptgen   P-ASM-001 2026-W39 [--mode mock|live] [--out-ro
 python -m weekly_report pipeline P-ASM-001 2026-W39 [--mode mock|live] [--out-root DIR] [--template PATH]
 python -m weekly_report preview  output/P-ASM-001_2026-W39.pptx [--out-dir DIR]   (LG스마트체로 PNG 렌더링)
 python -m weekly_report serve    [--port 8765] [--workspace DIR] [--no-browser]     (로컬 웹 테스트 화면)
+python -m weekly_report report exec    P-ASM-001 2026-W40 [--mode mock|live] [--output PATH]   (경영진 1장 요약)
+python -m weekly_report team     조립자동보정팀 2026-W40 [--mode mock|live] [--out-root DIR] [--template PATH] [--output PATH]
+                                 (팀 요약 페이지 + 과제별 주간 장표 한 파일, 팀 대신 과제 ID를 주면 그 과제의 팀)
+python -m weekly_report report monthly 2026-09 [--projects P-ASM-001 ...] [--mode mock|live] [--output PATH]  (월간 종합)
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from . import sources
 from .ai import AIError
 from .core import ValidationError
 from .ppt.budget import BudgetError
@@ -27,6 +32,43 @@ def _derived_input(kind: str, project_id: str, week: str, out_root: Path, root: 
         if path.exists():
             return path
     raise FileNotFoundError(f"{kind} 입력 없음: data/derived/{kind}/{project_id}/{week}.json (먼저 weekly를 실행하세요)")
+
+
+def _report(root: Path, args) -> int:
+    from .report.generate import generate_exec_summary, generate_monthly
+
+    try:
+        if args.kind == "exec":
+            output = args.output or root / f"output/report/경영진요약_{args.project_id}_{args.week}.pptx"
+            result = generate_exec_summary(root, args.project_id, args.week, output, mode=args.mode)
+        else:
+            year, month = (int(v) for v in args.month.split("-"))
+            ids = args.projects or [p["project_id"] for p in sources.list_projects(root)]
+            output = args.output or root / f"output/report/월간종합_{args.month}.pptx"
+            result = generate_monthly(root, ids, year, month, output, mode=args.mode)
+    except (FileNotFoundError, ValidationError, AIError, ValueError) as exc:
+        print(f"오류: {exc}", file=sys.stderr)
+        return 1
+    print(f"PPT: {result['pptx']}\n검사 보고서: {result['check']}")
+    print("AI 응답 처리: " + "; ".join(result["notes"]))
+    print("PPT 재검사: " + ("; ".join(result["problems"]) or "통과"))
+    return 0
+
+
+def _team(root: Path, out_root: Path, args) -> int:
+    from .team import generate_team_deck, team_projects
+
+    try:
+        team, _ = team_projects(root, args.team)  # 과제 ID를 주면 그 과제의 팀 이름으로 파일명을 정한다
+        output = args.output or out_root / f"output/팀주간보고_{team}_{args.week}.pptx"
+        result = generate_team_deck(root, args.team, args.week, output, out_root=out_root, mode=args.mode, template=args.template)
+    except (FileNotFoundError, ValidationError, BudgetError, AIError, ValueError) as exc:
+        print(f"오류: {exc}", file=sys.stderr)
+        return 1
+    print(f"PPT: {result.pptx}\n검사 보고서: {result.check}")
+    print("\n".join(f"- {n}" for n in result.notes))
+    print("PPT 재검사: " + ("; ".join(result.problems) or "통과"))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -51,6 +93,24 @@ def main(argv: list[str] | None = None) -> int:
     web.add_argument("--port", type=int, default=8765)
     web.add_argument("--workspace", type=Path, help="기본: weekly-report/workspace")
     web.add_argument("--no-browser", action="store_true")
+    team = sub.add_parser("team", help="팀 주간보고 (팀 요약 페이지 + 과제별 주간 장표, 한 파일)")
+    team.add_argument("team", help="팀 이름(기준정보 org.team) 또는 과제 ID")
+    team.add_argument("week", help="ISO 주차, 예: 2026-W40")
+    team.add_argument("--mode", choices=("mock", "live"), default="mock")
+    team.add_argument("--out-root", type=Path, help="data/derived·output을 쓸 위치 (기본: --root)")
+    team.add_argument("--template", type=Path)
+    team.add_argument("--output", type=Path)
+    report = sub.add_parser("report", help="보고 자료 (경영진 1장 요약 / 월간 종합, 템플릿 초안)")
+    kinds = report.add_subparsers(dest="kind", required=True)
+    exec_cmd = kinds.add_parser("exec", help="경영진 1장 요약")
+    exec_cmd.add_argument("project_id")
+    exec_cmd.add_argument("week", help="기준 주차, 예: 2026-W40")
+    monthly_cmd = kinds.add_parser("monthly", help="월간 종합 보고")
+    monthly_cmd.add_argument("month", help="YYYY-MM, 예: 2026-09")
+    monthly_cmd.add_argument("--projects", nargs="+", help="기본: 모든 과제 (내부 기준정보 + WorkLog export)")
+    for cmd in (exec_cmd, monthly_cmd):
+        cmd.add_argument("--mode", choices=("mock", "live"), default="mock")
+        cmd.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     root = args.root.resolve()
     if args.command == "serve":
@@ -66,7 +126,11 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(*notes, *(f"미리보기: {p}" for p in images), sep="\n")
         return 0
+    if args.command == "report":
+        return _report(root, args)
     out_root = (args.out_root or root).resolve()
+    if args.command == "team":
+        return _team(root, out_root, args)
     try:
         if args.command in {"weekly", "pipeline"}:
             weekly_path, cumulative_path, report = run_weekly(root, args.project_id, args.week, out_root, args.mode)
@@ -75,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
             template = find_template(root, args.template)
             output = getattr(args, "output", None) or out_root / f"output/{args.project_id}_{args.week}.pptx"
             notes = generate_ppt(
-                root, root / f"data/master/projects/{args.project_id}.json",
+                root, sources.load_project(root, args.project_id),
                 _derived_input("weekly", args.project_id, args.week, out_root, root),
                 _derived_input("cumulative", args.project_id, args.week, out_root, root),
                 template, output, mode=args.mode,
@@ -83,7 +147,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"템플릿: {template}\nPPT: {output}\nPPT 검사: {output.with_name(output.stem + '_ppt_check.txt')}")
             problems = [n for n in notes if n.startswith("PPT 검사 문제")]
             print(f"PPT 재검사: {'문제 ' + str(len(problems)) + '건' if problems else '통과'}")
-    except (FileNotFoundError, ValidationError, BudgetError, AIError) as exc:
+    except (FileNotFoundError, ValidationError, BudgetError, AIError, ValueError) as exc:
         print(f"오류: {exc}", file=sys.stderr)
         return 1
     return 0

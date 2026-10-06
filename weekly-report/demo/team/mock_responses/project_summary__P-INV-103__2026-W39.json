@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "category": "background",
+      "text": "보고 자동화 검증을 위해 실제 업무 데이터 없이 파이프라인을 확인하는 합성 과제입니다.",
+      "source_ids": [
+        "P-INV-103"
+      ],
+      "details": []
+    },
+    {
+      "category": "progress",
+      "text": "설비 투자 건의 심의를 완료해 다음 단계인 승인·품의 진행을 준비하고 있습니다.(9/22)",
+      "source_ids": [
+        "D-260922-tester-03"
+      ],
+      "details": []
+    },
+    {
+      "category": "plan",
+      "text": "심의를 완료한 설비 투자 건에 대해 다음 단계인 승인 품의를 진행할 예정입니다.(~9/25)",
+      "source_ids": [
+        "D-260922-tester-03"
+      ],
+      "details": []
+    }
+  ]
+}

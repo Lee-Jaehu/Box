@@ -1,0 +1,234 @@
+{
+  "fileType": "WORKLOG_PROJECT_EXPORT",
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-10-04T15:04:02+09:00",
+  "sourceRevision": 18,
+  "timezone": "Asia/Seoul",
+  "project": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "name": "WorkLog",
+    "revision": 3,
+    "deletedAt": null,
+    "isShortTerm": false,
+    "status": "preparing",
+    "team": {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "name": "예시DX팀",
+      "parent": {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "name": "예시DX담당"
+      }
+    },
+    "owner": {
+      "id": "00000000-0000-4000-8000-000000000010",
+      "name": "김예시",
+      "employeeNumber": "00000010",
+      "teamId": "00000000-0000-4000-8000-000000000002",
+      "teamName": "예시DX팀"
+    },
+    "members": [
+      {
+        "id": "00000000-0000-4000-8000-000000000011",
+        "name": "이샘플"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000012",
+        "name": "박데모"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000010",
+        "name": "김예시"
+      }
+    ],
+    "startDate": "2026-09-28",
+    "endDate": "2026-10-08",
+    "background": {
+      "documentVersion": 1,
+      "format": "tiptap-json",
+      "doc": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "보고서 작성 관련 지속적인 VoE 발생"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "기존 보고서의 경우 AI Readable 측면에서 부족함 존재"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      }
+    },
+    "purpose": {
+      "documentVersion": 1,
+      "format": "tiptap-json",
+      "doc": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "orderedList",
+            "attrs": {
+              "start": 1,
+              "type": null
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "AI Readable한 형태로의 업무기록 데이터 축적"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "AI를 활용한 보고 관련 반복 업무 해소"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      }
+    },
+    "retrospective": null
+  },
+  "milestones": [
+    {
+      "id": "00000000-0000-4000-8000-000000000100",
+      "name": "일반·수시 업무",
+      "isGeneral": true,
+      "status": "planned",
+      "sortOrder": 0,
+      "plannedStart": null,
+      "plannedEnd": null,
+      "baselineStart": null,
+      "baselineEnd": null,
+      "baselineConfirmedAt": null,
+      "actualStart": null,
+      "actualEnd": null,
+      "deletedAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "name": "요건 분석",
+      "isGeneral": false,
+      "status": "completed",
+      "sortOrder": 1,
+      "plannedStart": "2026-09-29",
+      "plannedEnd": "2026-10-01",
+      "baselineStart": "2026-09-29",
+      "baselineEnd": "2026-10-01",
+      "baselineConfirmedAt": "2026-10-04T15:00:22+09:00",
+      "actualStart": "2026-09-29",
+      "actualEnd": "2026-10-01",
+      "deletedAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "name": "설계",
+      "isGeneral": false,
+      "status": "in_progress",
+      "sortOrder": 2,
+      "plannedStart": "2026-10-01",
+      "plannedEnd": "2026-10-04",
+      "baselineStart": "2026-10-01",
+      "baselineEnd": "2026-10-04",
+      "baselineConfirmedAt": "2026-10-04T15:00:36+09:00",
+      "actualStart": null,
+      "actualEnd": null,
+      "deletedAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "name": "Work log 개발",
+      "isGeneral": false,
+      "status": "in_progress",
+      "sortOrder": 3,
+      "plannedStart": "2026-10-04",
+      "plannedEnd": "2026-10-06",
+      "baselineStart": null,
+      "baselineEnd": null,
+      "baselineConfirmedAt": null,
+      "actualStart": null,
+      "actualEnd": null,
+      "deletedAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000104",
+      "name": "PPT Generator 개발",
+      "isGeneral": false,
+      "status": "in_progress",
+      "sortOrder": 4,
+      "plannedStart": "2026-10-04",
+      "plannedEnd": "2026-10-06",
+      "baselineStart": null,
+      "baselineEnd": null,
+      "baselineConfirmedAt": null,
+      "actualStart": null,
+      "actualEnd": null,
+      "deletedAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000105",
+      "name": "마일스톤추가1",
+      "isGeneral": false,
+      "status": "planned",
+      "sortOrder": 5,
+      "plannedStart": "2026-09-30",
+      "plannedEnd": "2026-09-30",
+      "baselineStart": "2026-09-30",
+      "baselineEnd": "2026-09-30",
+      "baselineConfirmedAt": "2026-10-04T15:04:02+09:00",
+      "actualStart": null,
+      "actualEnd": null,
+      "deletedAt": "2026-10-04T15:10:00+09:00"
+    }
+  ],
+  "kpis": []
+}

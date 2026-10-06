@@ -22,9 +22,12 @@ def milestone_lines(milestones: list[dict[str, Any]], codes: CodeTable) -> str:
     lines = []
     for m in sorted(milestones, key=lambda x: x["order"]):
         plan = m.get("plan_text") or m.get("plan") or "-"
+        # WorkLog 단계는 적용 범위 대신 계획 기간, 실적일도 함께 준다
+        scope = f"계획 기간: {m['scope_label']}" if m.get("source_id") else f"적용 범위: {codes.scope_label(m['scope'])}"
+        actual = f" | 실적 {m['actual']}" if m.get("actual") else ""
         lines.append(
-            f"- {m['milestone_id']} | {m['name']} | 적용 범위: {codes.scope_label(m['scope'])} | "
-            f"Baseline {m.get('baseline') or '-'} | 계획 {plan} | 상태 {m['status']}"
+            f"- {m['milestone_id']} | {m['name']} | {scope} | "
+            f"Baseline {m.get('baseline') or '-'} | 계획 {plan}{actual} | 상태 {m['status']}"
         )
     return "\n".join(lines) if lines else "없음"
 
@@ -33,9 +36,11 @@ def daily_blocks(dailies: list[dict[str, Any]]) -> str:
     """Daily 원문 블록. pics는 AI 입력에서 제외한다."""
     blocks = []
     for daily in dailies:
+        author = daily.get("author_name") or daily["author"]
+        body = daily["raw_text"].replace("\n", "\n        ")  # 여러 줄 본문(WorkLog 업무일지)은 들여 써서 기록 경계를 분명히
         lines = [
-            f"- 기록 ID: {daily['daily_id']} ({daily['date']}, {daily['author']}, 카테고리 {daily.get('category') or '없음'})",
-            f"  본문: {daily['raw_text']}",
+            f"- 기록 ID: {daily['daily_id']} ({daily['date']}, {author}, 카테고리 {daily.get('category') or '없음'})",
+            f"  본문: {body}",
         ]
         for table in daily.get("tables", []):
             lines.append(f"  표 [{table['title']}]")
@@ -48,9 +53,10 @@ def daily_blocks(dailies: list[dict[str, Any]]) -> str:
 def item_lines(items: list[dict[str, Any]], *, with_slot: str | None = None) -> str:
     lines = []
     for value in items:
-        ids = ",".join(value.get("source_ids", [])) or "근거 없음"
+        # 근거 ID는 문장 뒤 [근거: ...]로 분리해 보여 준다. 앞에 (ID)를 붙이면 AI가 문장에 그대로 옮겨 쓴다
+        ids = ", ".join(value.get("source_ids", [])) or "없음"
         label = f"[{SLOT_LABEL.get(with_slot, with_slot)}] " if with_slot else ""
-        lines.append(f"- {label}({ids}) {value['text']}")
+        lines.append(f"- {label}{value['text']}  [근거: {ids}]")
     return "\n".join(lines)
 
 

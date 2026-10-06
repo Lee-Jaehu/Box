@@ -16,7 +16,7 @@ from typing import Any
 from ..ai import AIError, ExaoneClient
 from ..core import render_prompt
 from ..prompt_vars import item_lines
-from ..textmetrics import line_count, weighted_length
+from ..textmetrics import SENTENCE_MAX, SENTENCE_MIN, line_count, weighted_length
 from ..validate import extract_tokens
 from .milestones import MsRow
 from .model import BodyItem, PageModel, Para, Run, Section, SlideContent
@@ -27,7 +27,7 @@ BODY_PT = 9
 LINE_FACTOR_DEFAULT = 1.2  # 글꼴 실측이 없을 때 9pt 한 줄 높이 = 1.2em (보수적)
 LINE_FACTOR_LG = 1.17  # LG스마트체 실측: LibreOffice 렌더링 1.156em(22줄 = 3.18in), 완성 예시 1.10em → 넘침 방지로 1.17
 BODY_WIDTH_SAFETY = 0.92  # 실제 줄 폭 대비 8% 여유 (영문 글꼴 차이·단어 단위 줄바꿈 대비)
-MAX_CHARS = 50.0  # 항목 문장 길이 규칙 (AI 작성·fit_to_budget 기준). 줄 수 계산은 실제 폭(body_chars)으로 한다
+MAX_CHARS = SENTENCE_MAX  # 항목 문장 길이 규칙 (AI 작성·fit_to_budget 기준, 30~60자). 줄 수 계산은 실제 폭(body_chars)으로 한다
 RULE_LINES = 36  # CLAUDE.md: 본문 전체 36줄 (배경/목표 + 마일스톤 표 행 + 진행 현황·계획·이슈)
 BODY_TOP_MAX_LINES = 4  # "[배경/목표]" 제목 1줄 + 내용 최대 3줄
 GAP_EMU = int(0.03 * EMU_PER_IN)  # 완성 예시는 간격 0, 테두리 겹침만 피할 정도로 둔다
@@ -57,10 +57,14 @@ class Geometry:
 
     @property
     def body_chars(self) -> float:
-        """본문 한 줄에 실제로 들어가는 가중 글자 수 (여유분 반영, 50자 규칙보다 작아지지 않음)."""
+        """본문 한 줄에 실제로 들어가는 가중 글자 수 (여유분 반영).
+
+        LG스마트체 실측 시 약 62.6자로 60자 문장 규칙보다 넓다. 글꼴 파일이 없으면(한글 폭 1.0em 가정)
+        더 좁게 잡혀 긴 문장이 두 줄로 계산된다 (보수적).
+        """
         if not self.body_width:
             return MAX_CHARS
-        return max(MAX_CHARS, cell_width_chars(self.body_width, 2 * 18288, self.hangul_em) * BODY_WIDTH_SAFETY)
+        return cell_width_chars(self.body_width, 2 * 18288, self.hangul_em) * BODY_WIDTH_SAFETY
 
 
 def para_lines(para: Para, width: float = MAX_CHARS) -> int:
@@ -201,6 +205,7 @@ def fit_sections(content: SlideContent, client: ExaoneClient | None, root: Path)
         originals = list(section.items)
         if client is not None:
             variables = {"slot_name": section.key, "max_items": section.limit, "max_chars": int(MAX_CHARS),
+                         "min_chars": int(SENTENCE_MIN),
                          "item_lines": item_lines([{"text": i.text, "source_ids": i.source_ids} for i in originals])}
             try:
                 system, user = render_prompt(root, "fit_to_budget", variables)
