@@ -1,0 +1,13 @@
+보안 경고: 스크립트 실행 위험
+Invoke-WebRequest는 웹 페이지의 내용을 구문 분석합니다. 페이지를 구문 분석할 때 웹 페이지 내 스크립트 코드가 실행될 수
+있습니다.
+      권장 조치:
+      -UseBasicParsing 스위치를 사용하여 스크립트 코드 실행을 방지합니다.
+ 
+      계속하시겠어요?
+ 
+[Y] 예(Y)  [A] 모두 예(A)  [N] 아니요(N)  [L] 모두 아니요(L)  [S] 일시 중단(S)  [?] 도움말 (기본값은 "N"): A
+{"id":"01a10ffb-e013-7e9f-a9ac-49b2382f68b3","choices":[{"finish_reason":"stop","index":0,"logprobs":null,"message":{"content":"\n\nHello! I'm doing well, thank you. How can I help you today?","refusal":null,"role":"assistant","annotations":null,"audio":null,"function_call":null,"tool_calls":null,"reasoning":"Okay, this is a simple one-word greeting: \"hello\". The user is just saying hello, likely initiating a conversation. My response should be friendly and open-ended to encourage further dialogue. I should acknowledge the greeting warmly and offer assistance or ask what they'd like to talk about. Keeping it simple and inviting seems best. I'll respond with a standard yet welcoming reply, leaving the door open for any topic they might be interested in.\n"},"routed_experts":null,"stop_reason":null,"token_ids":null}],"created":1791269569,"model":"k-exaone_v2","object":"chat.completion","moderation":null,"service_tier":null,"system_fingerprint":null,"usage":{"completion_tokens":88,"prompt_tokens":9,"total_tokens":97,"completion_tokens_details":null,"prompt_tokens_details":null}}
+?곹깭: 500
+{"result_code":500,"description":"InternalServerError,Connection error."}
+(worklog) PS D:\26'\2609\group ai task\worklog_v1>
