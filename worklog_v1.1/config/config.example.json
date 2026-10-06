@@ -12,6 +12,9 @@
   "AI_API_URL": "",
   "AI_API_KEY": "",
   "AI_MODEL": "",
-  "AI_TIMEOUT_SECONDS": 120,
+  "AI_TIMEOUT_SECONDS": 300,
+  "AI_MAX_TOKENS": "",
+  "AI_INPUT_CHARS": 24000,
+  "AI_COMPAT_MODE": "auto",
   "AI_JSON_MODE": false
 }

@@ -129,6 +129,10 @@ def summary_path(out_root: Path, project_id: str, week: str) -> Path:
     return out_root / f"data/derived/summary/{project_id}/{week}.json"
 
 
+def _half(budget: int | None) -> int | None:
+    return max(budget // 2, 2000) if budget else None
+
+
 def run_summary(root: Path, project: dict[str, Any], week: str, out_root: Path, *, client: ExaoneClient,
                 max_lines: int, line_chars: float, dailies: list[dict[str, Any]] | None = None,
                 current_project: dict[str, Any] | None = None, period: tuple[date, date] | None = None,
@@ -156,6 +160,7 @@ def run_summary(root: Path, project: dict[str, Any], week: str, out_root: Path, 
     week_label = f"W{week[-2:]}" if period is None else f"{start.month}/{start.day}~{end.month}/{end.day}"
     week_ids = {d["daily_id"] for d in dailies} | set(weekly.get("source_daily_ids", []))
     codes = CodeTable.load(root)
+    input_notes: list[str] = []
     variables = {"project_id": pid, "project_name": project["name"], "background": project["background"],
                  "purpose": project["purpose"], "max_lines": max_lines, "line_chars": int(line_chars),
                  "milestone_lines": pv.milestone_lines((current_project or project)["milestones"], codes),
@@ -163,7 +168,9 @@ def run_summary(root: Path, project: dict[str, Any], week: str, out_root: Path, 
                  "week_label": week_label, "range_from": start.isoformat(), "range_to": end.isoformat(),
                  "period_label": "이번 주" if period is None else "보고 기간",
                  "prev_label": "지난주까지" if period is None else "보고 기간 이전까지",
-                 "weekly_lines": _weekly_lines(weekly), "daily_blocks": pv.daily_blocks(dailies)}
+                 "weekly_lines": _weekly_lines(weekly),
+                 # [Worklog 통합] 진행·계획은 위 정리본에 이미 있으므로 원문은 예산의 절반, 이슈·성과 줄을 우선 남긴다
+                 "daily_blocks": pv.daily_blocks(dailies, _half(getattr(client, "input_chars", None)), input_notes, focus=True)}
     system, user = render_prompt(root, PROMPT_ID, variables)
     input_hash = hashlib.sha256(f"{system}\n{user}".encode("utf-8")).hexdigest()[:16]
 
@@ -174,7 +181,7 @@ def run_summary(root: Path, project: dict[str, Any], week: str, out_root: Path, 
         if saved.get("ai", {}).get("input_hash") == input_hash:
             return SummaryResult(path, check, saved, [], reused=True)
 
-    notes: list[Issue] = [Issue("입력", "정보", w) for w in warnings]
+    notes: list[Issue] = [Issue("입력", "정보", w) for w in warnings + input_notes]
     payload = client.complete(PROMPT_ID, pid, key, system, user)
     if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
         raise ValidationError("project_summary 응답에 items 배열이 없음")

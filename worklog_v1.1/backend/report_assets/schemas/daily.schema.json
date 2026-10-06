@@ -185,6 +185,16 @@
           "type": "string"
         }
       }
+    },
+    "contents": {
+      "type": "object",
+      "description": "[Worklog 통합] Task 에디터 섹션 합본 {\"진행 현황\": [...], \"이슈\": [...], \"향후계획\": [...]} (결정 I38)",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
     }
   },
   "additionalProperties": false,

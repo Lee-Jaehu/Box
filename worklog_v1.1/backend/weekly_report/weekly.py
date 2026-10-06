@@ -248,6 +248,7 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
             validate_schema(value, root / f"schemas/{schema}.schema.json")
 
     weekly_notes: list[Issue] = []
+    input_notes: list[str] = []
     cum_notes: list[Issue] = []
     # 이전 주 일정 변화를 누적한 마일스톤으로 프롬프트를 만든다 (기준정보 파일은 그대로)
     from .ppt.milestones import apply_history, load_prior_weeklies
@@ -270,10 +271,13 @@ def run_weekly(root: Path, project_id: str, week: str, out_root: Path, mode: str
                      "range_from": start.isoformat(), "range_to": end.isoformat(),
                      "milestone_lines": pv.milestone_lines(current_project["milestones"], codes),
                      "milestone_policy": MILESTONE_POLICY["managed" if managed else "ai"],
-                     "prev_weekly_lines": pv.prev_weekly_lines(prev_weekly), "daily_blocks": pv.daily_blocks(dailies)}
+                     "prev_weekly_lines": pv.prev_weekly_lines(prev_weekly),
+                     # [Worklog 통합] 원문 예산(AI_INPUT_CHARS)을 넘으면 기록마다 균등하게 줄인다
+                     "daily_blocks": pv.daily_blocks(dailies, getattr(client, "input_chars", None), input_notes)}
         system, user = render_prompt(root, rollup_id, variables)
         content = build_weekly_payload(client.complete(rollup_id, project_id, resp_key, system, user), weekly_notes)
         apply_changed_rule(content, prev_weekly, weekly_notes)
+        weekly_notes += [Issue("입력", "정보", n) for n in input_notes]
         weekly_ai_model = client.model_label
     snapshot = None
     if managed:

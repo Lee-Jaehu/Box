@@ -35,3 +35,16 @@ Worklog 서비스 연결 코드는 `backend/app/services/reports.py`, 참고 슬
 
 `report_assets/config/` 변경: `people.json` 예시 사람 제거(이름은 Worklog export에서 옴), `worklog_mapping.json` 에 레코드 상태 `completed`·`cancelled` 추가.
 `report_assets/prompts/period_rollup.*.txt` 는 `weekly_rollup.*.txt` 에서 '이번 주' 표현만 '기간'으로 바꾼 새 파일이다.
+
+### 2026-10-06 Task 에디터 섹션 입력 + AI 호출 강건화 (결정 I38·I39)
+| 파일 | 변경 | 이유 |
+|---|---|---|
+| worklog.py | `task_sections()`/`task_contents()`/`merge_contents()`: Task 내용을 `## 진행 현황 / ## 이슈 / ## 향후계획`(별칭 포함) 섹션으로 나눔. 형식은 dict·MD 문자열·tiptap(heading 노드 또는 "## " 문단) 모두. `task.contents` → `task.content` 순. `log_text`는 섹션별 한 줄(`[이슈] … / …`), daily에 `contents{}` 추가(스키마 선택 속성). 옛 To-Do·Issue·성과 기록은 있으면 그대로 넣음 | Worklog가 Task 하나에 MD처럼 통합 작성하는 방식으로 바뀜 |
+| ai.py | `<think>…</think>` 제거 후 JSON 찾기, 본문의 각 `{`·`[` 위치를 차례로 시도(읽힌 JSON 안쪽은 건너뜀)하고 응답 형식에 맞는 값 우선. 본문이 비면 `reasoning`에서 찾음. `finish_reason=length`면 원인 메시지(재요청 안 함). `max_tokens`(설정 시). HTTP 408/429/5xx·연결 실패·시간 초과는 3초·10초 대기 후 최대 2번 더. `call_log`(입력 글자 수·초·요청 횟수·끝난 이유), `notes`(자동 조치) | PPT 추출 실패 원인 분석 결과 (I39) |
+| prompt_vars.py | `daily_blocks(dailies, budget, notes, focus)`: 예산을 넘으면 기록별 물 채우기로 균등하게 줄임(작은 기록은 그대로, `…(줄임)`), focus면 이슈·성과·배운 점 줄을 마지막까지 남김 | 입력량 비례 증가 차단 |
+| weekly.py, summary.py | 정리는 예산 `AI_INPUT_CHARS`, 팀장 요약은 그 절반 + 이슈 우선. 줄인 사실은 검사 보고서 '입력' 정보 | 같은 원문을 두 번 통째로 보내던 것 |
+| report_assets | `prompts/project_summary.*.txt` 문구(섹션 형식 근거), `prompts/README.md` v0.8, `schemas/daily.schema.json`에 `contents` | |
+
+원본 `weekly-report/weekly_report/ai.py`에도 같은 AI 호출 강건화를 넣었다(환경변수 `EXAONE_MAX_TOKENS`). 섹션 파서·원문 예산은 Worklog 전용이라 여기에만 있다.
+
+- ai.py (I40, 사내 게이트웨이 500 "Connection error." 대응): 호환 형식 `compat`(system을 user에 합치고 temperature·max_tokens 없음) — 5xx가 재요청 뒤에도 계속되면 1번 시도 후 유지. `last_request`(실패 분석용, 키 없음). 5xx 메시지에 입력 글자 수·AI점검 안내. 원본에도 같은 변경(`EXAONE_COMPAT_MODE`).

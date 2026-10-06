@@ -12,6 +12,7 @@ import json
 import os
 import re
 import socket
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -55,21 +56,41 @@ class ChatCompletionsAdapter:
 
     # 사내 EXAONE(k-exaone_v2) 게이트웨이는 response_format={"type":"json_object"}에 500을 돌려준다(2026-10-06 확인).
     # 기본은 붙이지 않는다. 프롬프트가 JSON만 요구하고 read_payload가 설명 문장·```json 표시를 걸러 JSON만 읽는다.
-    def __init__(self, json_mode: bool = False):
+    def __init__(self, json_mode: bool = False, max_tokens: int | None = None):
         self.json_mode = json_mode
+        self.max_tokens = max_tokens  # 지정할 때만 보낸다 (EXAONE_MAX_TOKENS)
 
     def build_request(self, messages: list[dict[str, str]], model: str | None) -> dict[str, Any]:
         body: dict[str, Any] = {"messages": messages, "temperature": 0.1}
         if self.json_mode:
             body["response_format"] = {"type": "json_object"}
+        if self.max_tokens:
+            body["max_tokens"] = int(self.max_tokens)
         if model:
             body["model"] = model
         return body
 
     def extract_text(self, raw: dict[str, Any]) -> str:
+        return self.extract(raw).text
+
+    def extract(self, raw: dict[str, Any]) -> "Reply":
+        """본문 + 끝난 이유(finish_reason) + 사고 과정(reasoning, 사고형 모델이 따로 줄 때)."""
         if isinstance(raw.get("content"), str):
-            return raw["content"]
-        return raw["choices"][0]["message"]["content"]
+            return Reply(raw["content"], raw.get("finish_reason"), None)
+        choice = raw["choices"][0]
+        message = choice.get("message") or {}
+        reasoning = message.get("reasoning") or message.get("reasoning_content")
+        content = message.get("content")
+        if content is not None and not isinstance(content, str):
+            raise TypeError("message.content가 문자열이 아님")
+        return Reply(content or "", choice.get("finish_reason"), reasoning if isinstance(reasoning, str) else None)
+
+
+class Reply:
+    """AI 응답 한 건 (본문·끝난 이유·사고 과정)."""
+
+    def __init__(self, text: str, finish_reason: str | None, reasoning: str | None):
+        self.text, self.finish_reason, self.reasoning = text, finish_reason, reasoning
 
 
 # 프롬프트별 응답 형식: 필수 배열 키, 반드시 객체여야 하는 키, 선택 배열 키
@@ -95,6 +116,18 @@ ITEM_LISTS = {"progress", "next_plan", "issues", "items", "pinned_facts", "new_p
 ITEM_OBJECTS = {"headline", "head_message", "title", "left_title", "right_title"}
 
 
+class LengthExceeded(Exception):
+    """응답이 길이 한도(finish_reason=length)로 잘려 JSON을 읽을 수 없음."""
+
+
+PROMPT_LABELS = {"weekly_rollup": "주간 정리", "period_rollup": "기간 정리", "cumulative_update": "누적 요약",
+                 "fit_to_budget": "분량 줄이기", "project_summary": "팀장 요약"}
+
+
+def prompt_label(prompt_id: str) -> str:
+    return PROMPT_LABELS.get(prompt_id, prompt_id)
+
+
 class ResponseFormatError(AIError):
     """AI 응답이 JSON이지만 프롬프트가 요구한 형식이 아님."""
 
@@ -103,35 +136,65 @@ class ResponseFormatError(AIError):
         self.prompt_id = prompt_id
 
 
-def _json_candidates(text: str) -> list[str]:
-    """응답 원문에서 JSON 후보 구간: 전체 → ```json 블록 → 첫 {/[ 부터."""
-    cleaned = text.strip().lstrip("\ufeff")
-    candidates = [cleaned]
-    candidates += [m.group(1) for m in re.finditer(r"```[A-Za-z]*\s*\n?(.*?)```", cleaned, re.S)]
-    if cleaned.startswith("```"):  # 닫는 ``` 없이 잘린 경우
-        candidates.append(cleaned.split("\n", 1)[1] if "\n" in cleaned else "")
-    starts = [i for i in (cleaned.find("{"), cleaned.find("[")) if i >= 0]
-    if starts:
-        candidates.append(cleaned[min(starts):])
-    return candidates
+# 사고형 모델이 본문에 섞어 보내는 사고 과정 (<think>…</think>). 안의 { } 때문에 JSON 찾기가 어긋난다.
+_THINK_RE = re.compile(r"<(think|thinking|reasoning)>.*?</\1>", re.S | re.I)
+_THINK_OPEN_RE = re.compile(r"<(think|thinking|reasoning)>.*", re.S | re.I)
+MAX_JSON_STARTS = 400  # {·[ 위치를 이만큼까지 차례로 시도
 
 
-def parse_json_value(text: str) -> Any:
-    """설명 문장·```json 표시가 섞여 있어도 첫 JSON 객체(또는 배열)를 꺼낸다."""
+def strip_reasoning(text: str) -> str:
+    """<think>…</think> 구간을 뺀다. 닫히지 않은 것(잘린 응답)은 그 뒤를 모두 뺀다."""
+    text = _THINK_RE.sub("", text)
+    return _THINK_OPEN_RE.sub("", text)
+
+
+def _json_values(text: str):
+    """응답 원문(사고 과정을 뺀 본문)에서 읽히는 JSON 값을 차례로 내놓는다.
+    전체가 JSON이면 그것 하나만. 아니면 ```json 블록 → 본문의 {·[ 위치마다 (읽힌 JSON 안쪽 위치는 건너뜀: 안쪽 조각을 답으로 고르지 않게)."""
     decoder = json.JSONDecoder()
-    error: json.JSONDecodeError | None = None
-    for candidate in _json_candidates(text):
-        candidate = candidate.strip()
+    cleaned = strip_reasoning(text.strip().lstrip("\ufeff")).strip()
+    try:
+        yield json.loads(cleaned)
+        return
+    except json.JSONDecodeError:
+        pass
+    blocks = [m.group(1) for m in re.finditer(r"```[A-Za-z]*\s*\n?(.*?)```", cleaned, re.S)]
+    if cleaned.startswith("```"):  # 닫는 ``` 없이 잘린 경우
+        blocks.append(cleaned.split("\n", 1)[1] if "\n" in cleaned else "")
+    for block in blocks:
         try:
-            return json.loads(candidate)
-        except json.JSONDecodeError as exc:
-            error = error or exc
-        if candidate[:1] in "{[":
-            try:  # JSON 뒤에 설명 문장이 붙은 경우
-                return decoder.raw_decode(candidate)[0]
-            except json.JSONDecodeError:
-                pass
-    raise error or json.JSONDecodeError("JSON 없음", text, 0)
+            yield json.loads(block.strip())
+        except json.JSONDecodeError:
+            pass
+    pos, tried = 0, 0
+    while tried < MAX_JSON_STARTS:
+        match = re.compile(r"[{\[]").search(cleaned, pos)
+        if not match:
+            return
+        tried += 1
+        try:
+            value, end = decoder.raw_decode(cleaned, match.start())  # JSON 뒤에 설명 문장이 붙어도 된다
+        except json.JSONDecodeError:
+            pos = match.start() + 1
+            continue
+        yield value
+        pos = end
+
+
+def parse_json_value(text: str, prompt_id: str | None = None) -> Any:
+    """설명 문장·```json 표시·사고 과정이 섞여 있어도 JSON 객체(또는 배열)를 꺼낸다.
+    prompt_id를 주면 그 프롬프트의 응답 형식에 맞는 첫 값을, 없으면 처음 읽힌 값을 고른다."""
+    shape = RESPONSE_SHAPES.get(prompt_id or "")
+    first: Any = None
+    found = False
+    for value in _json_values(text):
+        if shape is None or _has_shape(normalize_payload(value, prompt_id), shape):
+            return value
+        if not found:
+            first, found = value, True
+    if found:
+        return first
+    raise json.JSONDecodeError("JSON 없음", text, 0)
 
 
 def parse_json_text(text: str) -> dict[str, Any]:
@@ -222,9 +285,15 @@ def check_payload(value: Any, prompt_id: str) -> None:
 
 def read_payload(text: str, prompt_id: str) -> dict[str, Any]:
     """응답 원문 → 정리된 payload (JSON이 아니면 JSONDecodeError, 형식이 틀리면 ResponseFormatError)."""
-    value = normalize_payload(parse_json_value(text), prompt_id)
+    value = normalize_payload(parse_json_value(text, prompt_id), prompt_id)
     check_payload(value, prompt_id)
     return value
+
+
+# 잠깐 뒤 다시 보내면 되는 오류 (게이트웨이·과부하). 연결 실패·시간 초과도 다시 보낸다.
+TRANSIENT_CODES = {408, 429, 500, 502, 503, 504}
+RETRY_DELAYS = (3.0, 10.0)  # 다시 보내기 전 대기(초). 길이 = 추가 시도 횟수
+LENGTH_HINT = "응답 길이 한도에 걸려 잘렸습니다 — 환경변수 EXAONE_MAX_TOKENS를 늘리거나(사고형 모델은 사고 과정도 한도에 포함) 입력을 나눠 만드세요"
 
 
 class ExaoneClient:
@@ -237,6 +306,15 @@ class ExaoneClient:
         self.adapter = adapter or ChatCompletionsAdapter()
         self.mock_dir = mock_dir or root / "prompts/mock_responses"
         self.calls: list[str] = []  # 호출 기록 (테스트·보고용, 프롬프트 원문은 남기지 않음)
+        self.notes: list[str] = []  # 호출 중 자동 조치 기록 (재요청 등)
+        self.call_log: list[dict[str, Any]] = []  # live 호출 계측: 단계·입력 글자 수·걸린 초·보낸 횟수·끝난 이유
+        self.retry_delays: tuple[float, ...] = RETRY_DELAYS
+        self.sleep = time.sleep  # 테스트에서 바꿔 끼운다
+        # 호환 형식(system을 user에 합치고 temperature·max_tokens 없음): None=5xx가 끝까지 나면 한 번 시도, True=처음부터, False=안 씀
+        compat = os.getenv("EXAONE_COMPAT_MODE", "auto").strip().lower()
+        self.compat: bool | None = True if compat in {"1", "true", "yes", "on"} else False if compat in {"0", "false", "no", "off"} else None
+        if self.adapter.__class__ is ChatCompletionsAdapter and os.getenv("EXAONE_MAX_TOKENS", "").strip().isdigit():
+            self.adapter.max_tokens = int(os.environ["EXAONE_MAX_TOKENS"]) or None
 
     @property
     def model_label(self) -> str:
@@ -261,33 +339,112 @@ class ExaoneClient:
                 raise ResponseFormatError(prompt_id, f"JSON이 아닙니다 ({path.name})") from exc
         return self._live(prompt_id, system, user)
 
+    def _send(self, url: str, key: str, body: dict[str, Any], stat: dict[str, Any]) -> bytes:
+        """한 번 보내기 + 일시 오류(5xx·429·연결·시간 초과)는 대기 후 다시 보낸다."""
+        waits = [] if stat.get("no_retry") else list(self.retry_delays)
+        while True:
+            stat["sends"] += 1
+            try:
+                return self.transport.request(url, key, body, self.timeout)
+            except urllib.error.HTTPError as exc:
+                if exc.code not in TRANSIENT_CODES or not waits:
+                    raise
+                reason = f"HTTP {exc.code}"
+            except (TimeoutError, socket.timeout):
+                if not waits:
+                    raise
+                reason = f"시간 초과({self.timeout:g}초)"
+            except urllib.error.URLError as exc:
+                if not waits:
+                    raise
+                reason = f"연결 실패({type(exc.reason).__name__})"
+            wait = waits.pop(0)
+            self.notes.append(f"{prompt_label(stat['prompt'])}: {reason} → {wait:g}초 뒤 다시 요청")
+            self.sleep(wait)
+
     def _live(self, prompt_id: str, system: str, user: str) -> dict[str, Any]:
         url, key = os.getenv("EXAONE_API_URL"), os.getenv("EXAONE_API_KEY")
         if not url or not key:
             raise AIError("live 모드는 환경변수 EXAONE_API_URL과 EXAONE_API_KEY가 필요합니다")
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-        for attempt in range(2):
-            body = self.adapter.build_request(messages, os.getenv("EXAONE_MODEL"))
+        stat: dict[str, Any] = {"prompt": prompt_id, "chars": len(system) + len(user), "sends": 0, "seconds": 0.0, "finish": None}
+        self.call_log.append(stat)
+        started = time.monotonic()
+        try:
+            return self._live_loop(prompt_id, url, key, messages, stat)
+        finally:
+            stat["seconds"] = round(time.monotonic() - started, 1)
+
+    def _body(self, messages: list[dict[str, str]]) -> dict[str, Any]:
+        """요청 본문. 호환 형식이면 system 내용을 첫 user 메시지 앞에 합치고 temperature·max_tokens를 뺀다."""
+        if not self.compat:
+            return self.adapter.build_request(messages, os.getenv("EXAONE_MODEL"))
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        merged = [dict(m) for m in messages if m["role"] != "system"]
+        if system and merged:
+            merged[0]["content"] = f"{system}\n\n{merged[0]['content']}"
+        body = self.adapter.build_request(merged, os.getenv("EXAONE_MODEL"))
+        body.pop("temperature", None)
+        body.pop("max_tokens", None)
+        return body
+
+    def _live_loop(self, prompt_id: str, url: str, key: str, messages: list[dict[str, str]], stat: dict[str, Any]) -> dict[str, Any]:
+        tries = lambda: f" (요청 {stat['sends']}회)" if stat["sends"] > 1 else ""  # noqa: E731
+        attempt = -1
+        while attempt < 1:
+            attempt += 1
+            body = self._body(messages)
             try:
-                raw_bytes = self.transport.request(url, key, body, self.timeout)
+                raw_bytes = self._send(url, key, body, stat)
             except urllib.error.HTTPError as exc:
-                raise AIError(f"EXAONE HTTP 오류: {exc.code}") from None
-            except (TimeoutError, socket.timeout) as exc:
-                raise AIError(f"EXAONE 응답 시간 초과({self.timeout:g}초)") from None
+                if exc.code >= 500 and self.compat is None:
+                    # 재요청해도 5xx: 게이트웨이가 이 요청 모양을 처리하지 못할 수 있다 → 호환 형식으로 한 번 더, 되면 계속 사용
+                    self.compat = True
+                    stat["no_retry"] = True
+                    self.notes.append(f"{prompt_label(prompt_id)}: HTTP {exc.code}가 계속되어 호환 형식(system을 user에 합침, temperature 없음)으로 다시 요청")
+                    attempt -= 1
+                    continue
+                hint = f" · 입력 {stat['chars']:,}자 — 입력 길이가 원인일 수 있음" if exc.code >= 500 else ""
+                raise AIError(f"EXAONE HTTP 오류: {exc.code}{tries()}{hint}") from None
+            except (TimeoutError, socket.timeout):
+                raise AIError(f"EXAONE 응답 시간 초과({self.timeout:g}초){tries()}") from None
             except urllib.error.URLError as exc:
-                raise AIError(f"EXAONE 연결 실패: {type(exc.reason).__name__}") from None
+                raise AIError(f"EXAONE 연결 실패: {type(exc.reason).__name__}{tries()}") from None
             text = None
             try:
-                text = self.adapter.extract_text(json.loads(raw_bytes))
-                return read_payload(text, prompt_id)
+                raw = json.loads(raw_bytes)
+                extract = getattr(self.adapter, "extract", None)
+                reply = extract(raw) if extract else Reply(self.adapter.extract_text(raw), None, None)
+                stat["finish"] = reply.finish_reason
+                text = reply.text
+                return self._read_reply(reply, prompt_id)
+            except LengthExceeded:
+                raise AIError(f"{prompt_label(prompt_id)}: {LENGTH_HINT}") from None
             except (json.JSONDecodeError, ResponseFormatError, KeyError, IndexError, TypeError, AttributeError) as exc:
                 if attempt:
                     detail = f": {exc}" if isinstance(exc, ResponseFormatError) else ""
                     raise AIError(f"EXAONE 응답을 2회 모두 요구 형식의 JSON으로 받지 못했습니다{detail}") from None
                 # 문서 규칙: 파싱 실패 시 1회 재요청
-                if isinstance(text, str):
-                    messages.append({"role": "assistant", "content": text})
+                if isinstance(text, str) and text.strip():
+                    messages.append({"role": "assistant", "content": strip_reasoning(text)[:4000]})
                 retry = RETRY_MESSAGE if not isinstance(exc, ResponseFormatError) else \
                     f"직전 응답이 요구한 형식이 아닙니다 ({exc}). [출력 JSON 형식]에 맞춰 JSON으로만 다시 출력하세요."
                 messages.append({"role": "user", "content": retry})
         raise AssertionError("도달 불가")
+
+    def _read_reply(self, reply: "Reply", prompt_id: str) -> dict[str, Any]:
+        """본문 → payload. 본문이 비었거나 형식이 틀리면 사고 과정(reasoning)에서도 찾는다.
+        길이 한도로 잘려 읽을 수 없으면 LengthExceeded (같은 요청을 다시 보내도 또 잘리므로 재요청하지 않는다)."""
+        try:
+            return read_payload(reply.text, prompt_id)
+        except (json.JSONDecodeError, ResponseFormatError) as exc:
+            if reply.reasoning:
+                try:
+                    payload = read_payload(reply.reasoning, prompt_id)
+                    self.notes.append(f"{prompt_label(prompt_id)}: 본문 대신 사고 과정(reasoning)에서 JSON을 읽음")
+                    return payload
+                except (json.JSONDecodeError, ResponseFormatError):
+                    pass
+            if reply.finish_reason == "length":
+                raise LengthExceeded() from exc
+            raise

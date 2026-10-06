@@ -13,5 +13,5 @@
 [{{period_label}} 정리본] ({{week_label}}, {{range_from}} ~ {{range_to}})
 {{weekly_lines}}
 
-[{{period_label}} 업무 기록 원문] (이슈·잘한점은 여기서 자세히)
+[{{period_label}} 업무 기록 원문] (이슈·잘한점은 여기서 자세히. 분량이 많으면 진행 내용은 줄여서 보냄)
 {{daily_blocks}}
