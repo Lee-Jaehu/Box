@@ -100,8 +100,11 @@ python backend/run.py                 # http://localhost:8000/
 | `AI_API_URL` / `AI_API_KEY` / `AI_MODEL` | 비어 있음 | 보고자료 AI. 주소·키가 모두 있으면 서버가 직접 호출, 없으면 붙여넣기 방식. 키는 화면에 노출하지 않음 |
 | `AI_TIMEOUT_SECONDS` | `300` | AI 호출 한 번의 제한 시간. 사고형 모델(k-exaone_v2)은 입력이 크면 2분을 넘기기 쉬움 |
 | `AI_MAX_TOKENS` | 비어 있음 | 응답 길이 한도(max_tokens). 비우면 보내지 않음. "응답 길이 한도에 걸려 잘림" 오류가 나면 늘림(사고 과정도 한도에 포함) |
+| `AI_COMPAT_MODE` | `auto` | 사내 게이트웨이 호환 형식(system 내용을 user에 합치고 temperature·max_tokens 없이). `auto`는 HTTP 5xx가 재요청 뒤에도 계속되면 한 번 이 형식으로 보내고, 성공하면 그 작업 동안 유지. `true`는 처음부터, `false`는 안 씀 |
 | `AI_INPUT_CHARS` | `24000` | AI 호출 한 번에 넣을 업무일지 원문 글자 수 상한. 넘으면 기록마다 균등하게 줄이고 검사 보고서에 알림(팀장 요약은 절반, 이슈 줄 우선) |
 | `REPORT_JOB_RETENTION` | `200` | 보관할 보고자료 작업 수(넘으면 오래된 결과부터 삭제) |
+
+**AI 연결 점검:** 보고자료 생성이 AI 오류(특히 HTTP 500)로 실패하면 `AI점검.bat`을 실행한다. 요청 모양을 하나씩 바꿔 보내고(짧은 user만 / temperature / system 역할 / 한글 4천·1만2천·2만4천 자 / 마지막으로 실패한 실제 요청) 결과와 결론(넣을 설정값)을 출력한다. 키는 출력하지 않는다. 마지막으로 실패한 요청은 `data/reports/ai_debug/last_failed_request.json`에 남는다(키·주소 없음).
 
 이 외 `SQLITE_SYNCHRONOUS`(기본 FULL), `SQLITE_BUSY_TIMEOUT_MS`(5000), `EXPORT_WORKER_ENABLED` 가 있다.
 

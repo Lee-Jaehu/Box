@@ -15,5 +15,6 @@
   "AI_TIMEOUT_SECONDS": 300,
   "AI_MAX_TOKENS": "",
   "AI_INPUT_CHARS": 24000,
+  "AI_COMPAT_MODE": "auto",
   "AI_JSON_MODE": false
 }

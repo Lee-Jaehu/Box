@@ -46,3 +46,5 @@ Worklog 서비스 연결 코드는 `backend/app/services/reports.py`, 참고 슬
 | report_assets | `prompts/project_summary.*.txt` 문구(섹션 형식 근거), `prompts/README.md` v0.8, `schemas/daily.schema.json`에 `contents` | |
 
 원본 `weekly-report/weekly_report/ai.py`에도 같은 AI 호출 강건화를 넣었다(환경변수 `EXAONE_MAX_TOKENS`). 섹션 파서·원문 예산은 Worklog 전용이라 여기에만 있다.
+
+- ai.py (I40, 사내 게이트웨이 500 "Connection error." 대응): 호환 형식 `compat`(system을 user에 합치고 temperature·max_tokens 없음) — 5xx가 재요청 뒤에도 계속되면 1번 시도 후 유지. `last_request`(실패 분석용, 키 없음). 5xx 메시지에 입력 글자 수·AI점검 안내. 원본에도 같은 변경(`EXAONE_COMPAT_MODE`).

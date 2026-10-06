@@ -191,6 +191,7 @@ class ServiceClient(ExaoneClient):
                          adapter=ChatCompletionsAdapter(json_mode=settings.ai_json_mode, max_tokens=settings.ai_max_tokens))
         self.settings = settings
         self.input_chars = settings.ai_input_chars
+        self.compat = {"true": True, "false": False}.get(settings.ai_compat_mode)
         self.on_call = None  # 서버 AI 호출 직전 알림 (작업 단계 표시용): on_call(prompt_id, 입력 글자 수)
         self.not_before = not_before
         self.used: list[str] = []
@@ -215,7 +216,11 @@ class ServiceClient(ExaoneClient):
         if self.mode == "live":
             if self.on_call:
                 self.on_call(prompt_id, len(prompt))
-            payload = self._live(prompt_id, system, user)
+            try:
+                payload = self._live(prompt_id, system, user)
+            except AIError:
+                self._save_failed_request(prompt_id, name)
+                raise
             save_response(self.mock_dir, name, payload, sha, "live", _now(self.settings))
             stat = self.call_log[-1]  # 입력 크기·걸린 시간·요청 횟수 (어느 단계가 무겁고 느린지 보이게)
             self.used.append(f"{PROMPT_LABEL.get(prompt_id, prompt_id)}: 서버 AI 호출 ({name}) — 입력 {stat['chars']:,}자, "
@@ -224,6 +229,28 @@ class ServiceClient(ExaoneClient):
         if prompt_id == "fit_to_budget":  # 붙여넣기 방식에서는 묻지 않는다 → 원문 유지 + (계속) 장
             raise MockResponseMissing("붙여넣기 방식에서는 분량 줄이기를 AI에 묻지 않음")
         raise NeedResponse(prompt_id, name, prompt, sha, project_id)
+
+    def _save_failed_request(self, prompt_id: str, name: str) -> None:
+        if not self.last_request:
+            return
+        stat = self.call_log[-1] if self.call_log else {}
+        try:
+            _save_failed_request_file(self.settings, self.last_request, {
+                "savedAt": _now(self.settings), "promptId": prompt_id, "responseName": name,
+                "inputChars": stat.get("chars"), "sends": stat.get("sends"), "compat": bool(self.compat)})
+        except OSError:
+            log.warning("실패한 AI 요청을 저장하지 못함")
+
+
+def failed_request_path(settings: Settings) -> Path:
+    return settings.reports_dir / "ai_debug" / "last_failed_request.json"
+
+
+def _save_failed_request_file(settings: Settings, body: dict, meta: dict) -> None:
+    """[I40] 마지막으로 실패한 AI 요청 본문 (AI점검.bat이 다시 보내 원인 확인). 키·헤더·주소는 담지 않는다."""
+    path = failed_request_path(settings)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_json(path, {**meta, "body": body})
 
 
 # ── 작업 저장소 ──────────────────────────────────────────────────────────────

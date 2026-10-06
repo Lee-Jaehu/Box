@@ -310,6 +310,9 @@ class ExaoneClient:
         self.call_log: list[dict[str, Any]] = []  # live 호출 계측: 단계·입력 글자 수·걸린 초·보낸 횟수·끝난 이유
         self.retry_delays: tuple[float, ...] = RETRY_DELAYS
         self.sleep = time.sleep  # 테스트에서 바꿔 끼운다
+        # 호환 형식(system을 user에 합치고 temperature·max_tokens 없음): None=5xx가 끝까지 나면 한 번 시도, True=처음부터, False=안 씀
+        compat = os.getenv("EXAONE_COMPAT_MODE", "auto").strip().lower()
+        self.compat: bool | None = True if compat in {"1", "true", "yes", "on"} else False if compat in {"0", "false", "no", "off"} else None
         if self.adapter.__class__ is ChatCompletionsAdapter and os.getenv("EXAONE_MAX_TOKENS", "").strip().isdigit():
             self.adapter.max_tokens = int(os.environ["EXAONE_MAX_TOKENS"]) or None
 
@@ -338,7 +341,7 @@ class ExaoneClient:
 
     def _send(self, url: str, key: str, body: dict[str, Any], stat: dict[str, Any]) -> bytes:
         """한 번 보내기 + 일시 오류(5xx·429·연결·시간 초과)는 대기 후 다시 보낸다."""
-        waits = list(self.retry_delays)
+        waits = [] if stat.get("no_retry") else list(self.retry_delays)
         while True:
             stat["sends"] += 1
             try:
@@ -372,14 +375,37 @@ class ExaoneClient:
         finally:
             stat["seconds"] = round(time.monotonic() - started, 1)
 
+    def _body(self, messages: list[dict[str, str]]) -> dict[str, Any]:
+        """요청 본문. 호환 형식이면 system 내용을 첫 user 메시지 앞에 합치고 temperature·max_tokens를 뺀다."""
+        if not self.compat:
+            return self.adapter.build_request(messages, os.getenv("EXAONE_MODEL"))
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        merged = [dict(m) for m in messages if m["role"] != "system"]
+        if system and merged:
+            merged[0]["content"] = f"{system}\n\n{merged[0]['content']}"
+        body = self.adapter.build_request(merged, os.getenv("EXAONE_MODEL"))
+        body.pop("temperature", None)
+        body.pop("max_tokens", None)
+        return body
+
     def _live_loop(self, prompt_id: str, url: str, key: str, messages: list[dict[str, str]], stat: dict[str, Any]) -> dict[str, Any]:
         tries = lambda: f" (요청 {stat['sends']}회)" if stat["sends"] > 1 else ""  # noqa: E731
-        for attempt in range(2):
-            body = self.adapter.build_request(messages, os.getenv("EXAONE_MODEL"))
+        attempt = -1
+        while attempt < 1:
+            attempt += 1
+            body = self._body(messages)
             try:
                 raw_bytes = self._send(url, key, body, stat)
             except urllib.error.HTTPError as exc:
-                raise AIError(f"EXAONE HTTP 오류: {exc.code}{tries()}") from None
+                if exc.code >= 500 and self.compat is None:
+                    # 재요청해도 5xx: 게이트웨이가 이 요청 모양을 처리하지 못할 수 있다 → 호환 형식으로 한 번 더, 되면 계속 사용
+                    self.compat = True
+                    stat["no_retry"] = True
+                    self.notes.append(f"{prompt_label(prompt_id)}: HTTP {exc.code}가 계속되어 호환 형식(system을 user에 합침, temperature 없음)으로 다시 요청")
+                    attempt -= 1
+                    continue
+                hint = f" · 입력 {stat['chars']:,}자 — 입력 길이가 원인일 수 있음" if exc.code >= 500 else ""
+                raise AIError(f"EXAONE HTTP 오류: {exc.code}{tries()}{hint}") from None
             except (TimeoutError, socket.timeout):
                 raise AIError(f"EXAONE 응답 시간 초과({self.timeout:g}초){tries()}") from None
             except urllib.error.URLError as exc:

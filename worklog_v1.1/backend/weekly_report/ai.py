@@ -339,6 +339,9 @@ class ExaoneClient:
         self.retry_delays: tuple[float, ...] = RETRY_DELAYS
         self.sleep = time.sleep  # 테스트에서 바꿔 끼운다
         self.input_chars: int | None = None  # 원문 블록 글자 수 상한 (prompt_vars.daily_blocks)
+        # [Worklog 통합] 호환 형식(system을 user에 합치고 temperature·max_tokens 없음): None=5xx가 끝까지 나면 한 번 시도(auto), True=처음부터, False=안 씀
+        self.compat: bool | None = None
+        self.last_request: dict[str, Any] | None = None  # 마지막으로 보낸 요청 본문 (키·주소 없음, 실패 분석용)
 
     @property
     def model_label(self) -> str:
@@ -365,7 +368,7 @@ class ExaoneClient:
 
     def _send(self, url: str, key: str, body: dict[str, Any], stat: dict[str, Any]) -> bytes:
         """[Worklog 통합] 한 번 보내기 + 일시 오류(5xx·429·연결·시간 초과)는 대기 후 다시 보낸다."""
-        waits = list(self.retry_delays)
+        waits = [] if stat.get("no_retry") else list(self.retry_delays)
         while True:
             stat["sends"] += 1
             try:
@@ -400,17 +403,40 @@ class ExaoneClient:
         finally:
             stat["seconds"] = round(time.monotonic() - started, 1)
 
+    def _body(self, messages: list[dict[str, str]]) -> dict[str, Any]:
+        """요청 본문. 호환 형식이면 system 내용을 첫 user 메시지 앞에 합치고 temperature·max_tokens를 뺀다
+        (사내 게이트웨이에서 성공이 확인된 모양: model + user 메시지만)."""
+        if not self.compat:
+            return self.adapter.build_request(messages, self.model)
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        merged = [dict(m) for m in messages if m["role"] != "system"]
+        if system and merged:
+            merged[0]["content"] = f"{system}\n\n{merged[0]['content']}"
+        body = self.adapter.build_request(merged, self.model)
+        body.pop("temperature", None)
+        body.pop("max_tokens", None)
+        return body
+
     def _live_loop(self, prompt_id: str, url: str, key: str, messages: list[dict[str, str]], stat: dict[str, Any]) -> dict[str, Any]:
         json_retry = False
         attempt = -1
         tries = lambda: f" (요청 {stat['sends']}회)" if stat["sends"] > 1 else ""  # noqa: E731
         while attempt < 1:
             attempt += 1
-            body = self.adapter.build_request(messages, self.model)
+            body = self._body(messages)
+            self.last_request = body
             try:
                 raw_bytes = self._send(url, key, body, stat)
             except urllib.error.HTTPError as exc:
                 detail = _error_detail(exc)
+                if exc.code >= 500 and self.compat is None and not getattr(self.adapter, "json_mode", False):
+                    # [Worklog 통합] 재요청해도 5xx: 사내 게이트웨이가 이 요청 모양(system 역할·temperature 등)을 처리하지 못할 수 있다.
+                    # 성공이 확인된 모양(model + user만)으로 한 번 더 보내고, 되면 이 작업의 나머지 호출도 그 모양으로 보낸다.
+                    self.compat = True
+                    stat["no_retry"] = True  # 호환 형식 시도는 한 번만 (대기 재요청 없이)
+                    self.notes.append(f"{prompt_label(prompt_id)}: HTTP {exc.code}가 계속되어 호환 형식(system을 user에 합침, temperature 없음)으로 다시 요청")
+                    attempt -= 1
+                    continue
                 if getattr(self.adapter, "json_mode", False) and exc.code in JSON_MODE_REJECT_CODES and not json_retry:
                     # [Worklog 통합] JSON 강제 옵션을 거절하는 서버: 옵션을 빼고 한 번 더 보낸다
                     self.adapter.json_mode = False
@@ -418,7 +444,9 @@ class ExaoneClient:
                     self.notes.append(f"AI 서버가 JSON 강제 옵션을 거절(HTTP {exc.code}) → 옵션 없이 다시 요청")
                     attempt -= 1  # 형식 재요청 기회는 그대로 남긴다
                     continue
-                raise AIError(f"EXAONE HTTP 오류: {exc.code}{f' ({detail})' if detail else ''}{tries()} — 요청 주소 {_url_hint(url)}") from None
+                hint = (f" · 입력 {stat['chars']:,}자 — AI점검.bat으로 원인을 확인하세요(입력 길이가 원인이면 설정 AI_INPUT_CHARS를 줄임)"
+                        if exc.code >= 500 else "")
+                raise AIError(f"EXAONE HTTP 오류: {exc.code}{f' ({detail})' if detail else ''}{tries()} — 요청 주소 {_url_hint(url)}{hint}") from None
             except (TimeoutError, socket.timeout):
                 raise AIError(f"EXAONE 응답 시간 초과({self.timeout:g}초){tries()} — 입력이 크면 설정 AI_TIMEOUT_SECONDS를 늘리거나 기간·과제를 나눠 만드세요") from None
             except urllib.error.URLError as exc:

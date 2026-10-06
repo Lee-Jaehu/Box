@@ -89,13 +89,51 @@ def test_transient_errors_are_retried_with_wait(error):
 
 
 def test_transient_errors_give_up_with_count_and_no_secret():
-    c = client(Fake(503, 503, 503))
+    c = client(Fake(503, 503, 503, 503))  # 3회 + 호환 형식 1회
     with pytest.raises(AIError) as err:
         call(c)
-    assert "503" in str(err.value) and "요청 3회" in str(err.value) and "KEY" not in str(err.value)
+    assert "503" in str(err.value) and "요청 4회" in str(err.value) and "KEY" not in str(err.value)
+    assert "입력 2자" in str(err.value) and "AI_INPUT_CHARS" in str(err.value)
     with pytest.raises(AIError) as err:  # 일시 오류가 아닌 것(404 등)은 바로 알린다
         call(client(Fake(404)))
     assert "404" in str(err.value) and "요청" not in str(err.value).split("—")[0]
+
+
+class SystemRejecting(Fake):
+    """system 역할이나 temperature가 있으면 500을 주는 게이트웨이 (사용자 PC에서 의심되는 경우)."""
+
+    def __init__(self):
+        super().__init__()
+
+    def request(self, url, key, body, timeout):
+        self.sent.append(body)
+        if any(m["role"] == "system" for m in body["messages"]) or "temperature" in body:
+            raise urllib.error.HTTPError(url, 500, "error", {}, io.BytesIO(b'{"description":"InternalServerError,Connection error."}'))
+        return json.dumps(reply(json.dumps(ITEMS))).encode()
+
+
+def test_compat_shape_after_persistent_5xx_then_kept_for_the_job():
+    fake = SystemRejecting()
+    c = client(fake, max_tokens=4000)
+    assert c.complete("cumulative_update", "P", "W", "SYS", "USER") == ITEMS
+    compat = fake.sent[-1]
+    assert compat["messages"] == [{"role": "user", "content": "SYS\n\nUSER"}] and set(compat) == {"messages", "model"}
+    assert len(fake.sent) == 4 and "호환 형식" in c.notes[-1]
+    before = len(fake.sent)
+    assert c.complete("cumulative_update", "P", "W", "SYS", "USER2") == ITEMS  # 같은 작업의 다음 호출은 처음부터 호환 형식
+    assert len(fake.sent) == before + 1
+
+
+def test_compat_can_be_forced_or_disabled():
+    fake = SystemRejecting()
+    c = client(fake)
+    c.compat = True
+    assert call(c) == ITEMS and len(fake.sent) == 1
+    c = client(SystemRejecting())
+    c.compat = False
+    with pytest.raises(AIError):
+        call(c)
+    assert len(c.transport.sent) == 3
 
 
 def test_config_ai_limits(tmp_path):
@@ -104,7 +142,10 @@ def test_config_ai_limits(tmp_path):
     s = load_settings(cfg)
     assert (s.ai_max_tokens, s.ai_input_chars, s.ai_timeout_seconds) == (8000, 10000, 300.0)
     cfg.write_text(json.dumps({"AI_MAX_TOKENS": ""}), encoding="utf-8")
-    assert load_settings(cfg).ai_max_tokens is None
+    assert load_settings(cfg).ai_max_tokens is None and load_settings(cfg).ai_compat_mode == "auto"
+    for raw, want in ((True, "true"), ("false", "false"), ("auto", "auto")):
+        cfg.write_text(json.dumps({"AI_COMPAT_MODE": raw}), encoding="utf-8")
+        assert load_settings(cfg).ai_compat_mode == want
 
 
 # ---------------------------------------------------------------- 서비스 job (서버 AI, 가짜 EXAONE)
@@ -152,3 +193,51 @@ def test_live_job_with_sectioned_tasks_survives_think_and_gateway_error(tmp_path
     assert [s["kind"] for s in sent] == ["weekly_rollup", "cumulative_update", "cumulative_update", "project_summary"]
     assert "누적 요약: HTTP 500 → 0초 뒤 다시 요청" in report  # 자동 조치가 검사 보고서에 남는다
     assert "입력" in report and "요청 2회" in report
+
+
+# ---------------------------------------------------------------- 실패 요청 저장 + AI점검 (결정 I40)
+
+def test_failed_live_call_saves_request_without_key(tmp_path, monkeypatch):
+    from app.services.reports import ServiceClient, failed_request_path
+
+    monkeypatch.setattr(ai, "RETRY_DELAYS", (0.0, 0.0))
+    settings = Settings(data_dir=tmp_path / "data", ai_api_url="https://ai.example/v1/chat/completions?token=QS", ai_api_key="SECRETKEY",
+                        ai_model="k-exaone_v2")
+    sc = ServiceClient(tmp_path / "ws", settings)
+    sc.transport = Fake(500, 500, 500, 500)
+    with pytest.raises(AIError):
+        sc.complete("cumulative_update", "P", "2026-W40", "SYS", "USER")
+    saved = failed_request_path(settings).read_text(encoding="utf-8")
+    assert "SECRETKEY" not in saved and "QS" not in saved and "ai.example" not in saved
+    data = json.loads(saved)
+    assert data["promptId"] == "cumulative_update" and data["sends"] == 4 and data["compat"] is True
+    assert data["body"]["messages"][0]["content"] == "SYS\n\nUSER"
+
+
+def test_ai_check_concludes_cause(tmp_path):
+    import ai_check
+    from app.services.reports import _save_failed_request_file
+
+    settings = Settings(data_dir=tmp_path / "data", ai_api_url="https://ai.example/v1/chat/completions?token=QS", ai_api_key="SECRETKEY",
+                        ai_model="k-exaone_v2")
+
+    class Gateway:
+        """system·temperature 거절, 한글 1만 자 넘으면 500."""
+
+        def request(self, url, key, body, timeout):
+            chars = sum(len(m["content"]) for m in body["messages"])
+            if any(m["role"] == "system" for m in body["messages"]) or "temperature" in body or chars > 10000:
+                raise urllib.error.HTTPError(url, 500, "error", {}, io.BytesIO(b'{"description":"Connection error."}'))
+            return json.dumps(reply("ok")).encode()
+
+    _save_failed_request_file(settings, {"messages": [{"role": "user", "content": "x" * 30000}], "model": "k-exaone_v2"},
+                              {"promptId": "weekly_rollup"})
+    printed: list[str] = []
+    lines = ai_check.run(settings, Gateway(), printed.append)
+    text = "\n".join(printed)
+    assert "SECRETKEY" not in text and "QS" not in text
+    assert "[G]" in text and "weekly_rollup" in text
+    assert any("temperature · system 역할" in x and "AI_COMPAT_MODE" in x for x in lines)
+    assert any("12,000자부터 실패" in x and '"AI_INPUT_CHARS": 2666' in x for x in lines)
+    assert ai_check.conclude({"A": "500"})[0].startswith("A(가장 단순한 요청)부터 실패")
+    assert ai_check.conclude({k: "ok" for k in "ABCDEF"})[0].startswith("모든 요청이 성공")

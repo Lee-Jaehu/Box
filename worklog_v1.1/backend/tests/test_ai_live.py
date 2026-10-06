@@ -52,9 +52,9 @@ def test_json_mode_rejected_retries_without_it():
 
 def test_http_error_message_shows_server_reply_without_key_or_query():
     with pytest.raises(AIError) as err:
-        client(FakeTransport(500, 500, 500)).complete("cumulative_update", "P", "2026-W40", "s", "u")
+        client(FakeTransport(500, 500, 500, 500)).complete("cumulative_update", "P", "2026-W40", "s", "u")  # 3회 + 호환 형식 1회
     msg = str(err.value)
-    assert "HTTP 오류: 500" in msg and "요청 3회" in msg and "Connection error" in msg and "https://ai.example/v1/chat/completions" in msg
+    assert "HTTP 오류: 500" in msg and "요청 4회" in msg and "AI점검.bat" in msg and "Connection error" in msg and "https://ai.example/v1/chat/completions" in msg
     assert "secret" not in msg and "KEY" not in msg
 
 
