@@ -12,6 +12,7 @@ import json
 import os
 import re
 import socket
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -318,6 +319,12 @@ JSON_MODE_REJECT_CODES = {400, 415, 422, 500, 501}
 # [Worklog 통합] 잠깐 뒤 다시 보내면 되는 오류 (게이트웨이·과부하). 연결 실패·시간 초과도 다시 보낸다.
 TRANSIENT_CODES = {408, 429, 500, 502, 503, 504}
 RETRY_DELAYS = (3.0, 10.0)  # 다시 보내기 전 대기(초). 길이 = 추가 시도 횟수
+# 호출 한도(429, 사내 게이트웨이 "second limit(1)"): 따로 더 오래·여러 번 기다린다. Retry-After가 있으면 그 값(최대 60초)
+RATE_LIMIT_DELAYS = (2.0, 5.0, 10.0, 20.0, 30.0)
+MIN_INTERVAL = 1.5  # 요청 사이 최소 간격(초): 직전 요청의 시작·끝 모두에서 (초당 1회 한도)
+_PACE = {"lock": threading.Lock(), "start": float("-inf"), "end": float("-inf")}  # 프로세스 전체 공용
+RATE_LIMIT_HINT = ("사내 AI 호출 한도(초당 1회)에 계속 걸림 — 같은 API 키를 다른 사람·프로그램이 동시에 쓰는지 확인하거나 잠시 뒤 다시 실행하세요"
+                   " (요청 간격은 설정 {setting}로 늘릴 수 있음)")
 LENGTH_HINT = "응답 길이 한도에 걸려 잘렸습니다 — 설정 AI_MAX_TOKENS를 늘리거나(사고형 모델은 사고 과정도 한도에 포함) 기간·과제를 나눠 만드세요"
 
 
@@ -334,6 +341,15 @@ def _error_detail(exc: urllib.error.HTTPError, limit: int = 300) -> str:
 def _url_hint(url: str) -> str:
     """오류 메시지용 주소 (쿼리 문자열은 키가 들어 있을 수 있어 뺀다)."""
     return url.split("?", 1)[0]
+
+
+def _retry_after(exc: urllib.error.HTTPError, default: float, cap: float = 60.0) -> float:
+    """429 응답의 Retry-After(초)를 따르고, 없거나 읽을 수 없으면 default."""
+    try:
+        value = float((exc.headers or {}).get("Retry-After") or "")
+    except (TypeError, ValueError):
+        return default
+    return min(max(value, default), cap)
 
 
 class ExaoneClient:
@@ -356,6 +372,9 @@ class ExaoneClient:
         self.call_log: list[dict[str, Any]] = []
         self.retry_delays: tuple[float, ...] = RETRY_DELAYS
         self.sleep = time.sleep  # 테스트에서 바꿔 끼운다
+        self.clock = time.monotonic
+        self.rate_limit_delays: tuple[float, ...] = RATE_LIMIT_DELAYS
+        self.min_interval = MIN_INTERVAL  # 요청 사이 최소 간격 (설정 AI_MIN_INTERVAL_SECONDS)
         self.input_chars: int | None = None  # 원문 블록 글자 수 상한 (prompt_vars.daily_blocks)
         # [Worklog 통합] 호환 형식(system을 user에 합치고 temperature·max_tokens 없음): None=5xx가 끝까지 나면 한 번 시도(auto), True=처음부터, False=안 씀
         self.compat: bool | None = None
@@ -384,30 +403,59 @@ class ExaoneClient:
                 raise ResponseFormatError(prompt_id, f"JSON이 아닙니다 ({path.name})") from exc
         return self._live(prompt_id, system, user)
 
+    def _pace(self) -> None:
+        """직전 요청의 시작·끝에서 최소 간격이 지날 때까지 기다린다 (프로세스 전체 공용, 형식 재요청·다음 단계 모두)."""
+        if self.min_interval <= 0:
+            return
+        with _PACE["lock"]:
+            wait = max(_PACE["start"], _PACE["end"]) + self.min_interval - self.clock()
+            if wait > 0:
+                self.sleep(wait)
+            _PACE["start"] = self.clock()
+
     def _send(self, url: str, key: str, body: dict[str, Any], stat: dict[str, Any]) -> bytes:
-        """[Worklog 통합] 한 번 보내기 + 일시 오류(5xx·429·연결·시간 초과)는 대기 후 다시 보낸다."""
+        """한 번 보내기 + 일시 오류는 대기 후 다시 보낸다: 5xx·연결·시간 초과는 retry_delays, 호출 한도(429)는 따로 rate_limit_delays."""
         waits = [] if stat.get("no_retry") else list(self.retry_delays)
+        rate_waits = list(self.rate_limit_delays)
+        events = stat.setdefault("events", [])
         while True:
             stat["sends"] += 1
+            self._pace()
             try:
                 try:
                     return self.transport.request(url, key, body, self.timeout)
                 finally:  # 사내 담당자 문의용 요청 ID (헤더로 보낸 값)
                     stat["request_id"] = getattr(self.transport, "last_request_id", None)
+                    if self.min_interval > 0:
+                        _PACE["end"] = self.clock()
             except urllib.error.HTTPError as exc:
-                json_first = getattr(self.adapter, "json_mode", False) and exc.code in JSON_MODE_REJECT_CODES
-                if exc.code not in TRANSIENT_CODES or not waits or json_first:  # JSON 옵션 거절 여부부터 _live_loop가 본다
-                    raise
-                reason = f"HTTP {exc.code}"
+                if exc.code == 429:
+                    if not rate_waits:
+                        events.append("429")
+                        stat["rate_limited"] = True
+                        raise
+                    wait = _retry_after(exc, rate_waits.pop(0))
+                    reason = "HTTP 429(호출 한도)"
+                else:
+                    json_first = getattr(self.adapter, "json_mode", False) and exc.code in JSON_MODE_REJECT_CODES
+                    if exc.code not in TRANSIENT_CODES or not waits or json_first:  # JSON 옵션 거절 여부부터 _live_loop가 본다
+                        events.append(str(exc.code))
+                        raise
+                    wait = waits.pop(0)
+                    reason = f"HTTP {exc.code}"
             except (TimeoutError, socket.timeout):
                 if not waits:
+                    events.append("시간 초과")
                     raise
+                wait = waits.pop(0)
                 reason = f"시간 초과({self.timeout:g}초)"
             except urllib.error.URLError as exc:
                 if not waits:
+                    events.append("연결 실패")
                     raise
+                wait = waits.pop(0)
                 reason = f"연결 실패({type(exc.reason).__name__})"
-            wait = waits.pop(0)
+            events.append(f"{reason.split('(')[0].replace('HTTP ', '')}({wait:g}초 뒤 다시)")
             self.notes.append(f"{prompt_label(stat['prompt'])}: {reason} → {wait:g}초 뒤 다시 요청")
             self.sleep(wait)
 
@@ -441,8 +489,15 @@ class ExaoneClient:
     def _live_loop(self, prompt_id: str, url: str, key: str, messages: list[dict[str, str]], stat: dict[str, Any]) -> dict[str, Any]:
         json_retry = False
         attempt = -1
-        tries = lambda: (f" (요청 {stat['sends']}회)" if stat["sends"] > 1 else "") + \
-            (f" · 요청 ID {stat['request_id']}" if stat.get("request_id") else "")  # noqa: E731 - 사내 담당자 문의용
+        def tries() -> str:  # 요청 횟수 · 경위 · 요청 ID(사내 담당자 문의용) · 호출 한도 안내
+            parts = f" (요청 {stat['sends']}회)" if stat["sends"] > 1 else ""
+            if len(stat.get("events", [])) > 1:
+                parts += " · 경위: " + " → ".join(stat["events"][-8:])
+            if stat.get("request_id"):
+                parts += f" · 요청 ID {stat['request_id']}"
+            if stat.get("rate_limited"):
+                parts += " · " + RATE_LIMIT_HINT.format(setting="AI_MIN_INTERVAL_SECONDS")
+            return parts
         while attempt < 1:
             attempt += 1
             body = self._body(messages)
@@ -487,6 +542,7 @@ class ExaoneClient:
                 if attempt:
                     detail = f": {exc}" if isinstance(exc, ResponseFormatError) else ""
                     raise AIError(f"EXAONE 응답을 2회 모두 요구 형식의 JSON으로 받지 못했습니다{detail}") from None
+                stat.setdefault("events", []).append("응답 받음(요구 형식 아님 → 형식 재요청)")
                 # 문서 규칙: 파싱 실패 시 1회 재요청
                 if isinstance(text, str) and text.strip():
                     messages.append({"role": "assistant", "content": strip_reasoning(text)[:4000]})

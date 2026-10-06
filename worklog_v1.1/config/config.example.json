@@ -17,5 +17,6 @@
   "AI_INPUT_CHARS": 24000,
   "AI_COMPAT_MODE": "auto",
   "AI_REQUEST_ID_HEADER": "X-Request-ID",
+  "AI_MIN_INTERVAL_SECONDS": 1.5,
   "AI_JSON_MODE": false
 }

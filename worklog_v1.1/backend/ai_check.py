@@ -87,8 +87,11 @@ def conclude(results: dict[str, str]) -> list[str]:
     """결과 → 원인 추정과 조치."""
     ok = lambda k: results.get(k) == "ok"  # noqa: E731
     lines: list[str] = []
-    if not ok("A"):
-        return ["A(가장 단순한 요청)부터 실패: 주소(AI_API_URL 전체 경로)·키·모델명(AI_MODEL)을 확인하세요. 프로그램 문제가 아닙니다."]
+    if "429" in results.values():
+        lines.append("호출 한도(429, 초당 1회)에 걸린 요청이 있음: 같은 API 키를 다른 사람·프로그램이 동시에 쓰는지 확인하세요."
+                     " 프로그램은 요청 사이를 설정 AI_MIN_INTERVAL_SECONDS(기본 1.5초)만큼 띄우고, 429면 더 기다렸다 다시 보냅니다.")
+    if not ok("A") and results.get("A") != "429":
+        return lines + ["A(가장 단순한 요청)부터 실패: 주소(AI_API_URL 전체 경로)·키·모델명(AI_MODEL)을 확인하세요. 프로그램 문제가 아닙니다."]
     if "A2" in results and not ok("A2") and ok("A3"):
         lines.append("예전 방식의 한글 요청만 실패: 한글 인코딩(charset·UTF-8 원문)이나 요청 ID 헤더가 원인이었고, 지금 방식으로 해결됩니다.")
     if "A3" in results and not ok("A3"):
@@ -113,7 +116,8 @@ def conclude(results: dict[str, str]) -> list[str]:
     return lines or ["모든 요청이 성공했습니다. 다시 보고자료를 만들어 보고, 실패하면 오류 메시지 전체를 알려 주세요."]
 
 
-def run(settings: Settings, transport: Any = None, out: Callable[[str], None] = print, legacy: Any = None) -> list[str]:
+def run(settings: Settings, transport: Any = None, out: Callable[[str], None] = print, legacy: Any = None,
+        pause: Callable[[float], None] = time.sleep) -> list[str]:
     if not (settings.ai_api_url and settings.ai_api_key):
         out("config/config.json 에 AI_API_URL 과 AI_API_KEY 가 없습니다. 먼저 넣고 다시 실행하세요.")
         return []
@@ -130,7 +134,9 @@ def run(settings: Settings, transport: Any = None, out: Callable[[str], None] = 
         f" / 요청 ID 헤더: {settings.ai_request_id_header or '(보내지 않음)'}")
     out("-" * 70)
     results: dict[str, str] = {}
-    for mark, label, body in cases(settings.ai_model, saved):
+    for index, (mark, label, body) in enumerate(cases(settings.ai_model, saved)):
+        if index:
+            pause(max(settings.ai_min_interval_seconds, 1.5))  # 사내 게이트웨이 호출 한도(초당 1회)
         out(f"[{mark}] {label} ...")
         sender = legacy if mark == "A2" else transport
         status, seconds, detail = send(sender, settings.ai_api_url, settings.ai_api_key, body, settings.ai_timeout_seconds)

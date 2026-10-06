@@ -85,7 +85,8 @@ def test_transient_errors_are_retried_with_wait(error):
     """원인 3: 게이트웨이 일시 오류 한 번에 job 전체가 실패하던 것을 대기 후 재요청."""
     c = client(Fake(error, reply(json.dumps(ITEMS))))
     assert call(c) == ITEMS
-    assert c.slept == [ai.RETRY_DELAYS[0]] and c.call_log[-1]["sends"] == 2 and "다시 요청" in c.notes[0]
+    first = ai.RATE_LIMIT_DELAYS[0] if error == 429 else ai.RETRY_DELAYS[0]
+    assert c.slept == [first] and c.call_log[-1]["sends"] == 2 and "다시 요청" in c.notes[0]
 
 
 def test_transient_errors_give_up_with_count_and_no_secret():
@@ -233,7 +234,7 @@ def test_ai_check_concludes_cause(tmp_path):
     _save_failed_request_file(settings, {"messages": [{"role": "user", "content": "x" * 30000}], "model": "k-exaone_v2"},
                               {"promptId": "weekly_rollup"})
     printed: list[str] = []
-    lines = ai_check.run(settings, Gateway(), printed.append, legacy=Gateway())
+    lines = ai_check.run(settings, Gateway(), printed.append, legacy=Gateway(), pause=lambda s: None)
     text = "\n".join(printed)
     assert "SECRETKEY" not in text and "QS" not in text
     assert "[G]" in text and "weekly_rollup" in text
@@ -324,3 +325,56 @@ def test_ai_check_encoding_conclusion():
     assert any("한글 인코딩" in x for x in ai_check.conclude(res))
     res["A3"] = "500"
     assert any("AI_REQUEST_ID_HEADER" in x for x in ai_check.conclude(res))
+    assert any("호출 한도" in x for x in ai_check.conclude({"A": "ok", "B": "429"}))
+
+
+
+# ---------------------------------------------------------------- 호출 한도 429 "second limit(1)" (결정 I43)
+
+def _limit(retry_after=None):
+    headers = {"Retry-After": retry_after} if retry_after else {}
+    return urllib.error.HTTPError("u", 429, "error", headers, io.BytesIO(
+        b'{"result_code":429,"description":"RateLimitError,second limit(1), called 1 times per second"}'))
+
+
+def test_rate_limit_waits_longer_and_more_times_then_succeeds():
+    c = client(Fake(_limit(), _limit(), _limit(), _limit(), reply(json.dumps(ITEMS))))
+    assert call(c) == ITEMS
+    assert c.slept == list(ai.RATE_LIMIT_DELAYS[:4]) and c.call_log[-1]["sends"] == 5
+    c = client(Fake(_limit("7"), reply(json.dumps(ITEMS))))
+    assert call(c) == ITEMS and c.slept == [7.0]  # Retry-After를 따른다
+    c = client(Fake(_limit(), 503, reply(json.dumps(ITEMS))))
+    assert call(c) == ITEMS and c.slept == [ai.RATE_LIMIT_DELAYS[0], ai.RETRY_DELAYS[0]]  # 5xx 재시도와 따로 센다
+
+
+def test_rate_limit_final_message_has_history_and_hint_but_no_compat():
+    """사용자 증상 재현: 1회째 응답이 요구 형식이 아님 → 형식 재요청 → 429가 계속."""
+    fake = Fake(reply("JSON이 아닌 답"), *[_limit()] * (len(ai.RATE_LIMIT_DELAYS) + 1))
+    c = client(fake)
+    with pytest.raises(AIError) as err:
+        call(c)
+    msg = str(err.value)
+    assert "429" in msg and "호출 한도(초당 1회)" in msg and "AI_MIN_INTERVAL_SECONDS" in msg and "KEY" not in msg
+    assert "경위: 응답 받음(요구 형식 아님 → 형식 재요청) → 429(2초 뒤 다시)" in msg
+    assert c.compat is None and all("system" in str(b["messages"][0]["role"]) for b in fake.sent)  # 429는 호환 형식 전환 대상 아님
+
+
+def test_pacing_keeps_min_interval_from_start_and_end(monkeypatch):
+    monkeypatch.undo()  # conftest가 끈 실제 간격 조절을 이 테스트에서만 쓴다
+    now = [100.0]
+
+    class Slow(Fake):
+        def request(self, url, key, body, timeout):
+            now[0] += 4.0  # 응답에 4초 걸림
+            return super().request(url, key, body, timeout)
+
+    c = client(Slow(reply("형식 아님"), *[reply(json.dumps(ITEMS))] * 3))
+    c.min_interval = 1.5
+    c.clock = lambda: now[0]
+    c.sleep = lambda s: (c.slept.append(s), now.__setitem__(0, now[0] + s))
+    ai._PACE.update(start=float("-inf"), end=float("-inf"))
+    assert call(c) == ITEMS  # 1회째 형식 오류 → 형식 재요청은 직전 응답이 끝난 뒤 1.5초 기다림
+    assert c.slept == [1.5]
+    assert call(c) == ITEMS and c.slept == [1.5, 1.5]  # 다음 단계 호출도
+    now[0] += 10
+    assert call(c) == ITEMS and c.slept == [1.5, 1.5]  # 이미 충분히 지났으면 기다리지 않음
