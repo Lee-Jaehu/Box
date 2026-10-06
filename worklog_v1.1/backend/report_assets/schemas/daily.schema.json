@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "daily.schema.json",
+  "title": "Daily 원문",
+  "description": "Daily 1건 = 파일 1개 (raw/daily/{yyyy}/{yy-mm-dd}/{daily_id}.json). 원문은 덮어쓰지 않고 revision만 올린다. project_id가 null이면 개인 메모로 보고 요약·PPT 대상에서 제외.",
+  "type": "object",
+  "required": [
+    "meta",
+    "daily_id",
+    "date",
+    "tag",
+    "author",
+    "project_id",
+    "visibility",
+    "raw_text",
+    "tables",
+    "pics",
+    "links"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "daily_id": {
+      "type": "string",
+      "pattern": "^D-\\d{6}-[a-z0-9]+-\\d{2}$",
+      "description": "D-{yyMMdd}-{작성자}-{순번}"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "tag": {
+      "type": "string",
+      "pattern": "^\\d{2}-\\d{2}-\\d{2}$",
+      "description": "yy-mm-dd 태그 (date와 일치해야 함)"
+    },
+    "author": {
+      "type": "string",
+      "description": "사용자 ID (사번 권장)"
+    },
+    "project_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "category": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "DEV",
+        "ROLL",
+        "OPS",
+        "INV",
+        "DATA",
+        "RPT",
+        null
+      ],
+      "description": "작성자가 고른 카테고리. 비우면 AI가 제안"
+    },
+    "visibility": {
+      "enum": [
+        "private",
+        "project"
+      ]
+    },
+    "raw_text": {
+      "type": "string"
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "table_id",
+          "title",
+          "columns",
+          "rows"
+        ],
+        "properties": {
+          "table_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "표 원본은 반드시 값으로 저장 (요약·PPT는 이 값을 사용)"
+    },
+    "pics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "pic_id",
+          "path"
+        ],
+        "properties": {
+          "pic_id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "from_table_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "caption": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "표를 이미지로 변환한 결과·첨부 이미지. 표시용이며 AI 입력에는 쓰지 않음"
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "url"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "deleted": {
+      "type": "boolean",
+      "default": false
+    },
+    "author_name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "작성자 이름 (WorkLog 변환 시)"
+    },
+    "source_refs": {
+      "type": "object",
+      "description": "WorkLog 원본 ID (log·task·record UUID, 추적용)",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "array"
+        ],
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "schema",
+        "schema_version",
+        "revision",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "파일이 다시 저장될 때마다 +1. 하류 처리는 이 값으로 변경을 감지"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_by": {
+          "type": "string",
+          "description": "사용자 ID (사번 권장)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

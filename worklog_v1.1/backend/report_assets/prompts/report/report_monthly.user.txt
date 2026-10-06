@@ -1,0 +1,11 @@
+[보고 정보]
+보고: {{org}} 월간 과제 종합 보고 ({{month_label}}, {{week_span}})
+
+[과제 목록 (코드가 표에 넣는 값)]
+{{project_lines}}
+
+[이번 달 주간 정리본 (과제·주차별)]
+{{weekly_blocks}}
+
+[과제별 누적 요약 (최신)]
+{{cumulative_blocks}}

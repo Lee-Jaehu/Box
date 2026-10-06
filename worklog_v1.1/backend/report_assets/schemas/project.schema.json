@@ -1,0 +1,573 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project.schema.json",
+  "title": "과제 기준정보",
+  "description": "과제 1건 = 파일 1개 (master/projects/{project_id}.json). 개발자 A(worklog 웹)만 쓴다. 변경은 반드시 change_log에 남긴다.",
+  "type": "object",
+  "required": [
+    "meta",
+    "project_id",
+    "name",
+    "org",
+    "owner",
+    "members",
+    "period",
+    "status",
+    "health",
+    "type",
+    "target",
+    "background",
+    "purpose",
+    "kpis",
+    "milestones",
+    "change_log",
+    "retrospective"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^(P-[A-Z]+-\\d{3}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+      "description": "내부 과제 코드(P-ASM-001) 또는 WorkLog 과제 UUID"
+    },
+    "name": {
+      "type": "string"
+    },
+    "org": {
+      "type": "object",
+      "required": [
+        "group",
+        "dept",
+        "team"
+      ],
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "dept": {
+          "type": "string"
+        },
+        "team": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "owner": {
+      "type": "string",
+      "description": "사용자 ID (사번 권장)"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "사용자 ID (사번 권장)"
+      }
+    },
+    "reporters": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "사용자 ID (사번 권장)"
+      },
+      "description": "주간 기록 작성 대상자 (미갱신 판정 기준). 없으면 members 전체"
+    },
+    "period": {
+      "type": "object",
+      "required": [
+        "start",
+        "target"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "target_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "enum": [
+        "예정",
+        "진행",
+        "완료",
+        "보류",
+        "취소"
+      ]
+    },
+    "health": {
+      "enum": [
+        "정상",
+        "주의",
+        "지연",
+        "판단 불가"
+      ]
+    },
+    "type": {
+      "type": "object",
+      "required": [
+        "template_id",
+        "template_version"
+      ],
+      "properties": {
+        "template_id": {
+          "type": "string"
+        },
+        "template_version": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "$ref": "#/$defs/scope"
+    },
+    "background": {
+      "type": "string"
+    },
+    "purpose": {
+      "type": "string"
+    },
+    "kpis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kpi_id",
+          "name",
+          "unit",
+          "baseline",
+          "target"
+        ],
+        "properties": {
+          "kpi_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "baseline": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "target": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "direction": {
+            "enum": [
+              "up",
+              "down"
+            ]
+          },
+          "actuals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "period",
+                "value"
+              ],
+              "properties": {
+                "period": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                },
+                "source_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "milestone_id",
+          "stage_code",
+          "name",
+          "scope",
+          "baseline",
+          "plan",
+          "actual",
+          "status",
+          "order"
+        ],
+        "properties": {
+          "milestone_id": {
+            "type": "string",
+            "pattern": "^M\\d+(-\\d+)?$"
+          },
+          "parent_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stage_code": {
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              "PLAN",
+              "EXEC",
+              "VERIFY",
+              "APPLY",
+              "EXPAND",
+              "CLOSE"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "oneOf": [
+              {
+                "const": "common"
+              },
+              {
+                "$ref": "#/$defs/scope"
+              }
+            ]
+          },
+          "baseline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "plan_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actual": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "status": {
+            "enum": [
+              "예정",
+              "진행",
+              "지연",
+              "완료",
+              "보류",
+              "취소"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "order": {
+            "type": "integer"
+          },
+          "scope_label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "적용 범위 칸 표시 문구 (WorkLog: 계획 기간 MM/DD~MM/DD)"
+          },
+          "source_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "원본 시스템의 마일스톤 ID (WorkLog UUID)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "change_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "change_id",
+          "at",
+          "by",
+          "field_path",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "change_id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+            "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+          },
+          "by": {
+            "type": "string",
+            "description": "사용자 ID (사번 권장)"
+          },
+          "field_path": {
+            "type": "string",
+            "description": "JSON 경로 (예: milestones[M6-3].plan)"
+          },
+          "from": {},
+          "to": {},
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "proposal_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "retrospective": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generated": {
+          "type": "boolean"
+        },
+        "confirmed_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confirmed_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "people": {
+      "type": "object",
+      "description": "WorkLog 변환 시: 사용자 ID → 이름·사번·팀 (config/people.json보다 우선)",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "employee_number": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "source": {
+      "type": "object",
+      "description": "입력 출처 (WorkLog export 변환 시)",
+      "required": [
+        "system"
+      ],
+      "properties": {
+        "system": {
+          "enum": [
+            "internal",
+            "worklog"
+          ]
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "generated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "milestones_managed": {
+          "type": "boolean",
+          "description": "true면 일정·상태는 시스템 값이 기준 (AI milestone_updates 무시)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "target_label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "대상 칸 표시 문구 (target 코드가 없을 때, 예: 팀명)"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "schema",
+        "schema_version",
+        "revision",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "파일이 다시 저장될 때마다 +1. 하류 처리는 이 값으로 변경을 감지"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_by": {
+          "type": "string",
+          "description": "사용자 ID (사번 권장)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "array",
+      "description": "적용 범위. 코드는 code_table_site_process.json 기준",
+      "items": {
+        "type": "object",
+        "properties": {
+          "site": {
+            "type": "string"
+          },
+          "plant": {
+            "type": "string"
+          },
+          "line": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "process": {
+            "type": "string"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "units_count": {
+            "type": "integer"
+          },
+          "usage": {
+            "enum": [
+              "EV",
+              "ESS"
+            ]
+          },
+          "model": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

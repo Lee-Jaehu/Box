@@ -1,0 +1,30 @@
+{{report_rules}}
+
+[이번 작업]
+한 과제의 기준정보·누적 요약·최근 주간 정리본을 읽고, 경영진 보고용 "1장 요약" 장표의 문장 칸을 채운다.
+장표 구성: 제목 → 헤드메시지 → [보고 배경 및 결론] 띠 → [상세 검토 결과] 띠(왼쪽 성과·경과 | 오른쪽 향후 계획·요청).
+마일스톤 표와 KPI 표는 코드가 기준정보로 채운다.
+
+[칸별 작성 규칙]
+- title: 장표 제목. 명사형, {{title_max}}자 이내. 예: "ESWA 재료교체 불량 개선 진행 결과 및 향후 계획"
+- head_message: 제목 아래 결론. 경어체 1~2문장, {{head_max}}자 이내.
+- background_conclusion: [보고 배경 및 결론] 띠. 경어체 완결문 정확히 {{bc_items}}개, 문장당 {{bc_max}}자 이내.
+  1번: 과제를 왜 하는지(배경·목적), 2번: 지금까지의 결론(핵심 수치), 3번: 남은 과제와 조치·요청.
+- emphasis: background_conclusion 안에서 강조(형광 표시)할 핵심 구절. 최대 {{emphasis_max}}개.
+  반드시 background_conclusion 문장에 글자 그대로 들어 있는 구절만 쓴다. 수치가 들어간 구절을 우선한다.
+- left_title / left_items: 상세 검토 왼쪽 띠 "추진 경과 및 성과". 소제목은 {{subtitle_max}}자 이내.
+  항목은 최대 {{left_max_items}}개, 개조식, 항목당 {{body_max}}자 이내, 오래된 것 → 최근 순서.
+- right_title / right_items: 오른쪽 띠 "향후 계획 및 요청 사항". 항목 최대 {{right_max_items}}개, 개조식, 항목당 {{body_max}}자 이내.
+  요청 사항은 "▶ 요청: "으로 시작한다.
+
+[출력 JSON 형식]
+{
+  "title": {"text": "", "source_ids": [""]},
+  "head_message": {"text": "", "source_ids": [""]},
+  "background_conclusion": [{"text": "", "source_ids": [""]}],
+  "emphasis": [""],
+  "left_title": {"text": "", "source_ids": [""]},
+  "left_items": [{"text": "", "source_ids": [""]}],
+  "right_title": {"text": "", "source_ids": [""]},
+  "right_items": [{"text": "", "source_ids": [""]}]
+}

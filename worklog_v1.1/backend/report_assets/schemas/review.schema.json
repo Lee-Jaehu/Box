@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "review.schema.json",
+  "title": "검토 결과",
+  "description": "사람이 웹에서 내린 판단 기록 (raw/reviews/{review_id}.json). 대상은 주간 정리본 또는 변경 제안. 이재후 파이프라인은 이 파일을 읽어 확정본을 만든다.",
+  "type": "object",
+  "required": [
+    "meta",
+    "review_id",
+    "target_type",
+    "target_id",
+    "target_revision",
+    "decision",
+    "by",
+    "at"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "review_id": {
+      "type": "string",
+      "pattern": "^R-"
+    },
+    "target_type": {
+      "enum": [
+        "weekly",
+        "proposal",
+        "daily_summary"
+      ]
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "target_revision": {
+      "type": "integer",
+      "description": "검토한 대상 파일의 revision (그 사이 대상이 바뀌었으면 무효)"
+    },
+    "decision": {
+      "enum": [
+        "approved",
+        "edited",
+        "rejected"
+      ]
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "value"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "value": {}
+        },
+        "additionalProperties": false
+      },
+      "description": "decision=edited 일 때 사람이 고친 값"
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "by": {
+      "type": "string",
+      "description": "사용자 ID (사번 권장)"
+    },
+    "at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+      "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "schema",
+        "schema_version",
+        "revision",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "파일이 다시 저장될 때마다 +1. 하류 처리는 이 값으로 변경을 감지"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?\\+09:00$",
+          "description": "KST, ISO 8601 (예: 2026-09-22T11:00:00+09:00)"
+        },
+        "updated_by": {
+          "type": "string",
+          "description": "사용자 ID (사번 권장)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,14 @@
+[과제]
+- 과제 ID / 과제명: {{project_id}} / {{project_name}}
+- 배경: {{background}}
+- 목적: {{purpose}}
+- 완료된 마일스톤: {{completed_milestones}}
+
+[지난주까지 누적 요약]
+{{prev_items}}
+
+[고정 사실]
+{{pinned_facts}}
+
+[이번 주 주간 정리본] ({{week_label}})
+{{weekly_lines}}

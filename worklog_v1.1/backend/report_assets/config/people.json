@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "name": "사용자 표시명",
+    "note": "Worklog 연동: 이름은 export(조직·사용자 기준정보)에서 가져온다. 직급을 표시하려면 사용자 ID(UUID) → {name, title}을 여기에 넣는다."
+  },
+  "people": {}
+}
