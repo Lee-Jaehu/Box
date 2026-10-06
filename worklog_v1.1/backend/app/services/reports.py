@@ -37,7 +37,7 @@ from .report_slides import STATUS_COLOR, AppendixGroup, Block, GanttBlock, Gantt
 
 from weekly_report import prompt_vars as pv
 from weekly_report import sources as wr_sources
-from weekly_report.ai import RESPONSE_SHAPES, AIError, ExaoneClient, MockResponseMissing, ResponseFormatError, read_payload
+from weekly_report.ai import RESPONSE_SHAPES, AIError, ChatCompletionsAdapter, ExaoneClient, MockResponseMissing, ResponseFormatError, read_payload
 from weekly_report.core import ValidationError, load_json, week_range
 from weekly_report.ppt.budget import BudgetError
 from weekly_report.codes import PeopleTable
@@ -187,7 +187,8 @@ class ServiceClient(ExaoneClient):
 
     def __init__(self, ws: Path, settings: Settings, not_before: str | None = None):
         super().__init__(ws, "live" if settings.ai_live else "mock", timeout=settings.ai_timeout_seconds, mock_dir=ws / "responses",
-                         api_url=settings.ai_api_url, api_key=settings.ai_api_key, model=settings.ai_model)
+                         api_url=settings.ai_api_url, api_key=settings.ai_api_key, model=settings.ai_model,
+                         adapter=ChatCompletionsAdapter(json_mode=settings.ai_json_mode))
         self.settings = settings
         self.not_before = not_before
         self.used: list[str] = []

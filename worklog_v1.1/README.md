@@ -36,7 +36,10 @@
 5. AI 연결이 없으면 ‘AI 응답 필요’가 나온다 → **프롬프트 복사** → 사내 AI 에 보내기 → 받은 JSON 붙여넣기 → **응답 저장 후 계속**(과제마다 2~3번, 팀장 요약을 켜면 1번 더). 같은 입력이면 다음부터는 다시 묻지 않는다.
 6. 완료되면 PPT 와 검사 보고서(숫자·날짜 근거 확인, PPT 재검사)를 내려받는다. **최근 보고자료** 목록은 모든 사용자에게 보인다.
 
-서버 AI 연결: `config\config.json` 에 `AI_API_URL`, `AI_API_KEY`(필요 시 `AI_MODEL`, `AI_TIMEOUT_SECONDS`)를 넣고 서버를 다시 시작한다. 요청은 OpenAI 호환 Chat Completions 형식(`messages`, `response_format=json_object`, `Authorization: Bearer <키>`)으로 보낸다. 사내 API 형식이 다르면 `backend/weekly_report/ai.py` 의 `ChatCompletionsAdapter` 를 바꾼다. 결과·받은 AI 응답은 `DATA_DIR\reports\` 에 있으며 **DB 백업에는 포함되지 않는다**.
+서버 AI 연결: `config\config.json` 에 `AI_API_URL`, `AI_API_KEY`(필요 시 `AI_MODEL`, `AI_TIMEOUT_SECONDS`)를 넣고 서버를 다시 시작한다. 요청은 OpenAI 호환 Chat Completions 형식(`messages`, `response_format=json_object`, `Authorization: Bearer <키>`)으로 보낸다. 사내 API 형식이 다르면 `backend/weekly_report/ai.py` 의 `ChatCompletionsAdapter` 를 바꾼다.
+- `AI_API_URL` 은 **호출 주소 전체**(예: `https://…/v1/chat/completions`)를 넣는다. 기본 주소나 채팅 화면 주소를 넣으면 405 가 난다.
+- 사내 EXAONE(k-exaone_v2) 게이트웨이는 JSON 강제 옵션 `response_format` 에 500(`Connection error.`)을 돌려주므로 기본은 보내지 않는다(`AI_JSON_MODE: false`). 지원하는 서버에서만 `true` 로 켠다. 켜 두었다가 거절되면 옵션 없이 한 번 더 보낸다.
+- AI 호출이 실패하면 검사 보고서·작업 오류에 서버 응답 앞부분과 요청 주소(쿼리 제외)가 남는다(키는 남기지 않음). 결과·받은 AI 응답은 `DATA_DIR\reports\` 에 있으며 **DB 백업에는 포함되지 않는다**.
 
 ## 빠른 시작
 

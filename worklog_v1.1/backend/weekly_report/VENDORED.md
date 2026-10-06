@@ -14,6 +14,7 @@ Worklog 서비스 연결 코드는 `backend/app/services/reports.py`, 참고 슬
 | ppt/compose.py | 정리본 range가 ISO 주와 다르면 머리글 "기간 진행사항", 제목 "진행 현황 – 기간 내 진행" | 기간 보고를 주간업무 양식으로 |
 | ppt/compose.py | 배경·목적이 비면 "- 배경·목적 미입력" (원래 "- -. -") | 미입력 프로젝트 |
 | pptgen.py | `generate_ppt` 를 `prepare_ppt`(구성·페이지 나누기) + 렌더로 분리, `prepared=` 인자 | 여러 과제를 한 파일로 합치기 |
+| ai.py | `ChatCompletionsAdapter(json_mode=False)`: 사내 EXAONE 게이트웨이가 `response_format` 에 500 → 기본은 안 보냄(`AI_JSON_MODE` 로 켬), 켰는데 400/415/422/500/501 이면 옵션 없이 1회 재요청, HTTP 오류 메시지에 서버 응답 앞부분·요청 주소(쿼리 제외) | 2026-10-06 사용자 PC에서 405·500 원인 확인 |
 | report/generate.py | `exec_fill()`(경영진 1장 요약 슬라이드 1장 내용) 분리, `generate_monthly(org=)` | 여러 과제 경영진 요약을 한 파일로, 화면에서 고른 조직명 |
 | worklog.py | 표 노드를 "\| 칸 \| 칸 \|" 행 단위로, 간트 노드를 "[간트] 이름 (MM/DD~MM/DD, 진행 n%)" 로 AI 입력에 넣음 | 원래는 표가 칸 단위로 흩어지고 간트는 빠졌음 |
 | worklog.py | 과제 시작·종료일이 없으면 일정 칸 "미정" (계산용 날짜는 마일스톤 계획일) | 원래는 스키마 오류로 생성 실패 |

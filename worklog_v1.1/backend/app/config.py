@@ -49,6 +49,9 @@ class Settings:
     ai_api_key: str | None = None
     ai_model: str | None = None
     ai_timeout_seconds: float = 120.0
+    # 요청에 response_format={"type":"json_object"}를 붙일지. 사내 EXAONE 게이트웨이는 이 옵션에 500을 돌려줘서 기본은 끔
+    # (프롬프트가 JSON만 요구하고, 응답에 설명·```json이 섞여도 JSON만 골라 읽음)
+    ai_json_mode: bool = False
     report_worker_enabled: bool = True
     report_job_retention: int = 200
 
@@ -121,7 +124,7 @@ def load_settings(config_file: Path | None = None) -> Settings:
                       ("idempotency_retention_days", int)):
         if key in merged:
             setattr(s, key, cast(merged[key]))
-    for flag in ("export_worker_enabled", "backup_hardlink_attachments", "report_worker_enabled"):
+    for flag in ("export_worker_enabled", "backup_hardlink_attachments", "report_worker_enabled", "ai_json_mode"):
         if flag in merged:
             setattr(s, flag, str(merged[flag]).lower() in {"1", "true", "yes"})
     for key in ("ai_api_url", "ai_api_key", "ai_model"):

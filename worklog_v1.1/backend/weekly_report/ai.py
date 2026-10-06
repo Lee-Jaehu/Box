@@ -51,10 +51,20 @@ class Adapter(Protocol):
 
 
 class ChatCompletionsAdapter:
-    """OpenAI 호환 Chat Completions 형식 (미검증 가정)."""
+    """OpenAI 호환 Chat Completions 형식.
+
+    [Worklog 통합] 사내 EXAONE(k-exaone_v2) 게이트웨이는 response_format={"type":"json_object"}에 500
+    ("InternalServerError,Connection error.")을 돌려준다(2026-10-06 사용자 PC 확인). 그래서 기본은 붙이지 않는다(json_mode=False).
+    프롬프트가 JSON만 요구하고, read_payload가 응답 속 설명 문장·```json 표시를 걸러 JSON만 읽는다.
+    """
+
+    def __init__(self, json_mode: bool = False):
+        self.json_mode = json_mode
 
     def build_request(self, messages: list[dict[str, str]], model: str | None) -> dict[str, Any]:
-        body: dict[str, Any] = {"messages": messages, "temperature": 0.1, "response_format": {"type": "json_object"}}
+        body: dict[str, Any] = {"messages": messages, "temperature": 0.1}
+        if self.json_mode:
+            body["response_format"] = {"type": "json_object"}
         if model:
             body["model"] = model
         return body
@@ -223,6 +233,24 @@ def read_payload(text: str, prompt_id: str) -> dict[str, Any]:
     return value
 
 
+JSON_MODE_REJECT_CODES = {400, 415, 422, 500, 501}
+
+
+def _error_detail(exc: urllib.error.HTTPError, limit: int = 300) -> str:
+    """[Worklog 통합] 서버가 돌려준 오류 본문 앞부분 (원인 파악용, 요청·키는 담지 않음)."""
+    try:
+        text = exc.read().decode("utf-8", "replace")
+    except Exception:  # noqa: BLE001 - 본문을 못 읽어도 상태 번호는 알린다
+        return ""
+    text = " ".join(text.split())
+    return text[:limit] + ("…" if len(text) > limit else "")
+
+
+def _url_hint(url: str) -> str:
+    """오류 메시지용 주소 (쿼리 문자열은 키가 들어 있을 수 있어 뺀다)."""
+    return url.split("?", 1)[0]
+
+
 class ExaoneClient:
     def __init__(self, root: Path, mode: str = "mock", transport: Transport | None = None,
                  adapter: Adapter | None = None, timeout: float = 60, mock_dir: Path | None = None,
@@ -238,6 +266,7 @@ class ExaoneClient:
         self.adapter = adapter or ChatCompletionsAdapter()
         self.mock_dir = mock_dir or root / "prompts/mock_responses"
         self.calls: list[str] = []  # 호출 기록 (테스트·보고용, 프롬프트 원문은 남기지 않음)
+        self.notes: list[str] = []  # 호출 중 자동 조치 기록 (예: JSON 강제 옵션 끔)
 
     @property
     def model_label(self) -> str:
@@ -267,12 +296,23 @@ class ExaoneClient:
         if not url or not key:
             raise AIError("live 모드는 API 주소와 키가 필요합니다 (서버 설정 ai_api_url / ai_api_key 또는 환경변수 EXAONE_API_URL / EXAONE_API_KEY)")
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-        for attempt in range(2):
+        json_retry = False
+        attempt = -1
+        while attempt < 1:
+            attempt += 1
             body = self.adapter.build_request(messages, self.model)
             try:
                 raw_bytes = self.transport.request(url, key, body, self.timeout)
             except urllib.error.HTTPError as exc:
-                raise AIError(f"EXAONE HTTP 오류: {exc.code}") from None
+                detail = _error_detail(exc)
+                if getattr(self.adapter, "json_mode", False) and exc.code in JSON_MODE_REJECT_CODES and not json_retry:
+                    # [Worklog 통합] JSON 강제 옵션을 거절하는 서버: 옵션을 빼고 한 번 더 보낸다
+                    self.adapter.json_mode = False
+                    json_retry = True
+                    self.notes.append(f"AI 서버가 JSON 강제 옵션을 거절(HTTP {exc.code}) → 옵션 없이 다시 요청")
+                    attempt -= 1  # 형식 재요청 기회는 그대로 남긴다
+                    continue
+                raise AIError(f"EXAONE HTTP 오류: {exc.code}{f' ({detail})' if detail else ''} — 요청 주소 {_url_hint(url)}") from None
             except (TimeoutError, socket.timeout) as exc:
                 raise AIError(f"EXAONE 응답 시간 초과({self.timeout:g}초)") from None
             except urllib.error.URLError as exc:

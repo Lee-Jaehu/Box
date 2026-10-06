@@ -53,8 +53,15 @@ class Adapter(Protocol):
 class ChatCompletionsAdapter:
     """OpenAI 호환 Chat Completions 형식 (미검증 가정)."""
 
+    # 사내 EXAONE(k-exaone_v2) 게이트웨이는 response_format={"type":"json_object"}에 500을 돌려준다(2026-10-06 확인).
+    # 기본은 붙이지 않는다. 프롬프트가 JSON만 요구하고 read_payload가 설명 문장·```json 표시를 걸러 JSON만 읽는다.
+    def __init__(self, json_mode: bool = False):
+        self.json_mode = json_mode
+
     def build_request(self, messages: list[dict[str, str]], model: str | None) -> dict[str, Any]:
-        body: dict[str, Any] = {"messages": messages, "temperature": 0.1, "response_format": {"type": "json_object"}}
+        body: dict[str, Any] = {"messages": messages, "temperature": 0.1}
+        if self.json_mode:
+            body["response_format"] = {"type": "json_object"}
         if model:
             body["model"] = model
         return body
