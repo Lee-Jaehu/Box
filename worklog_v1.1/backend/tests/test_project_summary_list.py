@@ -51,3 +51,27 @@ def test_milestone_summary_excludes_general_and_deleted(env):
     assert summary["마일스톤 없음"] == {"total": 0, "completed": 0, "cancelled": 0}  # 일반·수시 업무 마일스톤은 제외
     detail = call("GET", f"/projects/{done['id']}")
     assert detail["milestoneSummary"] == summary["완료 과제"]
+
+
+def _doc(text: str) -> dict:
+    return {"documentVersion": 1, "format": "tiptap-json",
+            "doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}]}}
+
+
+def test_people_owner_members_then_log_authors(env):
+    call, team_id, owner = env
+    member = call("POST", "/users", {"name": "나참여", "teamId": team_id})["id"]
+    writer = call("POST", "/users", {"name": "가작성", "teamId": team_id})["id"]
+    gone = call("POST", "/users", {"name": "다삭제", "teamId": team_id})["id"]
+    project = call("POST", "/projects", {"name": "사람 과제", "teamId": team_id, "ownerUserId": owner, "memberIds": [member],
+                                         "status": "in_progress"}, owner)
+    general = [m for m in call("GET", f"/projects/{project['id']}")["milestones"] if m["isGeneral"]][0]
+    body = {"expectedRevision": 0, "tasks": [{"milestoneId": general["id"], "content": _doc("일지")}]}
+    call("PUT", f"/projects/{project['id']}/logs/2026-09-29/{writer}", body, writer)   # 참여자가 아닌 작성자
+    call("PUT", f"/projects/{project['id']}/logs/2026-09-29/{member}", body, member)   # 참여자 (중복으로 넣지 않음)
+    log = call("PUT", f"/projects/{project['id']}/logs/2026-09-29/{gone}", body, gone)
+    call("DELETE", f"/logs/{log['id']}?expectedRevision={log['revision']}", None, gone)  # 삭제한 일지만 있으면 빠짐
+
+    listed = [p for p in call("GET", "/projects?limit=200")["items"] if p["name"] == "사람 과제"][0]
+    assert [(x["name"], x["role"]) for x in listed["people"]] == [("담당자", "owner"), ("나참여", "member"), ("가작성", "author")]
+    assert call("GET", f"/projects/{project['id']}")["people"] == listed["people"]

@@ -17,7 +17,7 @@ const AUTHOR_KEY = 'worklog.logAuthorScope';
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
 /** 업무일지 탭의 시작 화면: 왼쪽 달력, 오른쪽에 선택한 날의 일지 목록. 작성은 ‘업무일지 작성’에서 프로젝트를 고른 뒤 시작한다. */
-export function LogsHome({ initialDate, projectId: fixedProject }: { initialDate?: string; projectId?: string }) {
+export function LogsHome({ initialDate, projectId: fixedProject, authorId: fixedAuthor }: { initialDate?: string; projectId?: string; authorId?: string }) {
   const { actor } = useSession();
   const [date, setDate] = useState(initialDate || todayLocal());
   const [ym, setYm] = useState(() => { const d = initialDate || todayLocal(); return { year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) }; });
@@ -36,12 +36,12 @@ export function LogsHome({ initialDate, projectId: fixedProject }: { initialDate
   // 서버에 보내는 조회 조건: 달력과 목록이 같은 조건을 쓴다
   // 트리에서 고른 과제 화면이면 필터(담당·팀·상태 등) 대신 그 과제만 본다 (완료 과제도 보이게)
   const q = useMemo(() => (scoped
-    ? { memberId: '', divisionId: '', teamId: '', status: '', q: '', projectId, authorId: authorMe && actor ? actor.id : '' }
+    ? { memberId: '', divisionId: '', teamId: '', status: '', q: '', projectId, authorId: fixedAuthor ?? (authorMe && actor ? actor.id : '') }
     : {
       memberId: filters.scope === 'mine' && actor ? actor.id : '',
       divisionId: filters.divisionId, teamId: filters.teamId, status: filters.status, q: filters.q.trim(),
       projectId, authorId: authorMe && actor ? actor.id : '',
-    }), [filters, projectId, authorMe, actor, scoped]);
+    }), [filters, projectId, authorMe, actor, scoped, fixedAuthor]);
   const qKey = JSON.stringify(q);
   const range = monthRange(ym.year, ym.month);
   const cal = useAsync(() => api.get<{ days: { date: string; count: number }[] }>(`/logs/calendar${qs({ dateFrom: range.from, dateTo: range.to, ...q })}`), [range.from, qKey]);
@@ -53,7 +53,7 @@ export function LogsHome({ initialDate, projectId: fixedProject }: { initialDate
   const pick = (d: string) => {
     setDate(d);
     if (Number(d.slice(5, 7)) !== ym.month) setYm({ year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
-    window.history.replaceState(null, '', `#/logs?${fixedProject ? `project=${fixedProject}&` : ''}date=${d}`);
+    window.history.replaceState(null, '', `#/logs?${fixedProject ? `project=${fixedProject}&` : ''}${fixedAuthor ? `author=${fixedAuthor}&` : ''}date=${d}`);
   };
   const items = list.data?.items ?? [];
 
@@ -66,7 +66,7 @@ export function LogsHome({ initialDate, projectId: fixedProject }: { initialDate
 
       <div className="row filters">
         <ProjectPicker projects={all} value={projectId} onChange={setProjectId} filters={filters} onFiltersChange={setFilters} allowAll label="프로젝트"
-          author={{ me: authorMe, onChange: setAuthorMe }} />
+          author={scoped && fixedAuthor ? undefined : { me: authorMe, onChange: setAuthorMe }} />
       </div>
 
       <div className="logs-layout">

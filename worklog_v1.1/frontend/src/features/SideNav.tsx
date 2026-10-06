@@ -1,10 +1,10 @@
-/** 왼쪽 세로 트리 내비게이션 (Windows 탐색기 왼쪽 창처럼): 담당 ▸ 팀 ▸ PJT ▸ Worklog(To-Do·Issue) / 자료 생성기.
- *  오른쪽 화면은 기존 주소(#/projects/<id>, #/logs?project=, #/todos/<id> …)를 그대로 연다. 결정 I37. */
+/** 왼쪽 세로 트리 내비게이션 (Windows 탐색기 왼쪽 창처럼): 담당 ▸ 팀 ▸ PJT ▸ 전체 Worklog / User ▸ Worklog / 자료 생성기.
+ *  Worklog 화면 안에 To-Do·Issue가 함께 있다. 오른쪽 화면은 기존 주소(#/projects/<id>, #/logs?project=&author=, #/reports?project=)를 연다. 결정 I37. */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from '../api/client';
 import type { List } from '../api/types';
 import { errText, STATUS_LABEL, useSession } from '../ui';
-import { activeKeys, buildTree, filterTree, GLOBAL_LINKS, href, isProjectDone, key, milestoneLabel, type NavProject } from './navTree';
+import { activeKeys, buildTree, filterTree, GLOBAL_LINKS, href, isProjectDone, key, milestoneLabel, peopleOf, ROLE_LABEL, type NavProject } from './navTree';
 
 const OPEN_KEY = 'worklog.navOpen';
 const MINE_KEY = 'worklog.navMine';
@@ -53,7 +53,10 @@ function Row({ depth, label, nodeKey, selected, expanded, link, title, className
   );
 }
 
-export function SideNav({ hash, onNavigate, projects: given }: { hash: string; onNavigate?: () => void; projects?: NavProject[] }) {
+export function SideNav({ hash, onNavigate, projects: given, collapsed = false, onCollapse }: {
+  hash: string; onNavigate?: () => void; projects?: NavProject[];
+  collapsed?: boolean; onCollapse?: (collapsed: boolean) => void;  // 넓은 화면에서 트리 접기·펴기 (App이 상태를 가진다)
+}) {
   const { actor } = useSession();
   const [projects, setProjects] = useState<NavProject[] | null>(given ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -94,9 +97,21 @@ export function SideNav({ hash, onNavigate, projects: given }: { hash: string; o
   const sel = active.selected;
   const row = { selected: sel, onToggle: toggle, onNavigate };
 
+  if (collapsed) {
+    return (
+      <nav className="sidenav rail" aria-label="프로젝트 탐색 (접힘)">
+        <button type="button" className="rail-btn" title="트리 펴기" aria-label="트리 펴기" onClick={() => onCollapse?.(false)}>»</button>
+      </nav>
+    );
+  }
+
   return (
     <nav className="sidenav" aria-label="프로젝트 탐색">
       <div className="sidenav-tools">
+        <div className="row between tight sidenav-head">
+          <strong className="hint">담당 ▸ 팀 ▸ 과제</strong>
+          {onCollapse && <button type="button" className="rail-btn" title="트리 접기 (오른쪽 화면을 넓게)" aria-label="트리 접기" onClick={() => onCollapse(true)}>«</button>}
+        </div>
         <input type="search" placeholder="과제·팀 이름 검색" value={q} onChange={(e) => setQ(e.target.value)} aria-label="트리 검색" />
         <div className="row between tight">
           <label className="check hint"><input type="checkbox" checked={mine} disabled={!actor} onChange={(e) => setMine(e.target.checked)} /> 내 프로젝트만</label>
@@ -127,13 +142,21 @@ export function SideNav({ hash, onNavigate, projects: given }: { hash: string; o
                         {...row} />
                       {isOpen(pk) && (
                         <>
-                          <Row depth={3} nodeKey={key.worklog(p.id)} expanded={isOpen(key.worklog(p.id))} link={href.worklog(p.id)} label="Worklog" {...row} />
-                          {isOpen(key.worklog(p.id)) && (
-                            <>
-                              <Row depth={4} nodeKey={key.todos(p.id)} link={href.todos(p.id)} label="To-Do" {...row} />
-                              <Row depth={4} nodeKey={key.issues(p.id)} link={href.issues(p.id)} label="Issue" {...row} />
-                            </>
-                          )}
+                          <Row depth={3} nodeKey={key.worklog(p.id)} link={href.worklog(p.id)} label="전체 Worklog" title="이 과제의 모든 사람 일지 + To-Do·Issue" {...row} />
+                          {peopleOf(p).map((person) => {
+                            const uk = key.person(p.id, person.id);
+                            return (
+                              <div key={person.id} role="group">
+                                <Row depth={3} nodeKey={uk} expanded={isOpen(uk)} className="tree-person"
+                                  label={<>{person.name ?? person.id}{person.role !== 'member' && <span className={`tree-tag role-${person.role}`}>{ROLE_LABEL[person.role]}</span>}</>}
+                                  {...row} />
+                                {isOpen(uk) && (
+                                  <Row depth={4} nodeKey={key.personWorklog(p.id, person.id)} link={href.personWorklog(p.id, person.id)} label="Worklog"
+                                    title={`${person.name ?? ''}의 일지 + 담당 To-Do·Issue`} {...row} />
+                                )}
+                              </div>
+                            );
+                          })}
                           <Row depth={3} nodeKey={key.reports(p.id)} expanded={isOpen(key.reports(p.id))} link={href.reports(p.id)} label="자료 생성기" {...row} />
                           {isOpen(key.reports(p.id)) && (
                             <>

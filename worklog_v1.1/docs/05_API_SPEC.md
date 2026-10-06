@@ -26,7 +26,7 @@ Base `/api/v1`. JSON camelCase. 로그인 토큰 없음. 변경 요청에 `X-Act
 | POST /imports/masters/preview | Excel/CSV 업로드·열 연결·검증 |
 | POST /imports/masters/commit | previewToken으로 원자적 적용 |
 | GET /imports/masters/template | 가져오기 양식 다운로드 |
-| GET/POST /projects | 목록·등록; 기본 general milestone 함께 생성. 목록·상세 항목에 `milestoneSummary {total, completed, cancelled}`(일반·수시 업무·삭제 제외, 왼쪽 트리 완료 표시용) |
+| GET/POST /projects | 목록·등록; 기본 general milestone 함께 생성. 목록·상세 항목에 `milestoneSummary {total, completed, cancelled}`(일반·수시 업무·삭제 제외, 왼쪽 트리 완료 표시용), `people [{id, name, role: owner|member|author}]`(대표 → 참여자 → 일지 작성자, 왼쪽 트리 PJT ▸ User) |
 | GET/PATCH/DELETE /projects/{id} | 상세·수정·휴지통 |
 | POST /projects/{id}/copy | 선택 기준정보 복사, 새 IDs |
 | GET/POST /projects/{id}/milestones | 목록·빠른 등록 |

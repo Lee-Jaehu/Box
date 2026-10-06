@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeKeys, buildTree, filterTree, isProjectDone, NO_DIVISION, NO_TEAM, type NavProject } from './navTree';
+import { activeKeys, buildTree, filterTree, isProjectDone, NO_DIVISION, NO_TEAM, peopleOf, type NavProject } from './navTree';
 
 const P = (id: string, over: Partial<NavProject> = {}): NavProject => ({
   id, name: `과제${id}`, teamId: 'T1', teamName: '자동보정팀', divisionId: 'D1', divisionName: '제조DX담당', status: 'in_progress',
@@ -49,10 +49,11 @@ describe('activeKeys (주소 → 펼칠 경로·선택 노드)', () => {
   const base = ['d:D1', 't:T1', 'p:p1'];
   it.each([
     ['#/projects/p1', 'p:p1', base],
-    ['#/logs?project=p1&date=2026-10-01', 'w:p1', [...base, 'w:p1']],
-    ['#/logs/p1/2026-10-01', 'w:p1', [...base, 'w:p1']],
-    ['#/todos/p1', 'wt:p1', [...base, 'w:p1']],
-    ['#/issues/p1', 'wi:p1', [...base, 'w:p1']],
+    ['#/logs?project=p1&date=2026-10-01', 'w:p1', base],
+    ['#/logs?project=p1&author=U2&date=2026-10-01', 'wu:p1:U2', [...base, 'u:p1:U2']],
+    ['#/logs/p1/2026-10-01', 'w:p1', base],
+    ['#/todos/p1', 'w:p1', base],  // 옛 주소: To-Do·Issue는 Worklog 안
+    ['#/issues/p1', 'w:p1', base],
     ['#/reports?project=p1', 'r:p1', [...base, 'r:p1']],
     ['#/reports?project=p1&template=weekly', 'rw:p1', [...base, 'r:p1']],
     ['#/reports?project=p1&template=exec', 're:p1', [...base, 'r:p1']],
@@ -64,5 +65,18 @@ describe('activeKeys (주소 → 펼칠 경로·선택 노드)', () => {
     expect(activeKeys('#/reports', projects)).toEqual({ selected: 'all:reports', open: [] });
     expect(activeKeys('#/masters', projects).selected).toBe('all:masters');
     expect(activeKeys('', projects).selected).toBe('all:logs');
+  });
+});
+
+describe('peopleOf (PJT ▸ User)', () => {
+  it('서버가 준 순서(대표 → 참여자 → 작성자)를 그대로 쓰고, 없으면 대표·참여자 ID로 만든다', () => {
+    const people = [{ id: 'U1', name: '홍대표', role: 'owner' as const }, { id: 'U2', name: '김참여', role: 'member' as const }, { id: 'U9', name: '이작성', role: 'author' as const }];
+    expect(peopleOf(P('a', { people }))).toEqual(people);
+    expect(peopleOf(P('b', { ownerUserId: 'U1', memberIds: ['U2', 'U1'], people: undefined })).map((x) => [x.id, x.role]))
+      .toEqual([['U1', 'owner'], ['U2', 'member']]);
+  });
+  it('사람 이름으로도 과제를 찾는다', () => {
+    const tree = buildTree([P('a', { people: [{ id: 'U9', name: '이작성', role: 'author' }] }), P('b')]);
+    expect(filterTree(tree, '이작성', null).flatMap((d) => d.teams.flatMap((t) => t.projects.map((x) => x.id)))).toEqual(['a']);
   });
 });

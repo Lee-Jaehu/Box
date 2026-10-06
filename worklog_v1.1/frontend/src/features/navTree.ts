@@ -1,9 +1,20 @@
-/** 왼쪽 내비게이션 트리(담당 → 팀 → PJT → Worklog·자료 생성기)용 순수 함수 (결정 I37). */
+/** 왼쪽 내비게이션 트리(담당 → 팀 → PJT → 전체 Worklog / User → Worklog / 자료 생성기)용 순수 함수 (결정 I37). */
 import type { Project } from '../api/types';
 
 export interface MilestoneSummary { total: number; completed: number; cancelled: number }
+/** 과제별 사람: 대표(owner) → 참여자(member) → 참여자가 아니지만 일지를 쓴 사람(author). 서버가 이 순서로 준다. */
+export interface ProjectPerson { id: string; name: string | null; role: 'owner' | 'member' | 'author' }
 export type NavProject = Pick<Project, 'id' | 'name' | 'teamId' | 'teamName' | 'divisionId' | 'divisionName' | 'status' | 'ownerUserId' | 'memberIds'>
-  & { milestoneSummary?: MilestoneSummary };
+  & { milestoneSummary?: MilestoneSummary; people?: ProjectPerson[] };
+
+export const ROLE_LABEL: Record<ProjectPerson['role'], string> = { owner: '대표', member: '참여', author: '작성' };
+
+/** 트리에 보일 사람 목록. 서버 값이 없으면(옛 응답) 대표·참여자 ID만으로 만든다. */
+export function peopleOf(p: NavProject): ProjectPerson[] {
+  if (p.people?.length) return p.people;
+  return [p.ownerUserId, ...p.memberIds.filter((u) => u !== p.ownerUserId)]
+    .map((id) => ({ id, name: null, role: id === p.ownerUserId ? 'owner' : 'member' } as ProjectPerson));
+}
 
 export interface TeamNode { key: string; id: string | null; name: string; projects: NavProject[] }
 export interface DivisionNode { key: string; id: string | null; name: string; teams: TeamNode[] }
@@ -48,12 +59,12 @@ export function buildTree(projects: NavProject[]): DivisionNode[] {
   return out;
 }
 
-/** 검색어(과제명·팀·담당)와 '내 프로젝트만'으로 거른 트리. 거른 결과에서 빈 팀·담당은 뺀다. */
+/** 검색어(과제명·팀·담당·사람 이름)와 '내 프로젝트만'으로 거른 트리. 거른 결과에서 빈 팀·담당은 뺀다. */
 export function filterTree(tree: DivisionNode[], q: string, mineOf: string | null): DivisionNode[] {
   const needle = q.trim().toLowerCase();
   const keep = (d: DivisionNode, t: TeamNode, p: NavProject) =>
     (!mineOf || p.ownerUserId === mineOf || p.memberIds.includes(mineOf))
-    && (!needle || [p.name, t.name, d.name].some((s) => s.toLowerCase().includes(needle)));
+    && (!needle || [p.name, t.name, d.name, ...peopleOf(p).map((x) => x.name ?? '')].some((s) => s.toLowerCase().includes(needle)));
   return tree.map((d) => ({ ...d, teams: d.teams.map((t) => ({ ...t, projects: t.projects.filter((p) => keep(d, t, p)) })).filter((t) => t.projects.length) }))
     .filter((d) => d.teams.length);
 }
@@ -61,9 +72,9 @@ export function filterTree(tree: DivisionNode[], q: string, mineOf: string | nul
 // ── 노드 키와 주소 ──────────────────────────────────────────────────────────
 export const key = {
   project: (pid: string) => `p:${pid}`,
-  worklog: (pid: string) => `w:${pid}`,
-  todos: (pid: string) => `wt:${pid}`,
-  issues: (pid: string) => `wi:${pid}`,
+  worklog: (pid: string) => `w:${pid}`,  // 전체 Worklog (모든 사람)
+  person: (pid: string, uid: string) => `u:${pid}:${uid}`,
+  personWorklog: (pid: string, uid: string) => `wu:${pid}:${uid}`,
   reports: (pid: string) => `r:${pid}`,
   reportWeekly: (pid: string) => `rw:${pid}`,
   reportExec: (pid: string) => `re:${pid}`,
@@ -72,8 +83,7 @@ export const key = {
 export const href = {
   project: (pid: string) => `#/projects/${pid}`,
   worklog: (pid: string) => `#/logs?project=${pid}`,
-  todos: (pid: string) => `#/todos/${pid}`,
-  issues: (pid: string) => `#/issues/${pid}`,
+  personWorklog: (pid: string, uid: string) => `#/logs?project=${pid}&author=${uid}`,
   reports: (pid: string) => `#/reports?project=${pid}`,
   reportWeekly: (pid: string) => `#/reports?project=${pid}&template=weekly`,
   reportExec: (pid: string) => `#/reports?project=${pid}&template=exec`,
@@ -82,8 +92,6 @@ export const href = {
 /** 아래쪽 '전체 보기·관리' 묶음 */
 export const GLOBAL_LINKS: { key: string; label: string; href: string }[] = [
   { key: 'all:logs', label: '전체 업무일지', href: '#/logs' },
-  { key: 'all:todos', label: '전체 To-Do', href: '#/todos' },
-  { key: 'all:issues', label: '전체 Issue', href: '#/issues' },
   { key: 'all:reports', label: '보고자료 (여러 과제·팀장 요약)', href: '#/reports' },
   { key: 'all:projects', label: '프로젝트 목록', href: '#/projects' },
   { key: 'all:masters', label: '조직·사용자', href: '#/masters' },
@@ -116,9 +124,14 @@ export function activeKeys(hash: string, projects: NavProject[]): { selected: st
   }
   switch (top) {
     case 'projects': return { selected: key.project(pid), open: base };
-    case 'logs': return { selected: key.worklog(pid), open: [...base, key.worklog(pid)] };
-    case 'todos': return { selected: key.todos(pid), open: [...base, key.worklog(pid)] };
-    case 'issues': return { selected: key.issues(pid), open: [...base, key.worklog(pid)] };
+    case 'logs': {
+      const author = parts[1] ? null : query.get('author');  // #/logs/<pid>/<date>(작성 화면)는 전체 Worklog로 표시
+      return author
+        ? { selected: key.personWorklog(pid, author), open: [...base, key.person(pid, author)] }
+        : { selected: key.worklog(pid), open: base };
+    }
+    case 'todos':
+    case 'issues': return { selected: key.worklog(pid), open: base };  // 옛 주소: To-Do·Issue는 Worklog 안에 있음
     case 'reports': {
       const t = query.get('template');
       const selected = t === 'weekly' ? key.reportWeekly(pid) : t === 'exec' ? key.reportExec(pid) : key.reports(pid);

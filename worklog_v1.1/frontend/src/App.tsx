@@ -5,13 +5,15 @@ import { LogsHome } from './features/LogsHome';
 import { MastersPage } from './features/MastersPage';
 import { OpsPage } from './features/OpsPage';
 import { ProjectDetail, ProjectsPage } from './features/ProjectsPage';
-import { ProjectWorkBar } from './features/ProjectWorkBar';
+import { ProjectWorklog } from './features/ProjectWorklog';
 import { ReportsPage, type Template } from './features/ReportsPage';
 import { SideNav } from './features/SideNav';
 import { LogEditorPage, TrackerWorkspace } from './features/WorkspacePage';
 import './app.css';
 
 const DEFAULT_HASH = '#/logs';
+const COLLAPSE_KEY = 'worklog.navCollapsed';
+const NARROW = '(max-width: 860px)';  // app.css 서랍 전환 기준과 같게
 
 function useHash(): string {
   const [h, setH] = useState(window.location.hash || DEFAULT_HASH);
@@ -52,18 +54,13 @@ function Router() {
 
   if (parts[0] === 'logs') {
     if (parts[1]) return <>{banner}<LogEditorPage key={parts[1]} projectId={parts[1]} date={parts[2]} /></>;
-    const project = query.get('project') ?? undefined;  // 왼쪽 트리 PJT ▸ Worklog
-    return (
-      <>
-        {banner}
-        {project && <ProjectWorkBar projectId={project} tab="logs" />}
-        <LogsHome key={`${project ?? ''}|${query.get('date') ?? 'today'}`} initialDate={query.get('date') ?? undefined} projectId={project} />
-      </>
-    );
+    const project = query.get('project');  // 왼쪽 트리 PJT ▸ 전체 Worklog / User ▸ Worklog (To-Do·Issue 포함)
+    if (project) {
+      return <>{banner}<ProjectWorklog key={project} projectId={project} authorId={query.get('author') ?? undefined} initialDate={query.get('date') ?? undefined} /></>;
+    }
+    return <>{banner}<LogsHome key={query.get('date') ?? 'today'} initialDate={query.get('date') ?? undefined} /></>;
   }
-  if (parts[0] === 'todos' || parts[0] === 'issues') {
-    return <>{banner}{parts[1] && <ProjectWorkBar projectId={parts[1]} tab={parts[0]} />}<TrackerWorkspace kind={parts[0]} projectId={parts[1]} /></>;
-  }
+  if (parts[0] === 'todos' || parts[0] === 'issues') return <>{banner}<TrackerWorkspace kind={parts[0]} projectId={parts[1]} /></>;  // 옛 주소
   if (parts[0] === 'reports') {
     const project = query.get('project');  // 왼쪽 트리 PJT ▸ 자료 생성기 ▸ 주간업무자료 / 경영진보고자료
     const template = query.get('template');
@@ -83,17 +80,26 @@ function Router() {
 export function App() {
   const hash = useHash();
   const [drawer, setDrawer] = useState(false);  // 좁은 화면에서 왼쪽 트리를 서랍처럼 연다
+  const [collapsed, setCollapsed] = useState<boolean>(() => { try { return localStorage.getItem(COLLAPSE_KEY) === '1'; } catch { return false; } });
+  useEffect(() => {
+    try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch { /* 무시 */ }
+    // 폭이 바뀌는 전환(.2s)이 끝나면 resize를 알려 간트 등 폭을 재는 화면이 다시 그리게 한다
+    const t = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 260);
+    return () => window.clearTimeout(t);
+  }, [collapsed]);
+  // ☰: 좁은 화면이면 서랍 열기·닫기, 넓은 화면이면 트리 접기·펴기
+  const menu = () => (window.matchMedia?.(NARROW).matches ? setDrawer((v) => !v) : setCollapsed((v) => !v));
   return (
     <ToastHost>
       <SessionProvider>
         <header className="topbar">
-          <button type="button" className="menu-btn" aria-label="메뉴" aria-expanded={drawer} onClick={() => setDrawer((v) => !v)}>☰</button>
+          <button type="button" className="menu-btn" aria-label="왼쪽 트리 접기·펴기" title="왼쪽 트리 접기·펴기" onClick={menu}>☰</button>
           <a className="brand" href="#/logs">Worklog</a>
           <span className="grow" />
           <ActorPicker />
         </header>
-        <div className={`shell${drawer ? ' drawer-open' : ''}`}>
-          <aside className="sidenav-wrap"><ErrorBoundary resetKey="nav"><SideNav hash={hash} onNavigate={() => setDrawer(false)} /></ErrorBoundary></aside>
+        <div className={`shell${drawer ? ' drawer-open' : ''}${collapsed ? ' nav-collapsed' : ''}`}>
+          <aside className="sidenav-wrap"><ErrorBoundary resetKey="nav"><SideNav hash={hash} onNavigate={() => setDrawer(false)} collapsed={collapsed && !drawer} onCollapse={setCollapsed} /></ErrorBoundary></aside>
           {drawer && <div className="drawer-mask" onClick={() => setDrawer(false)} aria-hidden="true" />}
           <div className="main-col">
             <main className="page"><ErrorBoundary resetKey={hash}><Router /></ErrorBoundary></main>

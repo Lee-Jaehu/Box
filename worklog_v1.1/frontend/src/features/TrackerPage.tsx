@@ -16,10 +16,11 @@ const STATUS: Record<string, string> = { open: '열림', in_progress: '진행 �
 const DONE: Record<Kind, string> = { todo: 'completed', issue: 'resolved' };
 const path = (kind: Kind) => (kind === 'todo' ? 'todos' : 'issues');
 
-export function TrackerPage({ kind, project }: { kind: Kind; project: Project }) {
+/** initialAssignee: Worklog 화면(PJT ▸ User ▸ Worklog)에서 그 사람 담당으로 시작. compact: Worklog 화면 안 패널용 (설명 문구 생략) */
+export function TrackerPage({ kind, project, initialAssignee, compact = false }: { kind: Kind; project: Project; initialAssignee?: string; compact?: boolean }) {
   const toast = useToast();
   const { users } = useSession();
-  const [applied, setApplied] = useState({ status: '', assignee: '', onlyOpen: true }); // 조회에 쓰이는 필터
+  const [applied, setApplied] = useState({ status: '', assignee: initialAssignee ?? '', onlyOpen: true }); // 조회에 쓰이는 필터
   const { draft, setDraft, dirty, apply } = useDraft(applied, setApplied); // 입력 중인 값: ‘필터 적용’으로 반영
   const { status, assignee, onlyOpen } = applied;
   const list = useAsync(() => api.get<List<Item>>(`/projects/${project.id}/${path(kind)}${qs({ status, assigneeId: assignee, limit: 200 })}`), [project.id, kind, status, assignee]);
@@ -47,7 +48,7 @@ export function TrackerPage({ kind, project }: { kind: Kind; project: Project })
         </div>
         <button type="button" className="primary" onClick={() => setCreating(true)}>+ {LABEL[kind]} 등록</button>
       </div>
-      <p className="hint">{LABEL[kind]}는 프로젝트 단위의 현재 관리 상태입니다. 일별 TASK와 계속 연결되지 않으며, {kind === 'todo' ? '완료할 때' : '해결할 때'} 한 줄 결과를 오늘 한 일에 남길 수 있습니다.</p>
+      {!compact && <p className="hint">{LABEL[kind]}는 프로젝트 단위의 현재 관리 상태입니다. 일별 TASK와 계속 연결되지 않으며, {kind === 'todo' ? '완료할 때' : '해결할 때'} 한 줄 결과를 오늘 한 일에 남길 수 있습니다.</p>}
       <table className="grid">
         <thead><tr><th>내용</th><th>담당</th><th>마감</th><th>상태</th><th /></tr></thead>
         <tbody>
