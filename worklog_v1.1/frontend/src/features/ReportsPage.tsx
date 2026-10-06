@@ -10,7 +10,7 @@ import { addDays } from '../gantt/adapter';
 type Kind = 'weekly' | 'period' | 'monthly';
 export type Template = 'weekly' | 'exec';
 
-interface ReportConfig { aiMode: 'live' | 'paste'; aiModel: string | null; aiUrlConfigured: boolean; aiKeyConfigured: boolean; fonts: boolean; maxProjects: number }
+interface ReportConfig { aiMode: 'live' | 'paste'; aiModel: string | null; aiPasteReason?: string; aiUrlConfigured: boolean; aiKeyConfigured: boolean; fonts: boolean; maxProjects: number }
 interface JobFile { name: string; label: string; sizeBytes: number }
 interface Need { promptId: string; promptLabel: string; responseName: string; projectId: string; projectName: string | null; prompt?: string; format: string }
 interface Job {
@@ -55,7 +55,8 @@ export function ReportsPage({ initialProjectIds, initialTemplate }: { initialPro
         ? <div className="notice">AI: 서버에 연결된 AI{cfg.aiModel ? `(${cfg.aiModel})` : ''}로 바로 정리합니다. 과제 수에 따라 몇 분 걸릴 수 있으며, 다른 화면으로 가도 서버에서 계속 만듭니다.</div>
         : <div className="notice warn">
             AI: 서버에 AI 연결이 설정되지 않아 <strong>붙여넣기 방식</strong>으로 만듭니다. 만드는 도중 ‘AI 응답 필요’가 나오면 프롬프트를 복사해 사내 AI에 보내고, 받은 JSON을 붙여 넣으세요(과제마다 2~3번, 팀장 요약 페이지를 넣으면 1번 더).
-            {' '}관리자는 <code>config\config.json</code>의 <code>ai_api_url</code>·<code>ai_api_key</code>로 모든 사용자에게 서버 연결을 켤 수 있습니다.
+            {' '}관리자는 <code>config\config.json</code>의 <code>AI_API_URL</code>·<code>AI_API_KEY</code>를 넣고 <strong>서버를 다시 시작</strong>하면 모든 사용자에게 서버 연결이 켜집니다.
+            {cfg.aiPasteReason && <><br /><span className="hint">서버가 읽은 설정: {cfg.aiPasteReason}</span></>}
           </div>)}
       {cfg && !cfg.fonts && <p className="hint">서버에 LG스마트체 글꼴 파일이 없어 줄 수를 보수적으로 계산합니다(내용이 조금 덜 담길 수 있음).</p>}
       <CreateForm config={cfg} initialProjectIds={initialProjectIds} initialTemplate={initialTemplate} onCreated={(id) => { setActiveId(id); jobs.reload(); }} />

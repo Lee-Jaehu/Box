@@ -464,6 +464,7 @@ def job_file(settings: Settings, job_id: str, name: str) -> Path:
 
 def config_info(settings: Settings) -> dict:
     return {"aiMode": "live" if settings.ai_live else "paste", "aiModel": settings.ai_model if settings.ai_live else None,
+            "aiPasteReason": settings.ai_paste_reason,
             "aiUrlConfigured": bool(settings.ai_api_url), "aiKeyConfigured": bool(settings.ai_api_key),
             "fonts": fonts_available(), "kinds": [{"id": k, "label": KIND_LABEL[k]} for k in KINDS],
             "templates": [{"id": t, "label": TEMPLATE_LABEL[t]} for t in TEMPLATES], "maxProjects": MAX_PROJECTS}

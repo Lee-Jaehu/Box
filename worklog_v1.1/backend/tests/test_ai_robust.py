@@ -241,3 +241,22 @@ def test_ai_check_concludes_cause(tmp_path):
     assert any("12,000자부터 실패" in x and '"AI_INPUT_CHARS": 2666' in x for x in lines)
     assert ai_check.conclude({"A": "500"})[0].startswith("A(가장 단순한 요청)부터 실패")
     assert ai_check.conclude({k: "ok" for k in "ABCDEF"})[0].startswith("모든 요청이 성공")
+
+
+# ---------------------------------------------------------------- 붙여넣기 방식이 되는 이유 (설정 없음)
+
+def test_paste_mode_reason_names_file_and_empty_fields_without_key(tmp_path, monkeypatch):
+    from app.services.reports import config_info
+
+    for name in ("WORKLOG_AI_API_URL", "WORKLOG_AI_API_KEY", "WORKLOG_AI_MODEL"):
+        monkeypatch.delenv(name, raising=False)
+    missing = load_settings(tmp_path / "없음.json")
+    assert not missing.ai_live and "설정 파일이 없음" in missing.ai_paste_reason
+    cfg = tmp_path / "config.json"
+    cfg.write_text(json.dumps({"AI_API_URL": "https://ai.example/v1/chat/completions", "AI_API_KEY": ""}), encoding="utf-8")
+    info = config_info(load_settings(cfg))
+    assert info["aiMode"] == "paste" and str(cfg) in info["aiPasteReason"] and "AI_API_KEY" in info["aiPasteReason"]
+    assert "AI_API_URL" not in info["aiPasteReason"]
+    monkeypatch.setenv("WORKLOG_AI_API_KEY", "SECRETKEY")  # 환경변수가 config.json보다 우선
+    live = load_settings(cfg)
+    assert live.ai_live and live.ai_paste_reason == "" and "SECRETKEY" not in json.dumps(config_info(live))
