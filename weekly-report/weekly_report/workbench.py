@@ -20,6 +20,7 @@ from .core import KST, ValidationError, atomic_json, load_json, validate_schema,
 from .ppt.budget import BudgetError
 from .pptgen import TEMPLATE_NAME, find_template, generate_ppt
 from .report.generate import generate_exec_summary, generate_monthly
+from .team import generate_team_deck, team_projects
 from .report.render import TEMPLATE_NAME as REPORT_TEMPLATE
 from .weekly import run_weekly
 from . import sources
@@ -27,7 +28,7 @@ from . import sources
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE = REPO / "workspace"
 MARKER = ".workspace"
-RESPONSE_RE = re.compile(r"^(weekly_rollup|cumulative_update|fit_to_budget|report_monthly|report_exec_summary)"
+RESPONSE_RE = re.compile(r"^(weekly_rollup|cumulative_update|fit_to_budget|report_monthly|report_exec_summary|project_summary)"
                          r"__[A-Za-z0-9-]+__\d{4}-(?:W\d{2}|\d{2})(__[a-z_]+)?\.json$")
 AUTHOR_RE = re.compile(r"^[a-z0-9]+$")
 CATEGORIES = {"DEV", "ROLL", "OPS", "INV", "DATA", "RPT"}
@@ -76,19 +77,24 @@ def missing_files(ws: Path, repo: Path = REPO) -> list[str]:
 
 
 def stale_files(ws: Path, repo: Path = REPO) -> list[str]:
-    """저장소에서 바뀐 실행 파일(프롬프트·스키마·설정·기준정보). 템플릿·글꼴은 비교하지 않는다."""
+    """저장소에서 바뀐 실행 파일(프롬프트·스키마·설정·기준정보·PPT 템플릿). 글꼴은 비교하지 않는다."""
     stale = []
     for rel in runtime_files(repo):
-        if rel.startswith(RUNTIME_TREES) and (ws / rel).is_file() and (ws / rel).read_bytes() != (repo / rel).read_bytes():
+        tracked = rel.startswith(RUNTIME_TREES) or rel in (TEMPLATE_NAME, REPORT_TEMPLATE)
+        if tracked and (ws / rel).is_file() and (ws / rel).read_bytes() != (repo / rel).read_bytes():
             stale.append(rel)
     return stale
 
 
 def refresh_runtime(ws: Path, repo: Path = REPO) -> list[str]:
     """저장소가 갱신되면(예: 프롬프트 v0.4) 작업공간의 실행 파일도 맞춘다. 사용자 입력·응답·결과는 건드리지 않는다."""
-    updated = stale_files(ws, repo)
-    for rel in updated:
-        _copy(repo / rel, ws / rel, overwrite=True)
+    updated = []
+    for rel in stale_files(ws, repo):
+        try:
+            _copy(repo / rel, ws / rel, overwrite=True)
+            updated.append(rel)
+        except PermissionError:  # Windows에서 열려 있는 템플릿 등 → 이번에는 건너뛰고 다음 요청에서 다시 시도
+            continue
     return updated
 
 
@@ -187,6 +193,8 @@ def init_workspace(ws: Path, *, force: bool = False, repo: Path = REPO) -> dict[
     for path in (repo / "demo/worklog/mock_responses").glob("*.json"):  # WorkLog 익명 예시 W40 데모 응답
         _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
     for path in (repo / "demo/report/mock_responses").glob("report_exec_summary__*.json"):  # W40 경영진 1장 요약 데모 응답
+        _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
+    for path in (repo / "demo/team/mock_responses").glob("project_summary__P-ASM-001__*.json"):  # W40 팀 요약 데모 응답
         _copy(path, ws / "prompts/mock_responses" / path.name, overwrite=force)
     (ws / MARKER).write_text("weekly-report 웹 테스트 작업공간 (지워도 다시 만들어짐)\n", encoding="utf-8")
     result["restored"] = True
@@ -430,6 +438,7 @@ def run_report(ws: Path, kind: str, project_id: str, week: str, mode: str = "moc
 
     kind=exec: 선택 과제의 경영진 1장 요약 (week 기준)
     kind=monthly: week의 목요일이 속한 달의 월간 종합 보고 (작업공간의 모든 과제)
+    kind=team: 선택 과제가 속한 팀의 주간보고 (팀 요약 페이지 + 과제별 주간 장표, 한 파일)
     """
     client = PromptCapturingClient(ws, mode)
     try:
@@ -440,6 +449,11 @@ def run_report(ws: Path, kind: str, project_id: str, week: str, mode: str = "moc
             thursday = week_range(week)[0] + timedelta(days=3)
             pptx = ws / f"output/report/월간종합_{thursday.year}-{thursday.month:02d}.pptx"
             result = generate_monthly(ws, [p["project_id"] for p in list_projects(ws)], thursday.year, thursday.month, pptx, client=client)
+        elif kind == "team":
+            team, _ = team_projects(ws, project_id)
+            pptx = ws / f"output/팀주간보고_{team}_{week}.pptx"
+            deck = generate_team_deck(ws, project_id, week, pptx, client=client)
+            result = {"pptx": deck.pptx, "check": deck.check, "problems": deck.problems}
         else:
             raise WorkbenchError(f"알 수 없는 보고 종류: {kind}")
     except MockResponseMissing:
@@ -450,7 +464,7 @@ def run_report(ws: Path, kind: str, project_id: str, week: str, mode: str = "moc
         return {**need, "error": str(exc), "previous": saved.read_text(encoding="utf-8") if saved.is_file() else ""}
     except PermissionError:
         return {"status": "error", "stage": "보고 자료", "message": "PPT 파일이 PowerPoint에서 열려 있습니다. 파일을 닫고 다시 실행하세요."}
-    except (ValidationError, AIError, FileNotFoundError) as exc:
+    except (ValidationError, AIError, BudgetError, FileNotFoundError) as exc:
         return {"status": "error", "stage": "보고 자료", "message": str(exc)}
     return {"status": "ok", "kind": kind, "problems": result["problems"],
             "files": {"pptx": _rel(ws, result["pptx"]), "check": _rel(ws, result["check"])},

@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "schema": "project_summary",
+    "schema_version": "0.1",
+    "revision": 1,
+    "created_at": "2026-10-06T12:26:30+09:00",
+    "updated_at": "2026-10-06T12:26:30+09:00",
+    "updated_by": "pipeline"
+  },
+  "project_id": "P-ASM-001",
+  "week": "2026-W40",
+  "project_name": "ESWA 재료교체 불량 개선",
+  "max_lines": 12,
+  "week_source_ids": [
+    "D-260928-ljh-01",
+    "D-260929-khw-01",
+    "D-260930-khw-01",
+    "D-261001-ljh-01",
+    "D-261002-ljh-01"
+  ],
+  "items": [
+    {
+      "category": "background",
+      "text": "재료교체 구간 Y축 불량(사행·이음매)으로 인한 수율 손실을 EPC 보정·예측 보정 로직으로 개선하는 과제입니다.",
+      "source_ids": [
+        "P-ASM-001"
+      ],
+      "new": false,
+      "details": []
+    },
+    {
+      "category": "progress",
+      "text": "1·2차 로직 적용으로 E77 불량률이 0.189% → 0.164%, 대표 4대는 0.270% → 0.185%로 감소했습니다.(8/13~9/4)",
+      "source_ids": [
+        "P-ASM-001"
+      ],
+      "new": false,
+      "details": []
+    },
+    {
+      "category": "progress",
+      "text": "Normal Line 수평전개를 WA 4대·MI_HL 2대 적용으로 완료해 누적 적용 호기가 26대가 되었습니다.(9/29~9/30)",
+      "source_ids": [
+        "D-260929-khw-01",
+        "D-260930-khw-01"
+      ],
+      "new": true,
+      "details": []
+    },
+    {
+      "category": "progress",
+      "text": "북미 법인과 협의해 현지 라인 가동 일정에 맞춰 북미 수평전개 적용일을 10/13으로 확정했습니다.(10/1)",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ],
+      "new": true,
+      "details": []
+    },
+    {
+      "category": "good",
+      "text": "추석 이후 2주 데이터에서도 개선 효과가 유지되어 ESWA는 4일 결과(0.144%)보다 더 감소했습니다.(9/28)",
+      "source_ids": [
+        "D-260928-ljh-01"
+      ],
+      "new": true,
+      "details": [
+        {
+          "text": "ESWA MEB E77 0.171% → 0.139%, ESMI1 #2-2·3 0.367% → 0.221%로 감소했습니다.",
+          "source_ids": [
+            "D-260928-ljh-01"
+          ],
+          "new": true
+        },
+        {
+          "text": "WA 4대(#21~#24)는 적용 후 첫날 알람이 발생하지 않았습니다.",
+          "source_ids": [
+            "D-260929-khw-01"
+          ],
+          "new": true
+        }
+      ]
+    },
+    {
+      "category": "issue",
+      "text": "북미 현지 PLC 펌웨어 버전이 국내와 달라 보정 파라미터 이식 전에 별도 검증이 필요합니다.(10/1)",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ],
+      "new": true,
+      "details": [
+        {
+          "text": "검증용 원격 접속 지원 가능 여부를 IT팀에 확인 요청드립니다.",
+          "source_ids": [
+            "D-261001-ljh-01"
+          ],
+          "new": true
+        }
+      ]
+    },
+    {
+      "category": "plan",
+      "text": "북미 Site 적용 전 PLC 보정 파라미터 이식을 검증하고 수평전개를 적용할 예정입니다.(~10/13)",
+      "source_ids": [
+        "D-261001-ljh-01"
+      ],
+      "new": true,
+      "details": []
+    },
+    {
+      "category": "plan",
+      "text": "그룹장 보고용 최종 효과 산출과 완료 회고 초안 작성을 마무리할 예정입니다.(~10/16)",
+      "source_ids": [
+        "D-261002-ljh-01"
+      ],
+      "new": true,
+      "details": []
+    }
+  ],
+  "ai": {
+    "model": "mock",
+    "prompt_id": "project_summary",
+    "prompt_version": "v0.7",
+    "generated_at": "2026-10-06T12:26:30+09:00",
+    "input_revisions": {
+      "P-ASM-001": 6,
+      "D-260928-ljh-01": 2,
+      "D-260929-khw-01": 1,
+      "D-260930-khw-01": 1,
+      "D-261001-ljh-01": 3,
+      "D-261002-ljh-01": 1
+    },
+    "input_hash": "1f1a3ffcbe382635"
+  }
+}

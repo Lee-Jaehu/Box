@@ -1,0 +1,12 @@
+{
+  "items": [
+    {"category": "background", "text": "재료교체 구간 Y축 불량(사행·이음매)으로 인한 수율 손실을 EPC 보정·예측 보정 로직으로 개선하는 과제입니다.", "source_ids": ["P-ASM-001"], "details": []},
+    {"category": "progress", "text": "1·2차 로직을 적용해 대표 4대 불량률이 0.270% → 0.185%로 감소했고, MEB 전 라인 수평전개를 마쳤습니다.(8/13~9/16)", "source_ids": ["P-ASM-001"], "details": []},
+    {"category": "progress", "text": "Normal Line(WA·MI_HL) 수평전개를 진행하고 있으며, 9/30까지 완료할 예정입니다.(9/22)", "source_ids": ["D-260922-ljh-01", "CP-260922-001"], "details": []},
+    {"category": "good", "text": "수평전개 후 ESWA MEB E77 전호기 불량률이 0.171% → 0.144%로 감소했습니다.(9/22)", "source_ids": ["D-260922-ljh-01"],
+     "details": [{"text": "ESMI1 #2-2·3도 0.367% → 0.230%로 감소해 개선 효과를 확인했습니다.", "source_ids": ["D-260922-ljh-01"]}]},
+    {"category": "issue", "text": "개선 효과가 적용 전·후 4일 단기 기준이라 장기 모니터링으로 다시 확인해야 합니다.(9/22)", "source_ids": ["D-260922-ljh-01"],
+     "details": [{"text": "장기 데이터가 쌓이면 ESWA·ESMI1 불량률을 다시 비교할 예정입니다.", "source_ids": ["D-260922-ljh-01"]}]},
+    {"category": "plan", "text": "Normal Line 수평전개를 마무리하고, 북미 Site 수평전개를 10월초에 진행할 예정입니다.(~9/30)", "source_ids": ["D-260922-ljh-01"], "details": []}
+  ]
+}

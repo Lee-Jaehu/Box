@@ -40,14 +40,8 @@ def expected_blue(content: SlideContent, page: PageModel) -> list[str]:
     return sorted(blue)
 
 
-def inspect_pptx(path: Path, content: SlideContent, pages: list[PageModel]) -> list[str]:
-    """문제 목록 (빈 목록이면 통과)."""
-    problems: list[str] = []
-    prs = Presentation(str(path))
-    if len(prs.slides) != len(pages):
-        problems.append(f"슬라이드 수 {len(prs.slides)} ≠ 기대 {len(pages)}")
-    if len(prs.slides) > MAX_SLIDES:
-        problems.append(f"과제당 최대 {MAX_SLIDES}장 초과")
+def theme_problems(prs) -> list[str]:
+    problems = []
     for part in theme_parts(prs):
         root = etree.fromstring(part.blob)
         for scheme in ("majorFont", "minorFont"):
@@ -55,7 +49,29 @@ def inspect_pptx(path: Path, content: SlideContent, pages: list[PageModel]) -> l
                 ea = node.find(a("ea"))
                 if ea is not None and ea.get("typeface") != EA_FONT:
                     problems.append(f"테마 {scheme} ea '{ea.get('typeface')}' ≠ {EA_FONT}")
-    for index, (slide, page) in enumerate(zip(prs.slides, pages), 1):
+    return problems
+
+
+def inspect_pptx(path: "Path | None", content: SlideContent, pages: list[PageModel], *,
+                 prs=None, start: int | None = None) -> list[str]:
+    """문제 목록 (빈 목록이면 통과).
+
+    start가 없으면 과제 1건짜리 파일 전체를 검사한다(슬라이드 수·테마 포함).
+    묶음 파일은 prs와 그 과제의 첫 슬라이드 번호(start, 0부터)를 넘긴다.
+    """
+    problems: list[str] = []
+    prs = prs if prs is not None else Presentation(str(path))
+    slides = list(prs.slides)
+    if start is None:
+        if len(slides) != len(pages):
+            problems.append(f"슬라이드 수 {len(slides)} ≠ 기대 {len(pages)}")
+        problems += theme_problems(prs)
+        start = 0
+    if len(pages) > MAX_SLIDES:
+        problems.append(f"과제당 최대 {MAX_SLIDES}장 초과")
+    if start + len(pages) > len(slides):
+        problems.append(f"슬라이드 부족: {start + 1}~{start + len(pages)}장 기대, 전체 {len(slides)}장")
+    for index, (slide, page) in enumerate(zip(slides[start:], pages), start + 1):
         tag = f"{index}장"
         shapes = shape_map(slide)
         needed = [n for n in REQUIRED_SHAPES if not (n == "ms_table" and not page.ms_rows)]

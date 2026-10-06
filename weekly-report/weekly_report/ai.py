@@ -70,6 +70,8 @@ RESPONSE_SHAPES: dict[str, dict[str, tuple[str, ...]]] = {
     "weekly_rollup": {"objects": ("headline",), "lists": (), "optional": ("progress", "next_plan", "issues", "milestone_updates")},
     "cumulative_update": {"objects": (), "lists": ("items",), "optional": ("pinned_facts", "new_pinned_facts")},
     "fit_to_budget": {"objects": (), "lists": ("items",), "optional": ("dropped",)},
+    # 팀 요약 페이지: items[].category/details는 summary.build_items가 확인
+    "project_summary": {"objects": (), "lists": ("items",), "optional": ()},
     # 보고 자료: 필수 칸만 여기서 확인하고, 나머지 칸은 report.checks가 스키마·칸 단위 대체로 처리
     "report_monthly": {"objects": ("head_message",), "lists": ("project_comments",),
                        "optional": ("highlights", "risks", "requests")},

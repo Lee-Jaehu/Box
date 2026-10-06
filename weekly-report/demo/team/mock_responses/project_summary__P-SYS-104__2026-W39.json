@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "category": "background",
+      "text": "보고 자동화 검증을 위해 실제 업무 데이터 없이 파이프라인을 확인하는 합성 과제입니다.",
+      "source_ids": [
+        "P-SYS-104"
+      ],
+      "details": []
+    },
+    {
+      "category": "progress",
+      "text": "대시보드 시스템 개발을 완료하고, 다음 단계인 기능 테스트를 준비하고 있습니다.(9/22)",
+      "source_ids": [
+        "D-260922-tester-04"
+      ],
+      "details": []
+    },
+    {
+      "category": "plan",
+      "text": "개발을 완료한 대시보드 시스템에 대해 다음 단계인 기능 테스트를 진행할 예정입니다.(~9/25)",
+      "source_ids": [
+        "D-260922-tester-04"
+      ],
+      "details": []
+    }
+  ]
+}

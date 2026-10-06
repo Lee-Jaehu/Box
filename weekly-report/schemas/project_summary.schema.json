@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project_summary.schema.json",
+  "title": "과제 요약 (팀 요약 페이지용)",
+  "description": "과제 1건의 주차별 요약 (derived/summary/{project_id}/{week}.json). EXAONE이 문장을 쓰고, 신규(파랑) 여부는 Rule이 근거 기록 ID로 정한다.",
+  "type": "object",
+  "required": ["meta", "project_id", "week", "project_name", "max_lines", "items", "ai"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["schema", "schema_version", "revision", "created_at", "updated_at", "updated_by"],
+      "properties": {
+        "schema": {"const": "project_summary"},
+        "schema_version": {"type": "string"},
+        "revision": {"type": "integer", "minimum": 1},
+        "created_at": {"type": "string"},
+        "updated_at": {"type": "string"},
+        "updated_by": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "project_id": {"type": "string"},
+    "week": {"type": "string", "pattern": "^\\d{4}-W\\d{2}$"},
+    "project_name": {"type": "string"},
+    "max_lines": {"type": "integer", "minimum": 1, "description": "요약 페이지에서 이 과제에 준 줄 수 (프롬프트 입력값)"},
+    "week_source_ids": {"type": "array", "items": {"type": "string"}, "description": "이번 주 기록 ID (신규 판정 기준)"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "text", "source_ids", "new", "details"],
+        "properties": {
+          "category": {"enum": ["background", "progress", "issue", "good", "plan"]},
+          "text": {"type": "string", "minLength": 1},
+          "source_ids": {"type": "array", "items": {"type": "string"}},
+          "new": {"type": "boolean", "description": "Rule: source_ids에 이번 주 기록 ID가 있으면 true (배경은 항상 false)"},
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["text", "source_ids", "new"],
+              "properties": {
+                "text": {"type": "string", "minLength": 1},
+                "source_ids": {"type": "array", "items": {"type": "string"}},
+                "new": {"type": "boolean"}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ai": {
+      "type": "object",
+      "required": ["model", "prompt_id", "prompt_version", "generated_at", "input_revisions"],
+      "properties": {
+        "model": {"type": "string"},
+        "prompt_id": {"const": "project_summary"},
+        "prompt_version": {"type": "string"},
+        "generated_at": {"type": "string"},
+        "input_revisions": {"type": "object", "additionalProperties": {"type": ["integer", "string"]}},
+        "input_hash": {"type": "string", "description": "프롬프트 입력 해시 (같으면 다시 호출하지 않음)"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

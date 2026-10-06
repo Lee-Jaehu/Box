@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "category": "background",
+      "text": "보고 자동화 검증을 위해 실제 업무 데이터 없이 파이프라인을 확인하는 합성 과제입니다.",
+      "source_ids": [
+        "P-ROL-102"
+      ],
+      "details": []
+    },
+    {
+      "category": "progress",
+      "text": "사이트 검증을 완료해 WA·MI_HL·HD·OT 사이트의 조립 공정 적용을 마쳤습니다.(9/22)",
+      "source_ids": [
+        "D-260922-tester-02"
+      ],
+      "details": []
+    },
+    {
+      "category": "issue",
+      "text": "WA 사이트 적용 일정이 당초 9/25에서 9/30으로 변경되어 일정 관리가 필요합니다.(9/22)",
+      "source_ids": [
+        "D-260922-tester-02"
+      ],
+      "details": []
+    },
+    {
+      "category": "plan",
+      "text": "진행 중인 NB·PW·HG 등 나머지 사이트의 조립 공정 적용을 이어서 진행할 예정입니다.",
+      "source_ids": [
+        "D-260922-tester-02"
+      ],
+      "details": []
+    }
+  ]
+}

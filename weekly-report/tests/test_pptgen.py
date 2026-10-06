@@ -118,8 +118,10 @@ def test_missing_template_reports_required_shapes(tmp_path):
 
 def test_template_missing_shape_is_reported(tmp_path):
     prs = Presentation(str(TEMPLATE))
-    s = shapes(prs.slides[0])
-    s["body_main"]._element.getparent().remove(s["body_main"]._element)
+    for slide in prs.slides:  # 새 템플릿은 4장(요약·참고·주간·예시) → 주간 장표가 있는 모든 장에서 제거
+        s = shapes(slide)
+        if "body_main" in s:
+            s["body_main"]._element.getparent().remove(s["body_main"]._element)
     broken = tmp_path / "broken.pptx"
     prs.save(str(broken))
     with pytest.raises(ValueError, match="필수 도형 누락: body_main"):
@@ -316,3 +318,13 @@ def test_estimate_cumulative_items_without_template(tmp_path):
     project = read(ROOT / "data/master/projects/P-ASM-001.json")
     weekly = read(ROOT / "data/derived/weekly/P-ASM-001/2026-W39.json")
     assert estimate_cumulative_items(tmp_path, project, [], weekly)[0] == 7
+
+
+def test_four_slide_template_outputs_only_weekly_pages(tmp_path):
+    """2026-10-06 템플릿: 0 팀 요약 양식, 1 요약 작성 예시, 2 주간 양식, 3 주간 예시 → 과제 PPT에는 주간 장만."""
+    assert len(Presentation(str(TEMPLATE)).slides) == 4
+    out, _ = build(ROOT, tmp_path)
+    prs = Presentation(str(out))
+    assert all("main_table" in shapes(slide) for slide in prs.slides)
+    text = " ".join(sh.text_frame.text for slide in prs.slides for sh in slide.shapes if sh.has_text_frame)
+    assert "자동보정선행개발팀" not in text and "과제 진행 현황_OOOO팀" not in text
