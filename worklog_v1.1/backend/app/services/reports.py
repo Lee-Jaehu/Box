@@ -37,7 +37,8 @@ from .report_slides import STATUS_COLOR, AppendixGroup, Block, GanttBlock, Gantt
 
 from weekly_report import prompt_vars as pv
 from weekly_report import sources as wr_sources
-from weekly_report.ai import RESPONSE_SHAPES, AIError, ChatCompletionsAdapter, ExaoneClient, MockResponseMissing, ResponseFormatError, read_payload
+from weekly_report.ai import (RESPONSE_SHAPES, AIError, ChatCompletionsAdapter, ExaoneClient, MockResponseMissing, ResponseFormatError,
+                               UrlLibTransport, read_payload)
 from weekly_report.core import ValidationError, load_json, week_range
 from weekly_report.ppt.budget import BudgetError
 from weekly_report.codes import PeopleTable
@@ -188,7 +189,8 @@ class ServiceClient(ExaoneClient):
     def __init__(self, ws: Path, settings: Settings, not_before: str | None = None):
         super().__init__(ws, "live" if settings.ai_live else "mock", timeout=settings.ai_timeout_seconds, mock_dir=ws / "responses",
                          api_url=settings.ai_api_url, api_key=settings.ai_api_key, model=settings.ai_model,
-                         adapter=ChatCompletionsAdapter(json_mode=settings.ai_json_mode, max_tokens=settings.ai_max_tokens))
+                         adapter=ChatCompletionsAdapter(json_mode=settings.ai_json_mode, max_tokens=settings.ai_max_tokens),
+                         transport=UrlLibTransport(settings.ai_request_id_header or None))
         self.settings = settings
         self.input_chars = settings.ai_input_chars
         self.compat = {"true": True, "false": False}.get(settings.ai_compat_mode)
@@ -237,7 +239,8 @@ class ServiceClient(ExaoneClient):
         try:
             _save_failed_request_file(self.settings, self.last_request, {
                 "savedAt": _now(self.settings), "promptId": prompt_id, "responseName": name,
-                "inputChars": stat.get("chars"), "sends": stat.get("sends"), "compat": bool(self.compat)})
+                "inputChars": stat.get("chars"), "sends": stat.get("sends"), "compat": bool(self.compat),
+                "requestId": stat.get("request_id")})
         except OSError:
             log.warning("실패한 AI 요청을 저장하지 못함")
 
@@ -464,6 +467,7 @@ def job_file(settings: Settings, job_id: str, name: str) -> Path:
 
 def config_info(settings: Settings) -> dict:
     return {"aiMode": "live" if settings.ai_live else "paste", "aiModel": settings.ai_model if settings.ai_live else None,
+            "aiPasteReason": settings.ai_paste_reason,
             "aiUrlConfigured": bool(settings.ai_api_url), "aiKeyConfigured": bool(settings.ai_api_key),
             "fonts": fonts_available(), "kinds": [{"id": k, "label": KIND_LABEL[k]} for k in KINDS],
             "templates": [{"id": t, "label": TEMPLATE_LABEL[t]} for t in TEMPLATES], "maxProjects": MAX_PROJECTS}

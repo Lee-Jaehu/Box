@@ -56,6 +56,11 @@ class Settings:
     ai_input_chars: int = 24000
     # 호환 형식(system 내용을 user에 합치고 temperature·max_tokens 없이). auto = 5xx가 끝까지 나면 한 번 시도 후 그 작업 동안 유지
     ai_compat_mode: str = "auto"
+    # EXAONE API 문서: 헤더에 요청 ID를 넣는다. 헤더 이름(비우면 보내지 않음). 사내 문서의 정확한 이름으로 바꿀 수 있다
+    ai_request_id_header: str = "X-Request-ID"
+    # 서버가 읽은 설정 파일 (화면·시작 로그에 "왜 붙여넣기 방식인지" 보여 줄 때 사용)
+    config_file: Path | None = None
+    config_found: bool = False
     # 요청에 response_format={"type":"json_object"}를 붙일지. 사내 EXAONE 게이트웨이는 이 옵션에 500을 돌려줘서 기본은 끔
     # (프롬프트가 JSON만 요구하고, 응답에 설명·```json이 섞여도 JSON만 골라 읽음)
     ai_json_mode: bool = False
@@ -69,6 +74,17 @@ class Settings:
     @property
     def ai_live(self) -> bool:
         return bool(self.ai_api_url and self.ai_api_key)
+
+    @property
+    def ai_paste_reason(self) -> str:
+        """서버 AI를 쓰지 않는(붙여넣기 방식) 이유. 키 값은 담지 않는다."""
+        if self.ai_live:
+            return ""
+        where = str(self.config_file) if self.config_file else "config\\config.json"
+        if self.config_file and not self.config_found:
+            return f"설정 파일이 없음: {where} (config.example.json 을 복사해 AI_API_URL·AI_API_KEY 를 넣으세요)"
+        missing = [name for name, value in (("AI_API_URL", self.ai_api_url), ("AI_API_KEY", self.ai_api_key)) if not value]
+        return f"{where} 의 {'·'.join(missing)} 이(가) 비어 있음"
 
     @property
     def db_path(self) -> Path:
@@ -117,6 +133,7 @@ def load_settings(config_file: Path | None = None) -> Settings:
     s = Settings()
     cfg_path = config_file or (APP_ROOT / "config" / "config.json")
     raw: dict = {}
+    s.config_file, s.config_found = cfg_path, cfg_path.exists()
     if cfg_path.exists():
         raw = json.loads(cfg_path.read_text(encoding="utf-8-sig"))
     env = {k[len("WORKLOG_"):].lower(): v for k, v in os.environ.items() if k.startswith("WORKLOG_")}
@@ -137,6 +154,8 @@ def load_settings(config_file: Path | None = None) -> Settings:
     for key in ("ai_api_url", "ai_api_key", "ai_model"):
         if merged.get(key):
             setattr(s, key, str(merged[key]).strip())
+    if "ai_request_id_header" in merged:
+        s.ai_request_id_header = str(merged["ai_request_id_header"] or "").strip()
     for key, cast in (("ai_timeout_seconds", float), ("report_job_retention", int), ("ai_input_chars", int)):
         if key in merged:
             setattr(s, key, cast(merged[key]))

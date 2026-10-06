@@ -43,6 +43,10 @@ def main() -> int:
     else:
         print(f" 바인딩 주소:    {settings.host} (이 PC 전용 설정)")
     print(f" 데이터 폴더:    {settings.data_dir}")
+    if settings.ai_live:
+        print(f" AI 연결:        서버 AI ({settings.ai_model or '모델 미지정'}) — 보고자료를 서버가 바로 만든다")
+    else:
+        print(f" AI 연결:        설정 없음 → 붙여넣기 방식 ({settings.ai_paste_reason})")
     print("=" * 60, flush=True)
     uvicorn.run("app.main:app_factory", factory=True, host=settings.host, port=settings.port, workers=1,
                 log_level="info", access_log=False)

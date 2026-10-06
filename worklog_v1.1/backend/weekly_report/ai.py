@@ -15,6 +15,7 @@ import socket
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -33,12 +34,29 @@ class Transport(Protocol):
     def request(self, url: str, key: str, body: dict[str, Any], timeout: float) -> bytes: ...
 
 
+REQUEST_ID_HEADER = "X-Request-ID"
+USER_AGENT = "Worklog-PPT/1.0"
+
+
 class UrlLibTransport:
+    """EXAONE API 문서의 "JSON 형식 요청" 규칙: Authorization Bearer 키 + 요청 ID 헤더, accept */*,
+    Content-Type application/json; charset=utf-8. 본문은 ASCII JSON(한글은 \\uXXXX)으로 보내 문자 인코딩 해석과 무관하게 한다.
+    요청 ID 헤더 이름은 설정(AI_REQUEST_ID_HEADER)으로 바꾸거나 비워서 뺄 수 있다."""
+
+    def __init__(self, request_id_header: str | None = REQUEST_ID_HEADER):
+        self.request_id_header = request_id_header
+        self.last_request_id: str | None = None
+
+    def headers(self, key: str) -> dict[str, str]:
+        self.last_request_id = str(uuid.uuid4())
+        headers = {"Content-Type": "application/json; charset=utf-8", "Accept": "*/*", "User-Agent": USER_AGENT,
+                   "Authorization": f"Bearer {key}"}
+        if self.request_id_header:
+            headers[self.request_id_header] = self.last_request_id
+        return headers
+
     def request(self, url: str, key: str, body: dict[str, Any], timeout: float) -> bytes:
-        request = urllib.request.Request(
-            url, json.dumps(body, ensure_ascii=False).encode("utf-8"),
-            {"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
-        )
+        request = urllib.request.Request(url, json.dumps(body, ensure_ascii=True).encode("ascii"), self.headers(key), method="POST")
         with urllib.request.urlopen(request, timeout=timeout) as response:
             return response.read()
 
@@ -372,7 +390,10 @@ class ExaoneClient:
         while True:
             stat["sends"] += 1
             try:
-                return self.transport.request(url, key, body, self.timeout)
+                try:
+                    return self.transport.request(url, key, body, self.timeout)
+                finally:  # 사내 담당자 문의용 요청 ID (헤더로 보낸 값)
+                    stat["request_id"] = getattr(self.transport, "last_request_id", None)
             except urllib.error.HTTPError as exc:
                 json_first = getattr(self.adapter, "json_mode", False) and exc.code in JSON_MODE_REJECT_CODES
                 if exc.code not in TRANSIENT_CODES or not waits or json_first:  # JSON 옵션 거절 여부부터 _live_loop가 본다
@@ -420,7 +441,8 @@ class ExaoneClient:
     def _live_loop(self, prompt_id: str, url: str, key: str, messages: list[dict[str, str]], stat: dict[str, Any]) -> dict[str, Any]:
         json_retry = False
         attempt = -1
-        tries = lambda: f" (요청 {stat['sends']}회)" if stat["sends"] > 1 else ""  # noqa: E731
+        tries = lambda: (f" (요청 {stat['sends']}회)" if stat["sends"] > 1 else "") + \
+            (f" · 요청 ID {stat['request_id']}" if stat.get("request_id") else "")  # noqa: E731 - 사내 담당자 문의용
         while attempt < 1:
             attempt += 1
             body = self._body(messages)
