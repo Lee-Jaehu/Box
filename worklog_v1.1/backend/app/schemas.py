@@ -279,6 +279,9 @@ class ReportJobCreate(Req):
     include_gantts: bool = False
     include_milestone_gantt: bool = False
     refresh_ai: bool = False
+    # 팀장 요약 페이지: 주간·기간 보고 + 주간업무 양식에서만 적용 (API 기본은 끔, 화면은 기본 켜서 보냄)
+    include_team_summary: bool = False
+    summary_author: str | None = Field(default=None, max_length=40)
 
 
 class ReportResponse(Req):

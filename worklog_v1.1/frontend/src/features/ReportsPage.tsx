@@ -18,7 +18,8 @@ interface Job {
   status: 'queued' | 'running' | 'need_response' | 'succeeded' | 'failed' | 'cancelled'; stage: string; need: Need | null;
   result: { files: JobFile[]; slideCount: number; problems: string[] } | null; error: string | null; responsesReceived: number;
   requestedBy: { id: string; name: string }; createdAt: string; aiMode: 'live' | 'paste';
-  options: { includeTables: boolean; includeGantts: boolean; includeMilestoneGantt: boolean; refreshAi: boolean };
+  options: { includeTables: boolean; includeGantts: boolean; includeMilestoneGantt: boolean; refreshAi: boolean;
+    includeTeamSummary?: boolean; summaryAuthor?: string | null };
 }
 
 const STATE: Record<Job['status'], string> = {
@@ -52,7 +53,7 @@ export function ReportsPage() {
       {cfg && (cfg.aiMode === 'live'
         ? <div className="notice">AI: 서버에 연결된 AI{cfg.aiModel ? `(${cfg.aiModel})` : ''}로 바로 정리합니다. 과제 수에 따라 몇 분 걸릴 수 있으며, 다른 화면으로 가도 서버에서 계속 만듭니다.</div>
         : <div className="notice warn">
-            AI: 서버에 AI 연결이 설정되지 않아 <strong>붙여넣기 방식</strong>으로 만듭니다. 만드는 도중 ‘AI 응답 필요’가 나오면 프롬프트를 복사해 사내 AI에 보내고, 받은 JSON을 붙여 넣으세요(과제마다 2~3번).
+            AI: 서버에 AI 연결이 설정되지 않아 <strong>붙여넣기 방식</strong>으로 만듭니다. 만드는 도중 ‘AI 응답 필요’가 나오면 프롬프트를 복사해 사내 AI에 보내고, 받은 JSON을 붙여 넣으세요(과제마다 2~3번, 팀장 요약 페이지를 넣으면 1번 더).
             {' '}관리자는 <code>config\config.json</code>의 <code>ai_api_url</code>·<code>ai_api_key</code>로 모든 사용자에게 서버 연결을 켤 수 있습니다.
           </div>)}
       {cfg && !cfg.fonts && <p className="hint">서버에 LG스마트체 글꼴 파일이 없어 줄 수를 보수적으로 계산합니다(내용이 조금 덜 담길 수 있음).</p>}
@@ -81,6 +82,9 @@ function CreateForm({ config, onCreated }: { config: ReportConfig | null; onCrea
   const { draft, setDraft, dirty, apply } = useDraft(filters, setFilters);
   const [selected, setSelected] = useState<string[]>([]);
   const [opts, setOpts] = useState({ includeTables: true, includeGantts: true, includeMilestoneGantt: true, refreshAi: false });
+  // 팀장 요약 페이지 (주간·기간 보고 + 주간업무 양식): 팀별 맨 앞에 AI 요약 1장
+  const [teamSummary, setTeamSummary] = useState(true);
+  const [summaryAuthor, setSummaryAuthor] = useState('');
   const [busy, setBusy] = useState(false);
 
   const shown = useMemo(() => filterProjects(all, filters, actor?.id ?? null), [all, filters, actor]);
@@ -89,6 +93,7 @@ function CreateForm({ config, onCreated }: { config: ReportConfig | null; onCrea
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const selectedProjects = all.filter((p) => selected.includes(p.id));
   const single = selectedProjects.length === 1 ? selectedProjects[0] : null;
+  const teamCount = new Set(selectedProjects.map((p) => p.teamId)).size;
   const max = config?.maxProjects ?? 30;
 
   const orgLabel = (() => {
@@ -111,6 +116,10 @@ function CreateForm({ config, onCreated }: { config: ReportConfig | null; onCrea
     try {
       const body: Record<string, unknown> = { kind, projectIds: selected, orgLabel, ...opts };
       if (kind !== 'monthly') body.template = template;
+      if (kind !== 'monthly' && template === 'weekly') {
+        body.includeTeamSummary = teamSummary;
+        if (teamSummary && summaryAuthor.trim()) body.summaryAuthor = summaryAuthor.trim();
+      }
       if (kind === 'weekly') body.week = week.week;
       if (kind === 'period') Object.assign(body, { dateFrom: from, dateTo: to });
       if (kind === 'monthly') body.month = month;
@@ -176,6 +185,22 @@ function CreateForm({ config, onCreated }: { config: ReportConfig | null; onCrea
           <legend>양식</legend>
           <label className="check"><input type="radio" name="tpl" checked={template === 'weekly'} onChange={() => setTemplate('weekly')} /> 주간업무 양식 <small className="hint">(과제당 1~2장: 마일스톤 표·누적 요약·진행·계획·이슈)</small></label>
           <label className="check"><input type="radio" name="tpl" checked={template === 'exec'} onChange={() => setTemplate('exec')} /> 경영진 1장 요약 양식 <small className="hint">(과제당 1장: 헤드메시지·배경 및 결론·경과·계획)</small></label>
+          {template === 'weekly' && (
+            <div className="stack team-summary">
+              <label className="check">
+                <input type="checkbox" checked={teamSummary} onChange={(e) => setTeamSummary(e.target.checked)} /> 팀장 요약 페이지 포함
+                <small className="hint">(팀별 맨 앞 1장: 과제마다 배경·진행·이슈·잘한점·계획을 AI가 요약, 이번 {kind === 'period' ? '기간' : '주'} 내용은 파란색)</small>
+              </label>
+              {teamSummary && (
+                <label className="row inline">
+                  작성자(팀장)
+                  <input type="text" maxLength={40} value={summaryAuthor} onChange={(e) => setSummaryAuthor(e.target.value)}
+                    placeholder="예: 홍길동 팀장 — 비우면 첫 과제 담당자" aria-label="팀장 요약 작성자" />
+                </label>
+              )}
+              {teamSummary && teamCount > 1 && <small className="hint">선택한 프로젝트가 {teamCount}개 팀에 걸쳐 있어 팀마다 [요약 → 과제 장표] 순서로 넣습니다.</small>}
+            </div>
+          )}
         </fieldset>
       )}
 
@@ -234,6 +259,9 @@ function JobPanel({ id, onChange, onClose }: { id: string; onChange: () => void;
   const [error, setError] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [answerError, setAnswerError] = useState<string | null>(null);
+  // 팀장 요약 페이지 (주간·기간 보고 + 주간업무 양식): 팀별 맨 앞에 AI 요약 1장
+  const [teamSummary, setTeamSummary] = useState(true);
+  const [summaryAuthor, setSummaryAuthor] = useState('');
   const [busy, setBusy] = useState(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const lastStatus = useRef<string | null>(null);
@@ -279,7 +307,7 @@ function JobPanel({ id, onChange, onClose }: { id: string; onChange: () => void;
   return (
     <div className="card stack" aria-live="polite">
       <div className="row between">
-        <h3>{job.kindLabel} · {job.templateLabel} <small className="hint">{job.periodLabel}</small></h3>
+        <h3>{job.kindLabel} · {job.templateLabel}{job.options?.includeTeamSummary ? ' + 팀장 요약' : ''} <small className="hint">{job.periodLabel}</small></h3>
         <span className="row inline">
           {['queued', 'need_response', 'failed'].includes(job.status) && <button type="button" onClick={() => void act('cancel')}>작업 취소</button>}
           <button type="button" onClick={onClose}>닫기</button>
@@ -348,7 +376,7 @@ function History({ jobs, activeId, onOpen, onReload }: { jobs: Job[]; activeId: 
             const ppt = j.result?.files.find((f) => f.label === 'PPT');
             return (
               <tr key={j.id} className={j.id === activeId ? 'sel' : j.status === 'failed' ? 'bad-soft' : ''}>
-                <td>{j.kindLabel}<br /><small className="hint">{j.templateLabel}</small></td>
+                <td>{j.kindLabel}<br /><small className="hint">{j.templateLabel}{j.options?.includeTeamSummary ? ' + 팀장 요약' : ''}</small></td>
                 <td>{j.periodLabel}</td>
                 <td>{j.projectNames[0]}{j.projectNames.length > 1 ? ` 외 ${j.projectNames.length - 1}개` : ''}</td>
                 <td>{j.requestedBy?.name}<br /><small className="hint">{fmtTime(j.createdAt)}</small></td>
