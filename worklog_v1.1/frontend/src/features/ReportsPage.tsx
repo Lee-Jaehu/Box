@@ -8,7 +8,7 @@ import { daysBetween, isoWeekOf, monthWeeks, shortDay, weekLabel } from './repor
 import { addDays } from '../gantt/adapter';
 
 type Kind = 'weekly' | 'period' | 'monthly';
-type Template = 'weekly' | 'exec';
+export type Template = 'weekly' | 'exec';
 
 interface ReportConfig { aiMode: 'live' | 'paste'; aiModel: string | null; aiUrlConfigured: boolean; aiKeyConfigured: boolean; fonts: boolean; maxProjects: number }
 interface JobFile { name: string; label: string; sizeBytes: number }
@@ -41,7 +41,8 @@ async function copyText(text: string, area?: HTMLTextAreaElement | null): Promis
   }
 }
 
-export function ReportsPage() {
+/** initialProjectIds·initialTemplate: 왼쪽 트리의 PJT ▸ 자료 생성기(#/reports?project=<id>&template=weekly|exec)에서 미리 고른 값 */
+export function ReportsPage({ initialProjectIds, initialTemplate }: { initialProjectIds?: string[]; initialTemplate?: Template } = {}) {
   const config = useAsync(() => api.get<ReportConfig>('/reports/config'), []);
   const jobs = useAsync(() => api.get<{ items: Job[] }>('/reports/jobs?limit=30'), []);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -57,7 +58,7 @@ export function ReportsPage() {
             {' '}관리자는 <code>config\config.json</code>의 <code>ai_api_url</code>·<code>ai_api_key</code>로 모든 사용자에게 서버 연결을 켤 수 있습니다.
           </div>)}
       {cfg && !cfg.fonts && <p className="hint">서버에 LG스마트체 글꼴 파일이 없어 줄 수를 보수적으로 계산합니다(내용이 조금 덜 담길 수 있음).</p>}
-      <CreateForm config={cfg} onCreated={(id) => { setActiveId(id); jobs.reload(); }} />
+      <CreateForm config={cfg} initialProjectIds={initialProjectIds} initialTemplate={initialTemplate} onCreated={(id) => { setActiveId(id); jobs.reload(); }} />
       {activeId && <JobPanel key={activeId} id={activeId} onChange={jobs.reload} onClose={() => setActiveId(null)} />}
       <History jobs={jobs.data?.items ?? []} activeId={activeId} onOpen={setActiveId} onReload={jobs.reload} />
     </section>
@@ -66,21 +67,24 @@ export function ReportsPage() {
 
 // ── 만들기 ───────────────────────────────────────────────────────────────────
 
-function CreateForm({ config, onCreated }: { config: ReportConfig | null; onCreated: (id: string) => void }) {
+function CreateForm({ config, onCreated, initialProjectIds, initialTemplate }: {
+  config: ReportConfig | null; onCreated: (id: string) => void; initialProjectIds?: string[]; initialTemplate?: Template;
+}) {
   const toast = useToast();
   const { actor } = useSession();
   const projects = useAsync(() => api.get<List<Project>>('/projects?limit=200'), []);
   const all = useMemo(() => projects.data?.items ?? [], [projects.data]);
   const today = todayLocal();
   const [kind, setKind] = useState<Kind>('weekly');
-  const [template, setTemplate] = useState<Template>('weekly');
+  const [template, setTemplate] = useState<Template>(initialTemplate ?? 'weekly');
   const [baseDate, setBaseDate] = useState(today);
   const [from, setFrom] = useState(addDays(today, -27));
   const [to, setTo] = useState(today);
   const [month, setMonth] = useState(today.slice(0, 7));
-  const [filters, setFilters] = useState<PickerFilters>(() => ({ ...defaultFilters(false), status: 'in_progress' }));
+  // 과제를 미리 골라 왔으면 그 과제가 보이도록 상태 필터를 풀어 둔다 (완료 과제도 보고자료를 만들 수 있게)
+  const [filters, setFilters] = useState<PickerFilters>(() => ({ ...defaultFilters(false), status: initialProjectIds?.length ? '' : 'in_progress' }));
   const { draft, setDraft, dirty, apply } = useDraft(filters, setFilters);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(initialProjectIds ?? []);
   const [opts, setOpts] = useState({ includeTables: true, includeGantts: true, includeMilestoneGantt: true, refreshAi: false });
   // 팀장 요약 페이지 (주간·기간 보고 + 주간업무 양식): 팀별 맨 앞에 AI 요약 1장
   const [teamSummary, setTeamSummary] = useState(true);

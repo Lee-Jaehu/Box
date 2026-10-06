@@ -142,3 +142,40 @@ a.btn.primary:hover { background: #1c47ac; }
 textarea.mono { width: 100%; font-family: Consolas, "D2Coding", monospace; font-size: 12px; margin-top: 4px; }
 ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
 table.grid tr.sel { background: #eef3fd; }
+
+/* ── 왼쪽 트리 내비게이션 (결정 I37: 담당 ▸ 팀 ▸ PJT ▸ Worklog·자료 생성기, 상단 탭 대체) ── */
+.menu-btn { display: none; font-size: 18px; padding: 2px 10px; }
+.shell { display: grid; grid-template-columns: 290px minmax(0, 1fr); align-items: start; }
+.sidenav-wrap { position: sticky; top: 48px; height: calc(100vh - 48px); border-right: 1px solid var(--line); background: #fbfbfc; overflow: hidden; }
+.sidenav { display: flex; flex-direction: column; height: 100%; }
+.sidenav-tools { padding: 8px 10px 4px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+.sidenav-tools input[type=search] { width: 100%; }
+.row.tight { margin: 0; gap: 4px; }
+.tree { flex: 1; overflow: auto; padding: 4px 0 8px; }
+.tree-row { display: flex; align-items: center; gap: 2px; padding: 1px 8px 1px 6px; color: var(--text); cursor: pointer; white-space: nowrap; font-size: 13px; line-height: 24px; user-select: none; }
+.tree-row:hover { background: #eef2fb; text-decoration: none; }
+.tree-row.active { background: #dbe6fb; color: var(--primary); font-weight: 600; }
+.tree-caret { width: 16px; flex: 0 0 16px; border: none; background: none; padding: 0; font-size: 11px; line-height: 24px; color: var(--muted); text-align: center; }
+.tree-caret:hover:not(:disabled) { background: none; color: var(--text); }
+.tree-label { overflow: hidden; text-overflow: ellipsis; }
+.tree-division .tree-label { font-size: 13px; }
+.tree-count { color: var(--muted); font-size: 11px; margin-left: 2px; }
+.tree-project { color: #1d2430; }                       /* 진행 중 과제: 검정 */
+.tree-project.done, .done-text { color: #6b7076; }       /* 마일스톤 기준 완료 과제: 검회색 */
+.tree-project.done.active { color: #4f545a; }
+.tree-tag { font-size: 10px; line-height: 14px; border: 1px solid #c4c8ce; color: #6b7076; border-radius: 8px; padding: 0 5px; margin-left: 6px; font-weight: 400; }
+.tree-tag.hold { border-color: #f0d49a; color: var(--warn); }
+.sidenav-global { border-top: 1px solid var(--line); padding: 6px 0 8px; }
+.sidenav-global .hint { padding: 0 12px 2px; }
+.tree-row.global { padding-left: 14px; }
+.main-col { min-width: 0; }
+.workbar { margin-bottom: 4px; }
+.workbar .tabs { margin: 4px 0 8px; }
+.drawer-mask { display: none; }
+@media (max-width: 860px) {
+  .menu-btn { display: inline-block; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .sidenav-wrap { position: fixed; left: 0; top: 48px; width: 300px; max-width: 85vw; z-index: 35; transform: translateX(-100%); transition: transform .15s ease; box-shadow: 4px 0 16px rgba(0,0,0,.12); }
+  .drawer-open .sidenav-wrap { transform: none; }
+  .drawer-open .drawer-mask { display: block; position: fixed; inset: 48px 0 0 0; background: rgba(0,0,0,.25); z-index: 34; }
+}

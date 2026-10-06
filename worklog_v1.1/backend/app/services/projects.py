@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import Settings
@@ -55,7 +55,22 @@ def _members(s: Session, project_id: str) -> list[str]:
     return [r for r in s.execute(select(ProjectMember.user_id).where(ProjectMember.project_id == project_id)).scalars()]
 
 
-def ser_project(s: Session, p: Project, *, detail: bool = False) -> dict:
+def milestone_summaries(s: Session, project_ids: list[str]) -> dict[str, dict]:
+    """과제별 마일스톤 집계 {total, completed, cancelled} (일반·수시 업무와 삭제된 마일스톤 제외). 쿼리 1번."""
+    out = {pid: {"total": 0, "completed": 0, "cancelled": 0} for pid in project_ids}
+    if not project_ids:
+        return out
+    rows = s.execute(select(Milestone.project_id, Milestone.status, func.count())
+                     .where(Milestone.project_id.in_(project_ids), Milestone.deleted_at.is_(None), Milestone.is_general.is_(False))
+                     .group_by(Milestone.project_id, Milestone.status))
+    for pid, status, n in rows:
+        out[pid]["total"] += n
+        if status in ("completed", "cancelled"):
+            out[pid][status] += n
+    return out
+
+
+def ser_project(s: Session, p: Project, *, detail: bool = False, summary: dict | None = None) -> dict:
     team = s.get(Organization, p.team_id)
     division = s.get(Organization, team.parent_id) if team and team.parent_id else None
     owner = s.get(User, p.owner_user_id)
@@ -66,6 +81,8 @@ def ser_project(s: Session, p: Project, *, detail: bool = False) -> dict:
         "isShortTerm": p.is_short_term, "status": p.status, "startDate": iso_date(p.start_date),
         "endDate": iso_date(p.end_date), "revision": p.revision, "deletedAt": iso(p.deleted_at),
         "memberIds": _members(s, p.id),
+        # 내비게이션 트리의 완료(검회색) 판정용: 일반·수시 업무를 뺀 마일스톤 상태 집계
+        "milestoneSummary": summary if summary is not None else milestone_summaries(s, [p.id])[p.id],
     }
     if detail:
         d.update(backgroundDoc=p.background_doc, purposeDoc=p.purpose_doc, retrospectiveDoc=p.retrospective_doc)
@@ -138,7 +155,8 @@ def list_projects(s: Session, *, division_id: str | None, team_id: str | None, o
     if q:
         stmt = stmt.where(Project.name.like(f"%{q.strip()}%"))
     rows, nxt = paginate(s, stmt, limit, cursor)
-    return {"items": [ser_project(s, p) for p in rows], "nextCursor": nxt}
+    summaries = milestone_summaries(s, [p.id for p in rows])
+    return {"items": [ser_project(s, p, summary=summaries[p.id]) for p in rows], "nextCursor": nxt}
 
 
 def get_project(s: Session, project_id: str) -> dict:
