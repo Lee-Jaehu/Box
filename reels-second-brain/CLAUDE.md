@@ -4,7 +4,7 @@ docs/PRD.md의 D1~D16과 10장 최소 운영 계약을 따른다. [가설] 항�
 
 ## 역할 분담 (PRD 11장)
 
-- Claude Code: 저장소 구조, 마이그레이션(`migrations/`), 공통 타입(`src/rsb/media/types.py`), jobs 워커, 웹훅 서버, 카카오 OAuth·토큰.
+- Claude Code: 저장소 구조, 마이그레이션(`src/rsb/migrations/`), 공통 타입(`src/rsb/media/types.py`), jobs 워커, 웹훅 서버, 카카오 OAuth·토큰.
 - Codex: `src/rsb/media/` 아래 영상 확보·프레임 샘플링·OCR·전사 모듈. 공통 스키마·타입은 바꾸지 않고 변경 요청을 남긴다.
 
 ## 개발

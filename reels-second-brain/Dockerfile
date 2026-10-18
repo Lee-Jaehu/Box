@@ -4,7 +4,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -r
 WORKDIR /app
 COPY pyproject.toml ./
 COPY src ./src
-COPY migrations ./migrations
 RUN pip install --no-cache-dir .
 
 ENV RSB_DATA_DIR=/data PYTHONUNBUFFERED=1
