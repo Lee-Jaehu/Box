@@ -22,19 +22,27 @@ class BlockedURLError(ValueError):
     pass
 
 
+class UnresolvedHostError(Exception):
+    pass
+
+
 def check_public_url(url: str) -> None:
     try:
         parts = urlsplit(url)
         if parts.scheme not in {"http", "https"} or not parts.hostname or parts.username or parts.password:
             raise ValueError("invalid_scheme_or_host")
-        addresses = socket.getaddrinfo(parts.hostname, parts.port or (443 if parts.scheme == "https" else 80), type=socket.SOCK_STREAM)
+        port = parts.port or (443 if parts.scheme == "https" else 80)
+        try:
+            addresses = socket.getaddrinfo(parts.hostname, port, type=socket.SOCK_STREAM)
+        except OSError as exc:
+            raise UnresolvedHostError(str(exc)) from exc
         if not addresses:
-            raise ValueError("unresolved_host")
+            raise UnresolvedHostError("unresolved_host")
         for record in addresses:
             ip = ipaddress.ip_address(record[4][0])
             if not ip.is_global or ip.is_multicast or ip.is_reserved or getattr(ip, "ipv4_mapped", None):
                 raise ValueError("non_public_ip")
-    except (ValueError, OSError) as exc:
+    except ValueError as exc:
         raise BlockedURLError(str(exc)) from exc
 
 
@@ -102,6 +110,8 @@ def fetch_video(url: str, dest_dir: Path, limits: Limits = Limits()) -> FetchRes
             return FetchResult("fetched", final, "yt-dlp", caption=caption)
     except BlockedURLError as exc:
         return FetchResult("failed", error=f"blocked_url:{exc}")
+    except UnresolvedHostError as exc:
+        return FetchResult("failed", error=f"dns_failed:{exc}")
     except (TimeoutError, httpx.TimeoutException, subprocess.TimeoutExpired):
         return FetchResult("failed", error="timeout")
     except (OSError, ValueError, httpx.HTTPError, KeyError) as exc:

@@ -50,6 +50,38 @@ def test_all_dns_records(monkeypatch):
         fetch.check_public_url("http://public.example")
 
 
+@pytest.mark.parametrize("failure", [socket.gaierror(-2, "Name or service not known"),
+                                    OSError("resolver unavailable"), None])
+@pytest.mark.parametrize("redirect_hops", [0, 1, 2])
+def test_dns_failure(monkeypatch, tmp_path, public_dns, failure, redirect_hops):
+    resolve = socket.getaddrinfo
+    failed_host = f"hop{redirect_hops}.example"
+    reason = str(failure) if failure is not None else "unresolved_host"
+
+    def failing_dns(host, port, **kwargs):
+        if host == failed_host:
+            if failure is not None:
+                raise failure
+            return []
+        return resolve(host, port, **kwargs)
+
+    monkeypatch.setattr(socket, "getaddrinfo", failing_dns)
+    with pytest.raises(fetch.UnresolvedHostError, match="."):
+        fetch.check_public_url(f"https://{failed_host}/video")
+
+    calls = []
+    def handler(request):
+        calls.append(str(request.url))
+        return httpx.Response(302, headers={"location": f"https://hop{len(calls)}.example/video"})
+
+    transport(monkeypatch, handler)
+    result = fetch.fetch_video("https://hop0.example/video", tmp_path)
+    assert result.status == "failed"
+    assert result.error == f"dns_failed:{reason}"
+    assert len(calls) == redirect_hops
+    assert not list(tmp_path.iterdir())
+
+
 @pytest.mark.parametrize("limit,status", [(3, "failed"), (20, "fetched")])
 def test_direct(monkeypatch, tmp_path, public_dns, limit, status):
     transport(monkeypatch, lambda r: httpx.Response(200, headers={"content-type": "video/mp4"}, content=b"123456"))
