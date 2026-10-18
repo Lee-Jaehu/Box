@@ -15,6 +15,9 @@ import httpx
 from .types import FetchResult, Limits
 
 
+YTDLP_HOST_SUFFIXES = ("instagram.com", "cdninstagram.com", "fbcdn.net", "fbsbx.com", "facebook.com")
+
+
 class BlockedURLError(ValueError):
     pass
 
@@ -72,6 +75,9 @@ def fetch_video(url: str, dest_dir: Path, limits: Limits = Limits()) -> FetchRes
                             return FetchResult("fetched", final, "direct")
                         break
             check_public_url(current)
+            host = urlsplit(current).hostname or ""
+            if not any(host == suffix or host.endswith("." + suffix) for suffix in YTDLP_HOST_SUFFIXES):
+                raise BlockedURLError("host_not_allowed_for_ytdlp")
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise TimeoutError
