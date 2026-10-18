@@ -1,0 +1,8 @@
+{"object": "instagram", "entry": [{"id": "17841400000000001", "time": 1760745600,
+  "messaging": [{"sender": {"id": "1000000000000001"}, "recipient": {"id": "17841400000000001"},
+    "timestamp": 1760745600000,
+    "message": {"mid": "mid.multi.1",
+      "attachments": [
+        {"type": "ig_reel", "payload": {"reel_video_id": "900002", "title": "A", "url": "https://lookaside.fbsbx.com/a"}},
+        {"type": "ig_reel", "payload": {"reel_video_id": "900003", "title": "B", "url": "https://lookaside.fbsbx.com/b"}},
+        {"type": "image", "payload": {"url": "https://lookaside.fbsbx.com/img"}}]}}]}]}
