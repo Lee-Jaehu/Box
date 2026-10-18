@@ -20,9 +20,10 @@ def record_message(conn: psycopg.Connection, m: IncomingMessage, *, allowed: boo
     """새 메시지면 event id, 같은 message_id 재전달이면 None."""
     kind = classify(m) if allowed else "ignored"
     row = conn.execute(
-        """INSERT INTO webhook_events (message_id, sender_id, recipient_id, kind, payload)
-           VALUES (%s, %s, %s, %s, %s) ON CONFLICT (message_id) DO NOTHING RETURNING id""",
-        (m.message_id, m.sender_id, m.recipient_id, kind, json.dumps(m.raw)),
+        """INSERT INTO webhook_events (message_id, sender_id, recipient_id, kind, payload, message_ts)
+           VALUES (%s, %s, %s, %s, %s, to_timestamp(%s / 1000.0))
+           ON CONFLICT (message_id) DO NOTHING RETURNING id""",
+        (m.message_id, m.sender_id, m.recipient_id, kind, json.dumps(m.raw), m.timestamp_ms),
     ).fetchone()
     if row is None or not allowed:
         return row["id"] if row else None

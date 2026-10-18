@@ -36,6 +36,7 @@ class IncomingMessage:
     recipient_id: str
     text: str | None
     reels: list[ReelAttachment] = field(default_factory=list)
+    timestamp_ms: int | None = None  # Meta 이벤트 timestamp(밀리초)
     unsupported: list[str] = field(default_factory=list)  # 첨부 type 목록
     raw: dict = field(default_factory=dict)
 
@@ -53,7 +54,9 @@ def parse_entries(body: dict) -> list[IncomingMessage]:
             recipient = (ev.get("recipient") or {}).get("id")
             if not (mid and sender and recipient):
                 continue
-            m = IncomingMessage(mid, str(sender), str(recipient), msg.get("text"), raw=ev)
+            ts = ev.get("timestamp")
+            m = IncomingMessage(mid, str(sender), str(recipient), msg.get("text"), raw=ev,
+                                timestamp_ms=ts if isinstance(ts, int) and ts > 0 else None)
             for att in msg.get("attachments") or []:
                 kind = att.get("type") or "unknown"
                 payload = att.get("payload") or {}

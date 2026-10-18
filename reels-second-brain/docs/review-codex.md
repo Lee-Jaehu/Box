@@ -35,3 +35,12 @@
 - 정상 입력의 웹훅 경로는 이벤트·접수·작업을 같은 메시지별 트랜잭션에 저장하고 연결 컨텍스트 커밋 후 200을 반환한다. 저장 예외는 503이다. message_id 중복 시 후속 처리를 하지 않는다.
 - 카카오 state는 일회성 삭제와 만료 검사를 수행한다. 사용자 ID 검증, Fernet 암호화, 갱신 행 잠금, 새 refresh token 미발급 시 기존 암호문 유지가 구현되어 있다. 검토한 코드에서 확정할 수 있는 추가 SQL 주입 또는 직접적인 토큰 로그 노출 문제는 찾지 못했다.
 - 코드 정적 검토 결과이며 실계정 연동 성공을 의미하지 않는다. 위 파일은 수정하지 않았다.
+
+## Claude Code 대응
+
+| # | 조치 | 테스트 |
+| --- | --- | --- |
+| 1 | 수정. claim 때 늘어난 attempts를 실행 토큰으로 써서 완료·실패 갱신에 소유권 조건을 걸었다. 소유권을 잃은 실행은 롤백하고 processing_runs에 lost로 남긴다. 작업 디렉터리도 실행별로 나눴다. heartbeat는 넣지 않았다(임대 900초, 1단계 작업은 그보다 짧음) | test_stale_worker_cannot_overwrite_reclaimed_job |
+| 2 | 수정. 전송 직전 send_attempted_at을 커밋하고, 재수거 시 표시가 남아 있으면 다시 보내지 않고 send_outcome_unknown으로 실패 처리. 오류 응답(HTTP 상태)·연결 실패는 전달되지 않은 것으로 보고 표시를 지운 뒤 재시도 규칙을 따른다. 응답 유실(타임아웃 등)은 unknown | test_reply_not_resent_when_outcome_unknown, test_reply_timeout_is_unknown_connect_error_retries |
+| 3 | 수정. webhook_events.message_ts에 Meta timestamp를 저장하고 24시간 창을 이것으로 계산. 시각이 없으면 보내지 않는다 | test_reply_outside_24h_window_not_sent, test_reply_without_message_timestamp_not_sent |
+| 4 | 보류. video id가 없을 때 URL 정규화 규칙은 실제 페이로드의 URL 형식([가설])을 본 뒤 정한다. 1단계-B 확인 항목에 추가 | — |

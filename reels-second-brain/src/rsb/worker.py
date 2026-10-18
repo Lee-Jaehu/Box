@@ -126,7 +126,7 @@ class Worker:
         reel = _reel(conn, job["reel_id"])
         if reel["fetch_status"] != "fetched" or not reel["video_path"]:
             raise PermanentError("video_not_fetched")
-        work = self.reel_dir(reel["id"]) / f"work-{job['id']}"
+        work = self.reel_dir(reel["id"]) / f"work-{job['id']}-{job['attempts']}"  # 실행별 분리
         try:
             r = run(Path(reel["video_path"]), work)
         finally:
@@ -147,18 +147,35 @@ class Worker:
 
     def handle_reply(self, conn: psycopg.Connection, job: dict) -> dict:
         p = job["payload"]
-        ev = conn.execute("SELECT received_at FROM webhook_events WHERE id=%s", (p["event_id"],)).fetchone()
-        if ev is None or _now() - ev["received_at"] > REPLY_WINDOW:
+        if (job["result"] or {}).get("send_attempted_at"):
+            # 이전 실행이 전송을 시도한 뒤 결과를 남기지 못했다. 이미 갔을 수 있으므로 다시 보내지 않는다
+            raise PermanentError("send_outcome_unknown")
+        ev = conn.execute("SELECT message_ts FROM webhook_events WHERE id=%s", (p["event_id"],)).fetchone()
+        # 창은 Meta가 준 메시지 시각 기준. 시각을 모르면 보내지 않는다(늦은 재전달 대비)
+        if ev is None or ev["message_ts"] is None or _now() - ev["message_ts"] > REPLY_WINDOW:
             raise PermanentError("outside_24h_window")
+        self._mark_send_attempted(conn, job, _now().isoformat())
         try:
             res = self.deps.send_text(self.s.ig_access_token, self.s.ig_account_id, p["recipient_id"], p["text"],
                                       self.s.ig_graph_version, self.http)
         except httpx.HTTPStatusError as e:
-            # 4xx는 재시도해도 같다(권한·창 만료 등). 429·5xx만 재시도
+            # 오류 응답을 받았으면 전달되지 않은 것. 4xx는 재시도해도 같고(권한·창 만료 등) 429·5xx만 재시도
+            self._mark_send_attempted(conn, job, None)
             code = e.response.status_code
             err = f"send_http_{code}"
             raise (RuntimeError(err) if code == 429 or code >= 500 else PermanentError(err)) from None
+        except httpx.ConnectError:
+            self._mark_send_attempted(conn, job, None)  # 연결 자체가 안 됐으면 전달되지 않은 것
+            raise RuntimeError("send_connect_error") from None
+        except httpx.TransportError:
+            raise PermanentError("send_outcome_unknown") from None  # 응답 유실: 갔는지 알 수 없음
         return {"message_id": res.get("message_id")}
+
+    @staticmethod
+    def _mark_send_attempted(conn: psycopg.Connection, job: dict, at: str | None) -> None:
+        conn.execute("UPDATE jobs SET result=%s WHERE id=%s",
+                     (json.dumps({"send_attempted_at": at}) if at else None, job["id"]))
+        conn.commit()
 
     # --- 루프 ---
 
@@ -171,7 +188,9 @@ class Worker:
         outcome = "succeeded"
         try:
             result = self.handlers[job["kind"]](conn, job)
-            jobs.succeed(conn, job["id"], result)
+            if not jobs.succeed(conn, job, result):
+                conn.rollback()  # 임대가 만료돼 다른 워커가 가져간 작업. 이 실행의 기록은 버린다
+                outcome = "lost"
         except Exception as e:
             conn.rollback()
             retryable = not isinstance(e, PermanentError)

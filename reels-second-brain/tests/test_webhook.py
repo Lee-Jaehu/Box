@@ -48,6 +48,7 @@ def test_reel_intake_persists_before_200(client, settings, conn):
     assert r.status_code == 200
     ev = conn.execute("SELECT * FROM webhook_events").fetchone()
     assert ev["kind"] == "reel" and ev["message_id"] == "mid.reel.1"
+    assert int(ev["message_ts"].timestamp()) == 1760745600  # Meta timestamp(ms) 보존
     reel = conn.execute("SELECT * FROM reels").fetchone()
     assert reel["ig_video_id"] == "900001" and reel["caption"] == "엑셀 단축키 5가지"
     intake = conn.execute("SELECT * FROM intakes").fetchone()

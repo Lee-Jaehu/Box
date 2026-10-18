@@ -1,6 +1,7 @@
 """jobs 워커 모의 테스트. 외부 의존성(다운로드·전사·판독·Send API)은 가짜로 바꾼다."""
 
 import threading
+import time
 from pathlib import Path
 
 import httpx
@@ -38,9 +39,10 @@ def make_deps(fetch=None, speech=None, screen=None, send=None):
     )
 
 
-def receive(conn, mid="mid.1", video_id="v1", title="캡션"):
+def receive(conn, mid="mid.1", video_id="v1", title="캡션", ts_ms="now"):
     m = IncomingMessage(mid, "1000000000000001", "17841400000000001", None,
-                        [ReelAttachment("https://lookaside.fbsbx.com/x", video_id, title)])
+                        [ReelAttachment("https://lookaside.fbsbx.com/x", video_id, title)],
+                        timestamp_ms=int(time.time() * 1000) if ts_ms == "now" else ts_ms)
     with conn.transaction():
         intake.record_message(conn, m, allowed=True)
 
@@ -121,7 +123,8 @@ def test_partial_extraction_status_per_medium(conn, settings):
 
 def test_reply_outside_24h_window_not_sent(conn, settings):
     receive(conn)
-    conn.execute("UPDATE webhook_events SET received_at = now() - interval '25 hours'")
+    # 늦은 재전달: DB에는 방금 들어왔지만 메시지는 25시간 전에 보낸 것
+    conn.execute("UPDATE webhook_events SET message_ts = now() - interval '25 hours'")
     conn.commit()
     sent = []
     w = Worker(settings, make_deps(send=lambda *a, **k: sent.append(a) or {}))
@@ -207,3 +210,80 @@ def test_work_dir_cleaned(conn, settings, tmp_path):
         return ExtractionResult("audio", "empty", "transcribe@1+fake-t")
     drain(Worker(settings, make_deps(speech=speech)), conn)
     assert not Path(seen["w"]).exists()
+
+
+def test_reply_without_message_timestamp_not_sent(conn, settings):
+    receive(conn, ts_ms=None)
+    sent = []
+    drain(Worker(settings, make_deps(send=lambda *a, **k: sent.append(a) or {})), conn)
+    assert sent == []
+    assert conn.execute("SELECT last_error FROM jobs WHERE kind='reply'").fetchone()["last_error"] == "outside_24h_window"
+
+
+def test_reply_not_resent_when_outcome_unknown(conn, settings):
+    """전송 시도 후 워커가 죽으면(결과 미기록) 임대 만료 후에도 다시 보내지 않는다."""
+    receive(conn)
+    conn.execute("DELETE FROM jobs WHERE kind <> 'reply'")
+    conn.commit()
+    sent = []
+
+    class Crash(BaseException):
+        pass
+
+    def send_then_crash(*a, **k):
+        sent.append(a)
+        raise Crash
+    w = Worker(settings, make_deps(send=send_then_crash))
+    with pytest.raises(Crash):
+        w.run_once(conn)
+    conn.rollback()
+    conn.execute("UPDATE jobs SET lease_until = now() - interval '1 second'")
+    conn.commit()
+    w.deps.send_text = lambda *a, **k: sent.append(a) or {"message_id": "x"}
+    w.run_once(conn)
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    assert len(sent) == 1
+    assert job["status"] == "failed" and job["last_error"] == "send_outcome_unknown"
+
+
+def test_reply_timeout_is_unknown_connect_error_retries(conn, settings):
+    receive(conn)
+    conn.execute("DELETE FROM jobs WHERE kind <> 'reply'")
+    conn.commit()
+
+    def connect_error(*a, **k):
+        raise httpx.ConnectError("refused")
+    w = Worker(settings, make_deps(send=connect_error))
+    w.run_once(conn)
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    assert job["status"] == "queued" and job["result"] is None
+
+    def timeout(*a, **k):
+        raise httpx.ReadTimeout("slow")
+    w.deps.send_text = timeout
+    conn.execute("UPDATE jobs SET run_after = now()")
+    conn.commit()
+    w.run_once(conn)
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    assert job["status"] == "failed" and job["last_error"] == "send_outcome_unknown"
+
+
+def test_stale_worker_cannot_overwrite_reclaimed_job(conn, settings, database_url):
+    """임대가 만료돼 B가 가져간 작업을 뒤늦게 끝난 A가 덮어쓰지 못한다."""
+    receive(conn)
+    conn.execute("DELETE FROM jobs WHERE kind <> 'fetch'")
+    conn.commit()
+    with db.connect(database_url) as other:
+        def slow_fetch(url, dest, limits):
+            # A가 처리하는 동안 임대가 만료되고 B가 같은 작업을 가져가 성공시킨다
+            other.execute("UPDATE jobs SET lease_until = now() - interval '1 second'")
+            other.commit()
+            b = jobs.claim(other, 900, 3)
+            other.commit()
+            assert jobs.succeed(other, b, {"by": "B"})
+            other.commit()
+            return FetchResult("failed", error="timeout")
+        Worker(settings, make_deps(fetch=slow_fetch)).run_once(conn)
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    assert job["status"] == "succeeded" and job["result"] == {"by": "B"}
+    assert conn.execute("SELECT outcome FROM processing_runs").fetchone()["outcome"] == "lost"

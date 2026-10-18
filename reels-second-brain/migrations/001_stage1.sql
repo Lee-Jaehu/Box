@@ -1,5 +1,5 @@
 -- 1단계 테이블 (PRD 6장 초안 + 1단계 구현에 필요한 보완)
--- 보완: jobs.payload/run_after/result/updated_at, processing_runs, kakao_tokens, oauth_states
+-- 보완: webhook_events.message_ts, jobs.payload/run_after/result/updated_at, processing_runs, kakao_tokens, oauth_states
 
 CREATE TABLE webhook_events (
   id BIGSERIAL PRIMARY KEY,
@@ -8,6 +8,7 @@ CREATE TABLE webhook_events (
   recipient_id TEXT NOT NULL,
   kind TEXT NOT NULL CHECK (kind IN ('reel','text','unsupported','ignored')),
   payload JSONB NOT NULL,
+  message_ts TIMESTAMPTZ,              -- Meta가 준 메시지 발생 시각. 24시간 응답 창 기준
   received_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
