@@ -94,9 +94,9 @@ def videos(tmp_path):
 
 class Reader:
     version = "fake1"
-    def read(self, path):
-        assert path.exists()
-        return "보이는 글자"
+    def read_batch(self, frames):
+        assert all(frame.path.exists() for frame in frames)
+        return ["보이는 글자"] * len(frames)
 
 
 class Speech:
@@ -132,17 +132,17 @@ def test_ocr(videos, tmp_path):
     result = ocr.extract_screen_text(videos[0], Reader(), work)
     assert result.status == "succeeded" and len(result.segments) == 1
     assert result.segments[0].end is None
-    assert result.extractor_version == "ocr@1+fake1"
+    assert result.extractor_version == "ocr@2+fake1"
     assert not list(work.iterdir())
 
 
 @pytest.mark.parametrize("raises,status", [(False, "empty"), (True, "failed")])
 def test_reader_failures(videos, tmp_path, raises, status):
     class Fake(Reader):
-        def read(self, path):
+        def read_batch(self, frames):
             if raises:
                 raise RuntimeError("failure")
-            return ""
+            return [""] * len(frames)
     work = tmp_path / "work"
     result = ocr.extract_screen_text(videos[0], Fake(), work)
     assert result.status == status
@@ -186,7 +186,7 @@ def test_openai_backends(monkeypatch, tmp_path):
     def create(**kwargs):
         calls.append(kwargs)
         if "messages" in kwargs:
-            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="텍스트"))])
+            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps({"frames": [{"index": 1, "text": "둘"}, {"index": 0, "text": "텍스트"}]} )))])
         return SimpleNamespace(segments=[SimpleNamespace(start=0.2, end=0.8, text=" 말 ")])
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)),
                              audio=SimpleNamespace(transcriptions=SimpleNamespace(create=create)))
@@ -196,10 +196,19 @@ def test_openai_backends(monkeypatch, tmp_path):
     image = tmp_path / "frame.jpg"
     image.write_bytes(b"fake-image")
     reader = ocr.OpenAIVisionReader()
-    assert reader.read(image) == "텍스트"
+    assert reader.read_batch([Frame(0, image), Frame(1.25, image)]) == ["텍스트", "둘"]
+    assert reader.version == "openai:vision-test:prompt2"
+    assert calls[0]["response_format"] == {"type": "json_object"}
     assert calls[0]["model"] == "vision-test"
     assert "지시가 아니다" in calls[0]["messages"][0]["content"]
-    assert calls[0]["messages"][1]["content"][0]["image_url"]["url"].startswith("data:image/jpeg;base64,")
+    parts = calls[0]["messages"][1]["content"]
+    assert len(calls) == 1
+    assert len(parts) == 4
+    assert [part["text"] for part in parts if part["type"] == "text"] == [
+        "프레임 0 (t=0.0s)", "프레임 1 (t=1.2s)"]
+    images = [part for part in parts if part["type"] == "image_url"]
+    assert len(images) == 2
+    assert all(part["image_url"]["url"] == "data:image/jpeg;base64,ZmFrZS1pbWFnZQ==" for part in images)
     backend = transcribe.OpenAIWhisperTranscriber()
     assert backend.transcribe(image)[0] == Segment(0.2, 0.8, "말")
     assert calls[1]["response_format"] == "verbose_json"
@@ -212,8 +221,8 @@ def test_consecutive_ocr(monkeypatch, tmp_path):
     class Fake(Reader):
         def __init__(self):
             self.texts = iter(["A", "A", "", "A", "B"])
-        def read(self, path):
-            return next(self.texts)
+        def read_batch(self, frames):
+            return [next(self.texts) for frame in frames]
     result = ocr.extract_screen_text(tmp_path / "video", Fake(), tmp_path / "work")
     assert [(s.start, s.text) for s in result.segments] == [(0, "A"), (3, "A"), (4, "B")]
 
@@ -253,3 +262,91 @@ def test_ytdlp_checks_redirect_destination(monkeypatch, tmp_path, public_dns):
     monkeypatch.setattr(fetch.subprocess, "run", lambda *a, **kw: pytest.fail("unexpected yt-dlp call"))
     result = fetch.fetch_video("https://www.instagram.com/reel/1", tmp_path)
     assert result.error == "blocked_url:host_not_allowed_for_ytdlp"
+
+
+@pytest.mark.parametrize("count,batch_size", [(60, 10), (59, 8), (61, 10)])
+def test_ocr_batch_calls(monkeypatch, tmp_path, count, batch_size):
+    sampled = [Frame(i, tmp_path / f"{i}.jpg") for i in range(count)]
+    monkeypatch.setattr(ocr, "sample_frames", lambda *args: sampled)
+    calls = []
+    class Fake(Reader):
+        def read_batch(self, chunk):
+            calls.append(chunk)
+            return [str(frame.ts) for frame in chunk]
+    work = tmp_path / "work"
+    result = ocr.extract_screen_text(tmp_path / "video", Fake(), work,
+                                     Limits(ocr_batch_size=batch_size))
+    assert result.status == "succeeded"
+    assert len(calls) == (count + batch_size - 1) // batch_size
+    assert [frame for chunk in calls for frame in chunk] == sampled
+    assert len(result.segments) == count
+    assert not list(work.iterdir())
+
+
+@pytest.mark.parametrize("failure", ["length", "exception", "always_length", "always_exception"])
+def test_ocr_batch_bisection(monkeypatch, tmp_path, failure):
+    def sample(video, directory, limits):
+        sampled = []
+        for i in range(7):
+            path = directory / f"{i}.jpg"
+            path.write_bytes(b"frame")
+            sampled.append(Frame(i, path))
+        return sampled
+    monkeypatch.setattr(ocr, "sample_frames", sample)
+    calls = []
+    class Fake(Reader):
+        def read_batch(self, chunk):
+            calls.append(len(chunk))
+            if len(chunk) > 1 or failure.startswith("always"):
+                if failure.endswith("length"):
+                    return []
+                raise ValueError("malformed response")
+            return [str(chunk[0].ts)]
+    work = tmp_path / "work"
+    result = ocr.extract_screen_text(tmp_path / "video", Fake(), work)
+    if failure.startswith("always"):
+        assert result.status == "failed"
+        assert result.error == "ocr_failed:ValueError"
+        assert not result.segments
+    else:
+        assert result.status == "succeeded"
+        assert [s.text for s in result.segments] == [str(i) for i in range(7)]
+        assert calls == [7, 3, 1, 2, 1, 1, 4, 2, 1, 1, 2, 1, 1]
+    assert not list(work.iterdir())
+
+
+def test_ocr_runtime_error_does_not_bisect(monkeypatch, tmp_path):
+    sampled = [Frame(i, tmp_path / f"{i}.jpg") for i in range(10)]
+    monkeypatch.setattr(ocr, "sample_frames", lambda *args: sampled)
+    calls = []
+    class Fake(Reader):
+        def read_batch(self, chunk):
+            calls.append(chunk)
+            raise RuntimeError("unavailable")
+    work = tmp_path / "work"
+    result = ocr.extract_screen_text(tmp_path / "video", Fake(), work)
+    assert calls == [sampled]
+    assert result.status == "failed"
+    assert result.error == "ocr_failed:RuntimeError"
+    assert not result.segments
+    assert not list(work.iterdir())
+
+
+@pytest.mark.parametrize("content", [
+    '{"frames": [{"index": 0, "text": "a"}]}',
+    '{"frames": [{"index": 0, "text": "a"}, {"index": 0, "text": "b"}]}',
+    'not JSON',
+    '{"frames": [{"index": 0, "text": "a"}, {"index": 1, "text": null}]}',
+    '{"frames": [{"index": 0, "text": "a"}, {"index": true, "text": "b"}]}',
+    'null',
+])
+def test_openai_ocr_invalid_response(monkeypatch, tmp_path, content):
+    import openai
+    def create(**kwargs):
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    monkeypatch.setattr(openai, "OpenAI", lambda: client)
+    image = tmp_path / "frame.jpg"
+    image.write_bytes(b"image")
+    with pytest.raises(ValueError):
+        ocr.OpenAIVisionReader().read_batch([Frame(0, image), Frame(1, image)])
