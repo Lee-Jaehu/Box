@@ -164,8 +164,9 @@ class Worker:
             code = e.response.status_code
             err = f"send_http_{code}"
             raise (RuntimeError(err) if code == 429 or code >= 500 else PermanentError(err)) from None
-        except httpx.ConnectError:
-            self._mark_send_attempted(conn, job, None)  # 연결 자체가 안 됐으면 전달되지 않은 것
+        except (httpx.ConnectError, httpx.ProxyError):
+            # 연결 자체가 안 됐거나 프록시가 CONNECT를 거부했으면 Meta에 닿지 않은 것
+            self._mark_send_attempted(conn, job, None)
             raise RuntimeError("send_connect_error") from None
         except httpx.TransportError:
             raise PermanentError("send_outcome_unknown") from None  # 응답 유실: 갔는지 알 수 없음

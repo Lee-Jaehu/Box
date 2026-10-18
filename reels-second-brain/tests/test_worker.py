@@ -258,6 +258,15 @@ def test_reply_timeout_is_unknown_connect_error_retries(conn, settings):
     job = conn.execute("SELECT * FROM jobs").fetchone()
     assert job["status"] == "queued" and job["result"] is None
 
+    def proxy_error(*a, **k):
+        raise httpx.ProxyError("403 Forbidden")
+    w.deps.send_text = proxy_error
+    conn.execute("UPDATE jobs SET run_after = now()")
+    conn.commit()
+    w.run_once(conn)
+    job = conn.execute("SELECT * FROM jobs").fetchone()
+    assert job["status"] == "queued" and job["result"] is None
+
     def timeout(*a, **k):
         raise httpx.ReadTimeout("slow")
     w.deps.send_text = timeout
