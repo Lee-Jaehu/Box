@@ -10,6 +10,7 @@
   - 워커: `python -m rsb.worker` (ffmpeg·yt-dlp 실행, `/data` 디스크 필요)
 - 환경변수는 `.env.example` 목록을 호스팅 환경변수로 넣는다. 저장소·대화창에 값을 올리지 않는다.
 - `RSB_TOKEN_KEY`는 Fernet 키로 생성한다(`.env.example` 주석).
+- PostgreSQL은 `pg_trgm` 확장을 쓸 수 있는 곳으로 고른다(2단계 검색, D17). `pgvector`는 D17 조건 충족 시에만 필요하다. Supabase·Render·Fly Postgres 모두 지원한다.
 
 ## 2. Meta 웹훅
 
