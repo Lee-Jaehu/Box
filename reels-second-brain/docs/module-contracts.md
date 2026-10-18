@@ -8,7 +8,7 @@
 | `rsb.media.fetch` | `fetch_video(url: str, dest_dir: Path, limits: Limits = Limits()) -> FetchResult` | URL이 영상 파일(Content-Type video/*)이면 직접 받고, 아니면 yt-dlp. `dest_dir` 안에 파일 1개 생성 |
 | `rsb.media.fetch` | `check_public_url(url: str) -> None` | http/https가 아니거나 사설·루프백·링크로컬·멀티캐스트·예약 주소로 풀리면 `BlockedURLError` |
 | `rsb.media.frames` | `sample_frames(video_path: Path, out_dir: Path, limits: Limits = Limits()) -> list[Frame]` | 장면 전환 또는 1초 간격 → 중복 제거 → 최대 `limits.max_frames`장 |
-| `rsb.media.ocr` | `extract_screen_text(video_path: Path, reader: VisionReader, work_dir: Path, limits: Limits = Limits()) -> ExtractionResult` | medium="screen", segments=프레임 시각별 텍스트(연속 동일 텍스트는 합침). 글자 없으면 status="empty" |
+| `rsb.media.ocr` | `extract_screen_text(video_path: Path, reader: VisionReader, work_dir: Path, limits: Limits = Limits()) -> ExtractionResult` | medium="screen", segments=프레임 시각별 텍스트(연속 동일 텍스트는 합침). 글자 없으면 status="empty". 프레임을 `limits.ocr_batch_size`장씩 묶어 `reader.read_batch`를 호출한다. 묶음 응답이 깨지면(개수 불일치·파싱 실패) 그 묶음만 반으로 나눠 다시 읽고, 1장까지 실패하면 status="failed" |
 | `rsb.media.transcribe` | `extract_speech(video_path: Path, transcriber: Transcriber, work_dir: Path, limits: Limits = Limits()) -> ExtractionResult` | medium="audio", ffmpeg로 16kHz mono 오디오 분리 후 전사. 오디오 트랙·발화 없으면 status="empty" |
 
 백엔드 구현(환경변수로 선택, 키는 환경변수로만):

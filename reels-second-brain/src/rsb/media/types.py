@@ -19,6 +19,7 @@ class Limits:
     download_timeout_s: int = 180
     ffmpeg_timeout_s: int = 300
     max_frames: int = 60
+    ocr_batch_size: int = 10  # 비전 LLM 1회 호출에 넣는 프레임 수. 60장 → 6회
 
 
 @dataclass
@@ -69,8 +70,11 @@ class Transcriber(Protocol):
 
 
 class VisionReader(Protocol):
-    """프레임 이미지 → 화면 글자(없으면 빈 문자열)."""
+    """프레임 묶음 → 프레임별 화면 글자(입력과 같은 순서·같은 개수, 글자 없으면 빈 문자열).
+
+    한 번의 모델 호출로 여러 프레임을 읽는다. 개수가 맞지 않는 응답은 예외로 알린다.
+    """
 
     version: str
 
-    def read(self, image_path: Path) -> str: ...
+    def read_batch(self, frames: list[Frame]) -> list[str]: ...
