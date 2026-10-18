@@ -15,7 +15,7 @@ from rsb.media.types import Frame, Limits, Segment
 def public_dns(monkeypatch):
     def resolve(host, port, **kwargs):
         address = {"localhost": "127.0.0.1"}.get(host, host)
-        if host == "public.example":
+        if host != "localhost" and ":" not in host and not host.replace(".", "").isdigit():
             address = "93.184.216.34"
         return [(socket.AF_INET6 if ":" in address else socket.AF_INET, socket.SOCK_STREAM, 6, "", (address, port))]
     monkeypatch.setattr(socket, "getaddrinfo", resolve)
@@ -73,7 +73,7 @@ def test_ytdlp(monkeypatch, tmp_path, public_dns):
         output.with_name("video.info.json").write_text(json.dumps({"description": "caption"}))
         return SimpleNamespace(returncode=0, stderr="")
     monkeypatch.setattr(fetch.subprocess, "run", run)
-    result = fetch.fetch_video("https://public.example", tmp_path)
+    result = fetch.fetch_video("https://www.instagram.com", tmp_path)
     assert result.caption == "caption" and result.method == "yt-dlp"
     assert len(list(tmp_path.iterdir())) == 1
 
@@ -170,14 +170,14 @@ def test_ytdlp_timeout(monkeypatch, tmp_path, public_dns):
     def run(args, **kwargs):
         raise subprocess.TimeoutExpired(args, kwargs["timeout"])
     monkeypatch.setattr(fetch.subprocess, "run", run)
-    assert fetch.fetch_video("http://public.example", tmp_path).error == "timeout"
+    assert fetch.fetch_video("http://www.instagram.com", tmp_path).error == "timeout"
     assert not list(tmp_path.iterdir())
 
 
 def test_ytdlp_error(monkeypatch, tmp_path, public_dns):
     transport(monkeypatch, lambda r: httpx.Response(200, headers={"content-type": "text/html"}))
     monkeypatch.setattr(fetch.subprocess, "run", lambda *a, **kw: SimpleNamespace(returncode=1, stderr="first\nlast\n"))
-    assert fetch.fetch_video("http://public.example", tmp_path).error == "ytdlp_failed:last"
+    assert fetch.fetch_video("http://www.instagram.com", tmp_path).error == "ytdlp_failed:last"
 
 
 def test_openai_backends(monkeypatch, tmp_path):
@@ -216,3 +216,40 @@ def test_consecutive_ocr(monkeypatch, tmp_path):
             return next(self.texts)
     result = ocr.extract_screen_text(tmp_path / "video", Fake(), tmp_path / "work")
     assert [(s.start, s.text) for s in result.segments] == [(0, "A"), (3, "A"), (4, "B")]
+
+
+@pytest.mark.parametrize("host", [suffix for suffix in fetch.YTDLP_HOST_SUFFIXES] +
+                         ["media." + suffix for suffix in fetch.YTDLP_HOST_SUFFIXES] +
+                         ["WWW.INSTAGRAM.COM"])
+def test_ytdlp_allowed_hosts(monkeypatch, tmp_path, public_dns, host):
+    transport(monkeypatch, lambda r: httpx.Response(200, headers={"content-type": "text/html"}))
+    calls = []
+    def run(args, **kwargs):
+        calls.append(args)
+        return SimpleNamespace(returncode=1, stderr="allowed")
+    monkeypatch.setattr(fetch.subprocess, "run", run)
+    assert fetch.fetch_video("https://" + host + "/reel/1", tmp_path).error == "ytdlp_failed:allowed"
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("host", ["public.example", "evilinstagram.com", "instagram.com.evil.example",
+                                  "evilfbcdn.net", "evilfbsbx.com", "evilfacebook.com", "evilcdninstagram.com"])
+def test_ytdlp_disallowed_hosts(monkeypatch, tmp_path, public_dns, host):
+    transport(monkeypatch, lambda r: httpx.Response(200, headers={"content-type": "text/html"}))
+    def run(*args, **kwargs):
+        pytest.fail("disallowed host reached yt-dlp")
+    monkeypatch.setattr(fetch.subprocess, "run", run)
+    result = fetch.fetch_video("https://" + host, tmp_path)
+    assert result.error == "blocked_url:host_not_allowed_for_ytdlp"
+    assert not list(tmp_path.iterdir())
+
+
+def test_ytdlp_checks_redirect_destination(monkeypatch, tmp_path, public_dns):
+    def handler(request):
+        if request.url.host == "www.instagram.com":
+            return httpx.Response(302, headers={"location": "https://public.example/page"})
+        return httpx.Response(200, headers={"content-type": "text/html"})
+    transport(monkeypatch, handler)
+    monkeypatch.setattr(fetch.subprocess, "run", lambda *a, **kw: pytest.fail("unexpected yt-dlp call"))
+    result = fetch.fetch_video("https://www.instagram.com/reel/1", tmp_path)
+    assert result.error == "blocked_url:host_not_allowed_for_ytdlp"
