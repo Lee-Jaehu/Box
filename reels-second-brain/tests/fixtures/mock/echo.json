@@ -1,0 +1,5 @@
+{"object": "instagram", "entry": [{"id": "17841400000000001", "time": 1760745600,
+  "messaging": [{"sender": {"id": "17841400000000001"}, "recipient": {"id": "1000000000000001"},
+    "timestamp": 1760745600000, "message": {"mid": "mid.echo.1", "text": "접수했어요", "is_echo": true}},
+   {"sender": {"id": "1000000000000001"}, "recipient": {"id": "17841400000000001"},
+    "timestamp": 1760745600000, "read": {"mid": "mid.echo.1"}}]}]}
