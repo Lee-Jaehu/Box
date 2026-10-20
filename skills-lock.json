@@ -73,6 +73,12 @@
       "skillPath": "pptx-manipulation/SKILL.md",
       "computedHash": "86e57f8a26c136c02ace6d0f1218c87d0568c256d5e51f58a8a1694f6d4d3fd7"
     },
+    "technical-video-script": {
+      "source": "samber/developer-relations-skills",
+      "sourceType": "github",
+      "skillPath": "skills/technical-video-script/SKILL.md",
+      "computedHash": "ae1e752134140ccb53ae13e3dbd8dcd1b662c4acf9e3aedec7189377ddc7e0dc"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
@@ -90,6 +96,12 @@
       "sourceType": "github",
       "skillPath": "ux-heuristics/SKILL.md",
       "computedHash": "078959463a4d191d3ff17fd7a0b036697c79da3e86102251c98f76ffa9e66a28"
+    },
+    "video-content-analysis": {
+      "source": "gasserane/personal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/video-content-analysis/SKILL.md",
+      "computedHash": "a6b20d491d1ce692e42682445bbcc6295d6ac06a040a91698808851a97613066"
     },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
