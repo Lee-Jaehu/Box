@@ -114,6 +114,12 @@
       "sourceType": "github",
       "skillPath": "skills/web-design-reviewer/SKILL.md",
       "computedHash": "4a05e32553a1dc916ee4f68f709d478c17de6b8ce184932f56f2b8646f3d4986"
+    },
+    "youtube-scriptwriting": {
+      "source": "cdeistopened/skill-stack",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/youtube-scriptwriting/SKILL.md",
+      "computedHash": "4fc5cb87a4214eb745603a4c6ed7c4381645c310b300e705dcdfc9f0e5c66064"
     }
   }
 }
