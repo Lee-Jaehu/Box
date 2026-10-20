@@ -1,17 +1,47 @@
 {
   "version": 1,
   "skills": {
+    "baoyu-slide-deck": {
+      "source": "jimliu/baoyu-skills",
+      "sourceType": "github",
+      "skillPath": "skills/baoyu-slide-deck/SKILL.md",
+      "computedHash": "ebccd43adb8bf92b172a740a455d4c88b5499e7dd1dc3f645d6087f6e76f03d0"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
       "computedHash": "913b9d37d0d54047dd65222bb8c67b2bf04e3cb87dcad1729068d7a8b2c8c396"
     },
+    "markitdown": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "skillPath": "cli-tool/components/skills/scientific/markitdown/SKILL.md",
+      "computedHash": "2f5a663e88f112dea8e7bdae3cfb4c57e03fd2ff82d7bf1a6e1e6d2b0c3a6fc2"
+    },
+    "powerpoint-automation": {
+      "source": "aktsmm/agent-skills",
+      "sourceType": "github",
+      "skillPath": "powerpoint-automation/SKILL.md",
+      "computedHash": "161a21011f34e525158120027c5daef25aef430dafbbd3b5e1231c1b57576656"
+    },
     "pptx": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/pptx/SKILL.md",
       "computedHash": "82eaf5daede5a1779aa17ccf06597cb209a0c2bd41d3a2f18bd45e0301a387fb"
+    },
+    "pptx-generator": {
+      "source": "minimax-ai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/pptx-generator/SKILL.md",
+      "computedHash": "956dcd3e9c6d0b4f174f65ae0046dc51217df2436a38aea08a91f75701db6b52"
+    },
+    "pptx-manipulation": {
+      "source": "claude-office-skills/skills",
+      "sourceType": "github",
+      "skillPath": "pptx-manipulation/SKILL.md",
+      "computedHash": "86e57f8a26c136c02ace6d0f1218c87d0568c256d5e51f58a8a1694f6d4d3fd7"
     }
   }
 }
