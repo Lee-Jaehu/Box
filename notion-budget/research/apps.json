@@ -1,0 +1,18 @@
+{
+  "_note": "스토어 ID는 2026-10-24 resolve_apps.py와 상세조회로 확인함. 빈 ID는 해당 스토어에 앱이 없거나 리뷰가 거의 없어 제외.",
+  "apps": [
+    {"key": "hana_1q_new",  "group": "bank",    "name": "하나원큐(신규)",       "play_id": "com.hanabank.oqf",                  "ios_id": "6743190232"},
+    {"key": "hana_1q_old",  "group": "bank",    "name": "(구)하나원큐",          "play_id": "com.kebhana.hanapush",              "ios_id": "1362508015"},
+    {"key": "woori_won",    "group": "bank",    "name": "우리WON뱅킹",           "play_id": "com.wooribank.smart.npib",          "ios_id": "1470181651"},
+    {"key": "kb_star",      "group": "bank",    "name": "KB스타뱅킹",            "play_id": "com.kbstar.kbbank",                 "ios_id": "373742138"},
+    {"key": "shinhan_sol",  "group": "bank",    "name": "신한 슈퍼SOL",          "play_id": "com.shinhan.sbanking",              "ios_id": "357484932"},
+    {"key": "toss",         "group": "fintech", "name": "토스",                  "play_id": "viva.republica.toss",               "ios_id": "839333328"},
+    {"key": "banksalad",    "group": "fintech", "name": "뱅크샐러드",            "play_id": "com.rainist.banksalad2",            "ios_id": "1195804784"},
+    {"key": "pyeonhan",     "group": "budget",  "name": "편한가계부(Realbyte)",  "play_id": "com.realbyteapps.moneymanagerfree", "ios_id": "560481810"},
+    {"key": "ttokttok",     "group": "budget",  "name": "똑똑가계부(문자 자동입력)", "play_id": "com.dencreak.spbook",           "ios_id": ""},
+    {"key": "naver_moneybook", "group": "budget", "name": "네이버 가계부",       "play_id": "com.nhn.android.moneybook",         "ios_id": ""},
+    {"key": "weple",        "group": "budget",  "name": "위플 가계부",           "play_id": "",                                  "ios_id": "467936485"}
+  ],
+  "youtube_queries": ["가계부 앱 후기", "가계부 쓰는 법", "뱅크샐러드 가계부 후기", "토스 가계부", "노션 가계부", "가계부 작심삼일", "가계부 포기", "편한가계부 사용법"],
+  "naver_blog_queries": ["가계부 앱 후기", "가계부 앱 추천 후기", "뱅크샐러드 가계부 후기", "편한가계부 후기", "노션 가계부 후기", "가계부 그만둔 이유", "가계부 작심삼일", "부부 가계부 앱 후기"]
+}
