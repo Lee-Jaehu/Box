@@ -27,9 +27,9 @@ NAVER_CLIENT_ID=... NAVER_CLIENT_SECRET=... python collect_naver_blog.py --fetch
 pip install anthropic
 python classify.py prepare                                   # 대상 추출 → data/work/items.jsonl
 python classify.py pilot --n 200
-python classify.py submit --tag pilot --ids ../data/work/pilot_ids.txt   # (권장) 200건 시범으로 실제 비용·품질 확인
+python classify.py submit --tag pilot --model claude-haiku-5-5 --ids ../data/work/pilot_ids.txt   # 결정(10/24): Haiku 5.5로 200건 시범 → 비용·품질 보고 후 전체 진행 여부 결정
 python classify.py collect --tag pilot
-python classify.py submit --tag primary --model claude-opus-5-5
+python classify.py submit --tag primary --model claude-haiku-5-5
 python classify.py collect --tag primary
 python classify.py sample --tag primary                      # kappa용 100건(관련 70 + 무관 30)
 python classify.py submit --tag second --model claude-sonnet-5-5 --ids ../data/work/kappa_ids.txt

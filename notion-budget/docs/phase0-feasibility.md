@@ -37,7 +37,7 @@
 | Q3 | I3 가드레일 | 5개 항목 동의 |
 | Q4 | 엑셀로 못 받는 카드 청구 명세서 | **PDF 명세서 파싱** |
 | Q5 | iOS 알림 파싱 | 카드사 문자 알림 가입에 동의 |
-| Q5-1 | Android 투트랙 (제안) | 휴대폰(iOS 단축어, Android MacroDroid)은 **알림 원문을 Notion 수신함으로 전달만** 하고, 해석은 PC의 Python 해석기 하나가 맡음. 사용자 기기 정보를 받은 뒤 확정 |
+| Q5-1 | Android 투트랙 (제안) | 휴대폰(iOS 단축어, Android MacroDroid)은 **알림 원문을 Notion 수신함으로 전달만** 하고, 해석은 PC의 Python 해석기 하나가 맡음. 사용자는 **iPhone** 사용 → iOS(문자) 경로를 먼저 구현. Android는 테스트 기기 확보 여부에 따라 결정 |
 
 ---
 
