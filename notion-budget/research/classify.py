@@ -81,6 +81,13 @@ def _load_rows():
             yield {"id": f"ios:{r['app_id']}:{r['reviewId']}", "source": "ios", "app_key": r["app_key"],
                    "app_id": r["app_id"], "review_id": r["reviewId"], "score": r["rating"],
                    "date": r["updated"], "thumbs": r["voteSum"], "text": text}
+    # YouTube 댓글은 가계부 영상에 달린 것이라 키워드 없이도 관련이 많아 필터 없이 전부 넣는다(별점 없음)
+    for f in sorted(glob.glob(str(RAW_DIR / "youtube" / "*.csv"))):
+        for r in csv.DictReader(open(f, encoding="utf-8-sig")):
+            yield {"id": f"yt:{r['videoId']}:{r['commentId']}", "source": "youtube", "app_key": "youtube",
+                   "app_id": r["videoId"], "review_id": r["commentId"], "score": "",
+                   "date": r["publishedAt"], "thumbs": r["likeCount"], "text": r["text"] or "",
+                   "always_include": True}
 
 
 def _keywords():
@@ -93,10 +100,12 @@ def prepare(_args):
     WORK.mkdir(parents=True, exist_ok=True)
     pat = _keywords()
     rng = random.Random(SEED)
-    items, n_hit, n_miss = [], 0, 0
+    items, n_hit, n_miss, n_all = [], 0, 0, 0
     for r in _load_rows():
         r["keyword_hit"] = bool(pat.search(r["text"]))
-        if r["keyword_hit"]:
+        if r.pop("always_include", False):
+            n_all += 1
+        elif r["keyword_hit"]:
             n_hit += 1
         elif rng.random() < 0.05:
             n_miss += 1
@@ -107,7 +116,7 @@ def prepare(_args):
         for i, r in enumerate(items):
             r["cid"] = f"r{i:06d}"  # 배치 custom_id는 영숫자·_- 64자 이내여야 함
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    print(f"items={len(items)} (keyword={n_hit}, miss_sample={n_miss}) -> {WORK / 'items.jsonl'}")
+    print(f"items={len(items)} (keyword={n_hit}, miss_sample={n_miss}, youtube_all={n_all}) -> {WORK / 'items.jsonl'}")
 
 
 def _items():
@@ -131,7 +140,7 @@ def submit(args):
             max_tokens=2048,
             system=system,
             output_config={"effort": args.effort, "format": {"type": "json_schema", "schema": SCHEMA}},
-            messages=[{"role": "user", "content": f"<review app=\"{r['app_key']}\" stars=\"{r['score']}\">\n{r['text']}\n</review>"}],
+            messages=[{"role": "user", "content": f"<review source=\"{r['source']}\" app=\"{r['app_key']}\" stars=\"{r['score']}\">\n{r['text']}\n</review>"}],
         ))
         for r in items
     ]

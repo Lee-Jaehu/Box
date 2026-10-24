@@ -8,7 +8,7 @@
 | `collect_play.py` | Google Play 리뷰 (별점·날짜·버전·개발사 답변) |
 | `collect_appstore.py` | App Store 리뷰 (공식 RSS, 앱당 최대 500건, 개발사 답변 없음) |
 | `collect_youtube.py` | YouTube 댓글 (`YOUTUBE_API_KEY` 필요) |
-| `collect_naver_blog.py` | 네이버 블로그 검색 결과 (`NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` 필요, 본문 아닌 요약만) |
+| `collect_naver_blog.py` | 네이버 블로그 검색 결과 (`NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` 필요). 본문은 수집하지 않음 (robots.txt가 AI 목적 봇 접근을 금지) |
 | `codebook.md` | 분류 기준표 |
 | `jtbd-interview-guide.md` | 지인 인터뷰 질문지 |
 
@@ -19,7 +19,7 @@ python resolve_apps.py
 python collect_play.py --max 5000
 python collect_appstore.py
 YOUTUBE_API_KEY=... python collect_youtube.py
-NAVER_CLIENT_ID=... NAVER_CLIENT_SECRET=... python collect_naver_blog.py --fetch-body   # robots.txt 허용 시에만 본문 수집
+NAVER_CLIENT_ID=... NAVER_CLIENT_SECRET=... python collect_naver_blog.py   # 요약만 수집. 본문은 robots.txt의 AI 이용 금지 문구 때문에 수집하지 않음
 ```
 
 ## 분류 (`classify.py`)
