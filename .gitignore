@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 worklog_v1.1/config/config.json
+
+# notion-budget: 거래 데이터·원본 파일·비밀값은 커밋 금지
+notion-budget/data/
+notion-budget/.env
