@@ -6,6 +6,7 @@
   submit   items(또는 --ids 파일로 지정한 부분집합)를 배치로 제출하고 batch id를 기록
   collect  배치 결과를 labels_{tag}.jsonl로 저장
   sample   kappa용 100건 층화 표본 id 목록 생성 (주 분류 결과 기준 관련 70 + 무관 30)
+  stratify 본분류용 앱별 층화 표본 id 목록과 층 가중치 생성
   kappa    두 라벨 파일의 일치도 보고
 
 usage:
@@ -192,6 +193,30 @@ def pilot(args):
     print(f"{len(ids)} ids -> {WORK / 'pilot_ids.txt'}")
 
 
+def stratify(args):
+    """앱별로 키워드 후보 args.hit건 + 비후보 args.miss건을 뽑는다. 앱 안에서는 출처(play/ios)별 크기에 비례해 나눈다.
+    가중치 = 층 크기 / 층 표본 수 (층 = 앱 × 출처 × 키워드 여부). 집계할 때 이 가중치로 모집단 비율을 복원한다."""
+    rng = random.Random(SEED + 3)
+    strata = {}
+    for r in _items():
+        strata.setdefault((r["app_key"], r["source"], r["keyword_hit"]), []).append(r["cid"])
+    rows = []
+    for app in sorted({k[0] for k in strata}):
+        for hit, quota in ((True, args.hit), (False, args.miss)):
+            keys = sorted(k for k in strata if k[0] == app and k[2] == hit)
+            total = sum(len(strata[k]) for k in keys)
+            for k in keys:
+                n = min(len(strata[k]), round(quota * len(strata[k]) / total))
+                for cid in sorted(rng.sample(strata[k], n)):
+                    rows.append({"cid": cid, "stratum": "|".join(map(str, k)), "weight": len(strata[k]) / n})
+    with open(WORK / "primary_ids.txt", "w") as f:
+        f.write("\n".join(r["cid"] for r in rows))
+    with open(WORK / "weights.jsonl", "w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"{len(rows)} ids -> {WORK / 'primary_ids.txt'} (weights.jsonl)")
+
+
 def cohen_kappa(a, b):
     n = len(a)
     po = sum(x == y for x, y in zip(a, b)) / n
@@ -241,12 +266,15 @@ def main():
     p.add_argument("--n", type=int, default=200)
     sm = sub.add_parser("sample")
     sm.add_argument("--tag", default="primary")
+    st = sub.add_parser("stratify")
+    st.add_argument("--hit", type=int, default=230)
+    st.add_argument("--miss", type=int, default=20)
     k = sub.add_parser("kappa")
     k.add_argument("--a", default="primary")
     k.add_argument("--b", default="second")
     args = ap.parse_args()
     {"prepare": prepare, "submit": submit, "collect": collect, "pilot": pilot, "sample": sample,
-     "kappa": kappa}[args.cmd](args)
+     "stratify": stratify, "kappa": kappa}[args.cmd](args)
 
 
 if __name__ == "__main__":
