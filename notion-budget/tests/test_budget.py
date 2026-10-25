@@ -185,6 +185,38 @@ class Alerts(unittest.TestCase):
         self.assertEqual(watch.streak["demo_card"], 0)
 
 
+class ShinhanSms(unittest.TestCase):
+    """신한카드 문자 형식(2026-10 실제 원문으로 확인). 이름·카드번호·금액·가맹점은 가상 값."""
+    def sms(self, i, text, when):
+        return alerts.parse(alerts.Alert(f"s{i}", alerts.sender_key("+82 1544-7200"), text, when))
+
+    def test_approve_cancel_and_wrapped_merchant(self):
+        r = self.sms(1, "[Web발신]\n신한법인(0000)승인 홍*동\n12,300원 10/25 14:21 가상\n상점 잔액1,987,700원", datetime(2026, 10, 25, 14, 21))
+        self.assertEqual((r.tx.amount, r.tx.counterparty, r.tx.account, r.tx.extra["limit_left"]), (-12300, "가상상점", "신한카드(0000)", 1987700))
+        r = self.sms(2, "[Web발신]\n신한법인(0000)취소 홍*동\n12,300원 10/25 14:30 가상\n상점", datetime(2026, 10, 25, 14, 30))
+        self.assertEqual((r.tx.amount, r.tx.counterparty, r.tx.extra.get("limit_left")), (12300, "가상상점", None))
+
+    def test_amount_on_first_line(self):
+        r = self.sms(3, "[Web발신]\n신한법인(0000)승인 홍*동 5,000원\n10/25 15:00 가상_APP\n잔액1,982,700원", datetime(2026, 10, 25, 15, 0))
+        self.assertEqual((r.tx.amount, r.tx.counterparty), (-5000, "가상_APP"))
+
+    def test_limit_gap_finds_missing_alert(self):
+        texts = [("10/01 09:00", "1,000", "1,999,000"), ("10/02 09:00", "2,000", "1,997,000"),
+                 ("10/04 09:00", "3,000", "1,990,000")]   # 10/03에 4,000원 알림이 빠짐
+        txs = [self.sms(i, f"신한법인(0000)승인 홍*동 {a}원 {d} 가상상점 잔액{l}원", datetime(2026, 10, int(d[3:5]), 9, 0)).tx
+               for i, (d, a, l) in enumerate(texts)]
+        gaps = reconcile.limit_gaps(txs)
+        self.assertEqual([(g.after_ref, g.missing) for g in gaps], [("s1", 4000)])
+
+    def test_limit_increase_is_not_a_gap(self):
+        txs = [self.sms(i, f"신한법인(0000)승인 홍*동 {a}원 10/0{i + 1} 09:00 가상상점 잔액{l}원", datetime(2026, 10, i + 1, 9, 0)).tx
+               for i, (a, l) in enumerate([("1,000", "1,000,000"), ("2,000", "1,998,000")])]  # 사이에 카드값 결제
+        self.assertEqual(reconcile.limit_gaps(txs), [])
+
+    def test_unknown_sender_kept_as_digits(self):
+        self.assertEqual(alerts.sender_key("+82 1588-0000"), "15880000")
+
+
 class Coverage(unittest.TestCase):
     def test_alert_coverage(self):
         d = date(2026, 10, 25)

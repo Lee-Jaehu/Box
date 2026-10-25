@@ -31,6 +31,30 @@ def balance_breaks(txs):
 
 
 @dataclass
+class LimitGap:
+    after_ref: str      # 이 알림 다음에
+    missing: int        # 알림 없이 사용된 금액(원)
+
+
+def limit_gaps(alert_txs):
+    """카드 알림의 '남은 한도'로 빠진 알림을 찾는다. 같은 카드의 연속된 승인 알림에서
+    앞 한도 - 이번 금액이 이번 한도보다 크면, 그 차이만큼 알림 없이 쓴 거래가 있다는 뜻이다.
+    한도가 늘어난 경우(결제·취소 반영)는 끊김으로 보지 않는다. 월말 엑셀 전에 T17(알림 누락)을 잡는 장치다."""
+    out, last = [], {}
+    for tx in sorted(alert_txs, key=lambda t: (t.date, t.time or time.min)):
+        left = tx.extra.get("limit_left")
+        if left is None or tx.amount >= 0:
+            continue
+        prev = last.get(tx.account)
+        if prev is not None:
+            expected = prev.extra["limit_left"] + tx.amount
+            if left < expected:
+                out.append(LimitGap(prev.source_ref, expected - left))
+        last[tx.account] = tx
+    return out
+
+
+@dataclass
 class Coverage:
     matched: int
     missed_by_alerts: list      # 엑셀에는 있는데 알림이 없던 거래

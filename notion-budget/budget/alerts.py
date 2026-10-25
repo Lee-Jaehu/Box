@@ -50,7 +50,31 @@ class Result:
         return self.tx is not None
 
 
-PATTERNS = {}  # {"shinhan_card": [Pattern, ...]} — 실제 샘플로 채움
+# 실제 알림 원문으로 확인한 형식만 넣는다. 확인 날짜와 근거를 이름에 남긴다.
+# 신한카드 문자 (2026-10-25, 사용자 문자 캡처로 확인, 법인카드):
+#   [Web발신] 신한법인(1234)승인 홍*동 12,300원 10/25 14:21 가맹점명 잔액2,000,000원
+#   [Web발신] 신한법인(1234)취소 홍*동 12,300원 10/25 14:30 가맹점명        ← 취소에는 잔액 없음
+#   '잔액'은 통장 잔액이 아니라 카드의 남은 한도다. 휴대폰 화면의 줄바꿈은 원문 공백이 아닐 수 있어
+#   가맹점명 안의 공백·줄바꿈은 지운다. 개인 신한카드는 '신한카드(1234)' 형식일 것으로 보이나 원문으로 확인 전이다.
+SHINHAN = re.compile(
+    r"신한(?P<product>법인|카드|체크)\((?P<card_tail>\d{4})\)\s*(?:승인|(?P<cancel>취소))\s+\S+\s+"
+    r"(?P<amount>[\d,]+)원\s+(?P<month>\d{2})/(?P<day>\d{2})\s+(?P<hour>\d{2}):(?P<minute>\d{2})\s+"
+    r"(?P<merchant>.+?)(?:\s*잔액\s*(?P<limit_left>[\d,]+)원)?\s*$", re.S)
+
+PATTERNS = {
+    "shinhan_card": [Pattern("신한 승인·취소 문자 (2026-10 확인)", "신한카드", SHINHAN)],
+}
+
+# 휴대폰 단축어가 넘겨주는 발신 번호 → 발신처 키
+SENDERS = {"15447200": "shinhan_card"}
+
+
+def sender_key(raw):
+    """'+82 1544-7200' → 'shinhan_card'. 모르는 번호는 숫자만 남겨 그대로 돌려준다(수신함에 미해석으로 남음)."""
+    digits = re.sub(r"\D", "", raw or "")
+    if digits.startswith("82") and len(digits) > 9:
+        digits = digits[2:]
+    return SENDERS.get(digits, digits or raw)
 
 
 def parse(alert, patterns=None):
@@ -69,10 +93,15 @@ def parse(alert, patterns=None):
             d = d.replace(year=y, month=int(g["month"]), day=int(g["day"]))
         if g.get("hour") and g.get("minute"):
             d = d.replace(hour=int(g["hour"]), minute=int(g["minute"]), second=0)
+        extra = {"card": p.card, "pattern": p.name}
+        if g.get("limit_left"):
+            extra["limit_left"] = int(g["limit_left"].replace(",", ""))
+        if g.get("product"):
+            extra["product"] = g["product"]
         tx = Transaction(date=d.date(), time=d.time().replace(second=0, microsecond=0), amount=amt if refund else p.sign * amt,
                          account=p.account + (f"({g['card_tail']})" if g.get("card_tail") else ""),
-                         counterparty=(g.get("merchant") or "").strip(), source=f"alert:{alert.sender}",
-                         source_ref=alert.id, extra={"card": p.card, "pattern": p.name})
+                         counterparty=re.sub(r"\s+", "", g.get("merchant") or ""), source=f"alert:{alert.sender}",
+                         source_ref=alert.id, extra=extra)
         return Result(alert, tx, p.name, True)
     return Result(alert, None, "", bool(MONEY_HINT.search(text)))
 
