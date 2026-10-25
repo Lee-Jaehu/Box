@@ -7,6 +7,7 @@
   collect  배치 결과를 labels_{tag}.jsonl로 저장
   sample   kappa용 100건 층화 표본 id 목록 생성 (주 분류 결과 기준 관련 70 + 무관 30)
   stratify 본분류용 앱별 층화 표본 id 목록과 층 가중치 생성
+  youtube  YouTube 댓글을 검색어별 층화 표본으로 뽑아 items_youtube.jsonl 생성 (가중치 포함)
   kappa    두 라벨 파일의 일치도 보고
 
 usage:
@@ -21,6 +22,7 @@ usage:
 import argparse
 import csv
 import glob
+import html
 import json
 import random
 import re
@@ -217,6 +219,37 @@ def stratify(args):
     print(f"{len(rows)} ids -> {WORK / 'primary_ids.txt'} (weights.jsonl)")
 
 
+def youtube(args):
+    """YouTube 댓글 → items_youtube.jsonl. commentId 중복과 10자 미만을 빼고, 검색어별로 최대 args.per_query건을 뽑는다.
+    앱 리뷰와 cid 체계가 섞이지 않도록 y00000 형식을 쓰고, 층(검색어) 가중치를 함께 기록한다."""
+    rng = random.Random(SEED + 4)
+    seen, by_query = set(), {}
+    for f in sorted(glob.glob(str(RAW_DIR / "youtube" / "*.csv"))):
+        for r in csv.DictReader(open(f, encoding="utf-8-sig")):
+            text = html.unescape(r["text"] or "").strip()
+            if r["commentId"] in seen or len(text) < 10:
+                continue
+            seen.add(r["commentId"])
+            by_query.setdefault(r["query"], []).append({
+                "source": "youtube", "app_key": "youtube", "query": r["query"], "video_id": r["videoId"],
+                "comment_id": r["commentId"], "video_title": html.unescape(r["videoTitle"] or ""),
+                "score": "", "date": r["publishedAt"].replace("T", " ").rstrip("Z"), "thumbs": r["likeCount"] or "0",
+                "text": text})
+    rows = []
+    for q in sorted(by_query):
+        pool = by_query[q]
+        pick = rng.sample(pool, min(args.per_query, len(pool)))
+        for r in pick:
+            r["weight"] = len(pool) / len(pick)
+        rows += pick
+    with open(WORK / "items_youtube.jsonl", "w", encoding="utf-8") as f:
+        for i, r in enumerate(rows):
+            r["cid"] = f"y{i:05d}"
+            r["id"] = f"youtube:{r['video_id']}:{r['comment_id']}"
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print({q: len(v) for q, v in by_query.items()}, f"-> {len(rows)} items", WORK / "items_youtube.jsonl")
+
+
 def cohen_kappa(a, b):
     n = len(a)
     po = sum(x == y for x, y in zip(a, b)) / n
@@ -269,12 +302,14 @@ def main():
     st = sub.add_parser("stratify")
     st.add_argument("--hit", type=int, default=230)
     st.add_argument("--miss", type=int, default=20)
+    y = sub.add_parser("youtube")
+    y.add_argument("--per-query", type=int, default=150)
     k = sub.add_parser("kappa")
     k.add_argument("--a", default="primary")
     k.add_argument("--b", default="second")
     args = ap.parse_args()
     {"prepare": prepare, "submit": submit, "collect": collect, "pilot": pilot, "sample": sample,
-     "stratify": stratify, "kappa": kappa}[args.cmd](args)
+     "stratify": stratify, "youtube": youtube, "kappa": kappa}[args.cmd](args)
 
 
 if __name__ == "__main__":
