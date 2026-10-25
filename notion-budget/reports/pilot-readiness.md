@@ -51,3 +51,9 @@ PYTHONPYCACHEPREFIX=/workspace/.box-env/pycache /workspace/.box-env/research-ven
 # 기존 시범 출력은 덮어쓰지 않는다. 재현은 새 경로로 실행한다.
 PYTHONPYCACHEPREFIX=/workspace/.box-env/pycache /workspace/.box-env/research-venv/bin/python notion-budget/research/prepare_research_pilot.py --out /tmp/notion-research-pilot-replay
 ```
+
+## 키 등록 후 갱신
+
+키는 현재 환경에 반영됐고 모델 목록 인증에 성공했다. `claude-haiku-5-5`도 확인했다.
+다만 토큰 계산이 API 크레딧 부족 HTTP 400으로 거절됐다. Batch는 제출하지 않았다.
+상세: [API 사전 점검](api-preflight.md). 위 ‘키 없음’은 준비 당시 상태이며 현재 중단 원인은 잔액이다.
