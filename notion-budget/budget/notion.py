@@ -22,6 +22,10 @@ DATABASES = {
         "메모": "rich_text",
         "원본키": "rich_text",          # 중복 입력 방지. model.assign_keys
         "원본 위치": "rich_text",       # 파일명:행, 알림 id
+        "청구 금액": "number",          # 이번 명세서 청구액. 할부면 회차 금액 + 수수료
+        "결제월": "rich_text",          # "2026-10"
+        "할부": "rich_text",            # "1/3"
+        "할부 수수료": "number",
     },
     "알림 수신함": {
         "원문": "title",
@@ -82,4 +86,8 @@ def transaction_properties(key, tx, category=None):
         "메모": {"rich_text": _text(tx.memo)},
         "원본키": {"rich_text": _text(key)},
         "원본 위치": {"rich_text": _text(tx.source_ref)},
+        "청구 금액": {"number": tx.billed},
+        "결제월": {"rich_text": _text(tx.billing_month)},
+        "할부": {"rich_text": _text(f"{tx.installment[0]}/{tx.installment[1]}" if tx.installment else "")},
+        "할부 수수료": {"number": tx.fee or None},
     }

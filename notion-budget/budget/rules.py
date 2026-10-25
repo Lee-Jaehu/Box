@@ -51,16 +51,20 @@ def _set(tx, kind, reason):
     return tx
 
 
-def monthly_totals(txs):
-    """월별 지출·수입 합계(원). 자산 이동은 빼고 따로 집계하고, 카드 취소는 지출에서 뺀다."""
+def monthly_totals(txs, basis="usage"):
+    """월별 지출·수입 합계(원). 자산 이동은 빼고 따로 집계하고, 카드 취소는 지출에서 뺀다.
+    basis="usage"(기본): 이용일의 달에 전액. basis="billed": 명세서가 있는 카드 거래는 결제월에 청구액만
+    (할부는 회차만, 수수료 포함). 명세서 정보가 없는 거래는 두 기준 모두 이용일로 센다."""
     out = {}
     for tx in txs:
-        m = tx.date.strftime("%Y-%m")
+        amt, m = tx.amount, tx.date.strftime("%Y-%m")
+        if basis == "billed" and tx.billed is not None and tx.billing_month:
+            amt, m = tx.billed, tx.billing_month
         d = out.setdefault(m, {"지출": 0, "수입": 0, "자산 이동": 0})
         if tx.kind and tx.kind.is_asset_move:
-            d["자산 이동"] += tx.amount
-        elif tx.amount < 0 or tx.extra.get("card"):
-            d["지출"] += -tx.amount
+            d["자산 이동"] += amt
+        elif amt < 0 or tx.extra.get("card"):
+            d["지출"] += -amt
         else:
-            d["수입"] += tx.amount
+            d["수입"] += amt
     return out

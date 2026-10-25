@@ -23,6 +23,9 @@ class Kind(str, Enum):
 
 @dataclass
 class Transaction:
+    """amount는 이용일 기준 전액이다. 할부면 이번 명세서에 청구된 회차 금액을 billed에 따로 둔다
+    (2026-10-25 결정: 둘 다 저장하고 화면 기본값은 이용일 기준). 회차 금액은 카드사마다 반올림이 달라
+    계산하지 않고 명세서 값을 그대로 쓴다."""
     date: date
     amount: int
     account: str
@@ -34,6 +37,10 @@ class Transaction:
     kind_reason: str = ""
     source: str = ""          # "excel:hana_bank", "alert:shinhan_card"
     source_ref: str = ""      # 파일명:행 번호, 알림 id
+    billed: Optional[int] = None          # 이번 명세서 청구액(원, 지출 음수, 수수료 포함)
+    billing_month: Optional[str] = None   # 그 명세서의 결제월 "2026-10"
+    installment: Optional[tuple] = None   # (이번 회차, 전체 회차)
+    fee: int = 0                          # 할부 수수료(원, 양수)
     extra: dict = field(default_factory=dict)
 
     def base_key(self):

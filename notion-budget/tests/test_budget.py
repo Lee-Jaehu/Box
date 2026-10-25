@@ -135,6 +135,24 @@ class Rules(unittest.TestCase):
         self.assertEqual(rules.monthly_totals(txs)["2026-10"], {"지출": 600000, "수입": 1724000, "자산 이동": -812000})
 
 
+class Installment(unittest.TestCase):
+    def test_usage_vs_billed(self):
+        # 가상 예시: 9월에 30만 원을 3개월 무이자로 사고, 10월 명세서에 1회차 100,000원 청구
+        tx = Transaction(date=date(2026, 9, 20), amount=-300000, account="가상카드", source="excel:x", extra={"card": True},
+                         billed=-100000, billing_month="2026-10", installment=(1, 3))
+        cafe = Transaction(date=date(2026, 10, 2), amount=-5000, account="가상카드", source="excel:x", extra={"card": True},
+                           billed=-5000, billing_month="2026-10")
+        for t in (tx, cafe):
+            rules.classify(t, rules.Profile())
+        usage = rules.monthly_totals([tx, cafe])
+        billed = rules.monthly_totals([tx, cafe], basis="billed")
+        self.assertEqual((usage["2026-09"]["지출"], usage["2026-10"]["지출"]), (300000, 5000))
+        self.assertNotIn("2026-09", billed)
+        self.assertEqual(billed["2026-10"]["지출"], 105000)
+        p = notion.transaction_properties("k#1", tx)
+        self.assertEqual((p["청구 금액"]["number"], p["할부"]["rich_text"][0]["text"]["content"]), (-100000, "1/3"))
+
+
 SYNTHETIC = {"demo_card": [alerts.Pattern(
     "가상 승인", "가상카드",
     re.compile(r"가상카드\((?P<card_tail>\d{4})\)\s*(?P<cancel>취소)?\s*(?P<amount>[\d,]+)원\s+(?P<month>\d{2})/(?P<day>\d{2})\s+(?P<hour>\d{2}):(?P<minute>\d{2})\s+(?P<merchant>.+)"))]}
