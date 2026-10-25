@@ -3,19 +3,22 @@
 실행: cd notion-budget && python -m unittest discover -s tests -v
 """
 import csv
+import json
 import re
 import sys
 import tempfile
 import unittest
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import openpyxl
 
-from budget import alerts, excel, notion, reconcile, rules
+from budget import alerts, excel, insights, notion, reconcile, rules
+from budget.categories import Categorizer
 from budget.model import Kind, Transaction, assign_keys
+from budget.run import run
 
 
 def bank_tx(d, amt, cp="", bal=None, ref=""):
@@ -261,6 +264,89 @@ class Notion(unittest.TestCase):
         self.assertIn({"name": "카드대금"}, s["구분"]["select"]["options"])
         self.assertEqual(s["금액"], {"number": {"format": "won"}})
         self.assertEqual(s["이름"], {"title": {}})
+
+
+class Categories(unittest.TestCase):
+    def test_rules_and_learning(self):
+        c = Categorizer()
+        self.assertEqual(c.categorize("가상 생고기")[0], "식비")
+        self.assertEqual(c.categorize("티맵모빌리티 주식")[0], "교통")
+        self.assertEqual(c.categorize("가상상사(주)"), ("미분류", "규칙 없음"))
+        c.learn("가상상사(주)", "문화·여가")
+        self.assertEqual(c.categorize("가상상사 (주)")[0], "문화·여가")   # 띄어쓰기·(주) 달라도 같은 가맹점
+        c.learn("다이소", "식비")                                         # 사용자가 고친 값이 규칙보다 우선
+        self.assertEqual(c.categorize("다이소")[1], "직접 고친 분류를 기억함")
+        with tempfile.TemporaryDirectory() as d:
+            c.save(Path(d) / "l.json")
+            self.assertEqual(Categorizer.load(Path(d) / "l.json").categorize("다이소")[0], "식비")
+
+    def test_normalize_keeps_words_with_ju(self):
+        self.assertEqual(Categorizer().categorize("가상식당")[0], "식비")   # '식'이 지워지면 안 됨
+
+
+def spend(d, amt, merchant, cat):
+    return Transaction(date=d, amount=-amt, account="가상카드", counterparty=merchant, kind=Kind.EXPENSE, category=cat)
+
+
+class Insights(unittest.TestCase):
+    week = date(2026, 10, 19)   # 월요일
+
+    def base(self):
+        return [spend(self.week - timedelta(weeks=i) + timedelta(days=2), 30000, "가상식당", "식비") for i in range(1, 9)]
+
+    def test_category_spike(self):
+        txs = self.base() + [spend(self.week + timedelta(days=d), 40000, "가상식당", "식비") for d in (0, 2, 4)]
+        ins = insights.weekly_insight(txs, self.week)
+        self.assertEqual((ins.kind, ins.impact), ("카테고리 급증", 90000))
+        self.assertIn("식비", ins.text)
+
+    def test_frequent_small(self):
+        txs = self.base() + [spend(date(2026, 10, d), 6000, "가상카페", "카페·간식") for d in (1, 6, 13, 20, 21)]
+        ins = insights.frequent_small(txs, self.week)
+        self.assertEqual((ins.kind, ins.impact), ("잦은 소액 결제", 30000))
+
+    def test_new_recurring(self):
+        txs = [spend(date(2026, 9, 15), 13900, "가상구독", "문화·여가"), spend(date(2026, 10, 15), 13900, "가상구독", "문화·여가")]
+        ins = insights.new_recurring(txs, self.week)
+        self.assertEqual(ins.impact, 13900 * 12)
+
+    def test_quiet_week_and_excluded_kinds(self):
+        self.assertIsNone(insights.weekly_insight(self.base(), self.week))
+        biz = spend(self.week, 500000, "가상식당", "식비")
+        biz.kind = Kind.BUSINESS                          # 법인카드는 개인 인사이트에서 제외
+        self.assertIsNone(insights.weekly_insight(self.base() + [biz], self.week))
+
+
+class EndToEnd(unittest.TestCase):
+    def test_run_on_synthetic_folder(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            samples = d / "samples"
+            samples.mkdir()
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["거래일시", "적요", "출금(원)", "입금(원)", "거래후잔액"])
+            ws.append(["2026.10.10 08:00:00", "급여", "", "2,000,000", "2,000,000"])
+            ws.append(["2026.10.12 09:00:00", "가상식당", "12,000", "", "1,988,000"])
+            ws.append(["2026.10.25 09:00:00", "신한카드", "50,000", "", "1,938,000"])
+            wb.save(samples / "hana_bank_가상.xlsx")
+            with open(samples / "shinhan_card_가상.csv", "w", encoding="utf-8", newline="") as f:
+                csv.writer(f).writerows([["이용일자", "가맹점명", "이용금액"], ["2026-10-20", "가상카페", "5,000"], ["2026-10-21", "다이소", "45,000"]])
+            (samples / "모르는파일.csv").write_text("a,b\n", encoding="utf-8")
+            (samples / "alerts.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
+                {"id": "a1", "sender": "+82 1544-7200", "text": "신한카드(0000)승인 홍*동 5,000원 10/20 12:00 가상카페 잔액995,000원", "received_at": "2026-10-20T12:00:00"},
+                {"id": "a2", "sender": "+82 1544-7200", "text": "신한카드(0000)승인 홍*동 45,000원 10/21 12:00 다이소 잔액950,000원", "received_at": "2026-10-21T12:00:00"},
+                {"id": "a3", "sender": "+82 1588-0000", "text": "가상은행 입금 1,000원", "received_at": "2026-10-22T12:00:00"}]), encoding="utf-8")
+            lines = run(samples, d / "out", d / "없음.json", d / "없음2.json", today=date(2026, 10, 27))
+            report = (d / "out" / "report.md").read_text(encoding="utf-8")
+            pages = [json.loads(l) for l in (d / "out" / "notion_pages.jsonl").read_text(encoding="utf-8").splitlines()]
+        self.assertIn("**오류**", report)                                       # 이름 규칙에 안 맞는 파일은 보고
+        self.assertIn("잔액 연속성: 이상 없음", report)
+        self.assertIn("알림이 잡은 카드 거래: 2/2 (100%)", report)
+        self.assertIn("미해석 1건", report)
+        self.assertIn("| 2026-10 | 62,000 | 2,000,000 | -50,000 | 0 |", report)   # 카드대금은 자산 이동
+        self.assertEqual(len(pages), 5)
+        self.assertEqual({p["properties"]["카테고리"]["select"]["name"] for p in pages if p["properties"]["이름"]["title"][0]["text"]["content"] == "다이소"}, {"생활용품"})
 
 
 if __name__ == "__main__":

@@ -71,7 +71,7 @@ def _text(s):
     return [{"type": "text", "text": {"content": s[i:i + 2000]}} for i in range(0, len(s), 2000)] or []
 
 
-def transaction_properties(key, tx, category=None):
+def transaction_properties(key, tx):
     """Transaction → 거래 DB 페이지 properties. rich_text 2,000자 제한은 나눠 담는다."""
     when = tx.date.isoformat() + (f"T{tx.time.strftime('%H:%M')}:00+09:00" if tx.time else "")
     return {
@@ -80,7 +80,7 @@ def transaction_properties(key, tx, category=None):
         "금액": {"number": tx.amount},
         "계정": {"select": {"name": tx.account}},
         "구분": {"select": {"name": tx.kind.value}} if tx.kind else {"select": None},
-        "카테고리": {"select": {"name": category or "미분류"}},
+        "카테고리": {"select": {"name": tx.category or "미분류"}},
         "출처": {"select": {"name": "알림" if tx.source.startswith("alert:") else "엑셀"}},
         "분류 근거": {"rich_text": _text(tx.kind_reason)},
         "메모": {"rich_text": _text(tx.memo)},

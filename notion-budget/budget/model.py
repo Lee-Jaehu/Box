@@ -42,6 +42,8 @@ class Transaction:
     billing_month: Optional[str] = None   # 그 명세서의 결제월 "2026-10"
     installment: Optional[tuple] = None   # (이번 회차, 전체 회차)
     fee: int = 0                          # 할부 수수료(원, 양수)
+    category: str = ""
+    category_reason: str = ""
     extra: dict = field(default_factory=dict)
 
     def base_key(self):
