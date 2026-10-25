@@ -14,6 +14,7 @@ class Kind(str, Enum):
     CARD_PAYMENT = "카드대금"
     LOAN_REPAYMENT = "대출 상환"
     SAVINGS = "저축"
+    BUSINESS = "법인(업무)"   # 법인카드 사용. 개인 지출 합계에서 빼고 따로 집계 (2026-10-25 결정)
 
     @property
     def is_asset_move(self):

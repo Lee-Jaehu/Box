@@ -132,7 +132,7 @@ class Rules(unittest.TestCase):
                card(-45000), card(-600000), card(45000)]
         for t in txs:
             rules.classify(t, self.profile)
-        self.assertEqual(rules.monthly_totals(txs)["2026-10"], {"지출": 600000, "수입": 1724000, "자산 이동": -812000})
+        self.assertEqual(rules.monthly_totals(txs)["2026-10"], {"지출": 600000, "수입": 1724000, "자산 이동": -812000, "법인(업무)": 0})
 
 
 class Installment(unittest.TestCase):
@@ -212,6 +212,17 @@ class ShinhanSms(unittest.TestCase):
         txs = [self.sms(i, f"신한법인(0000)승인 홍*동 {a}원 10/0{i + 1} 09:00 가상상점 잔액{l}원", datetime(2026, 10, i + 1, 9, 0)).tx
                for i, (a, l) in enumerate([("1,000", "1,000,000"), ("2,000", "1,998,000")])]  # 사이에 카드값 결제
         self.assertEqual(reconcile.limit_gaps(txs), [])
+
+    def test_business_card_kept_out_of_personal_spending(self):
+        use = self.sms(4, "신한법인(0000)승인 홍*동 30,000원 10/05 12:00 가상식당 잔액1,970,000원", datetime(2026, 10, 5, 12, 0)).tx
+        back = self.sms(5, "신한법인(0000)취소 홍*동 10,000원 10/05 12:10 가상식당", datetime(2026, 10, 5, 12, 10)).tx
+        mine = self.sms(6, "신한법인(0000)승인 홍*동 8,000원 10/06 12:00 가상카페 잔액1,962,000원", datetime(2026, 10, 6, 12, 0)).tx
+        mine.kind = Kind.EXPENSE                          # 사용자가 개인 지출로 바꾼 건
+        for t in (use, back, mine):
+            rules.classify(t, rules.Profile())
+        self.assertEqual((use.kind, back.kind), (Kind.BUSINESS, Kind.BUSINESS))
+        self.assertEqual(rules.monthly_totals([use, back, mine])["2026-10"],
+                         {"지출": 8000, "수입": 0, "자산 이동": 0, "법인(업무)": 20000})
 
     def test_unknown_sender_kept_as_digits(self):
         self.assertEqual(alerts.sender_key("+82 1588-0000"), "15880000")
