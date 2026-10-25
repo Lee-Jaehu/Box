@@ -34,7 +34,7 @@ from common import RAW_DIR, ROOT
 
 WORK = RAW_DIR.parent / "work"
 CODEBOOK = ROOT / "codebook.md"
-TOPICS = [f"T{i:02d}" for i in range(1, 20)] + ["T99"]
+TOPICS = [f"T{i:02d}" for i in range(1, 22)] + ["T99"]
 POLARITY = ["NEG", "POS", "REQ", "NEU"]
 SEED = 20261024
 
