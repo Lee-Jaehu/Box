@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import openpyxl
 
 from budget import alerts, excel, insights, notion, reconcile, rules
+from budget import notion_sync
 from budget.categories import Categorizer
 from budget.model import Kind, Transaction, assign_keys
 from budget.run import run
@@ -347,6 +348,85 @@ class EndToEnd(unittest.TestCase):
         self.assertIn("| 2026-10 | 62,000 | 2,000,000 | -50,000 | 0 |", report)   # 카드대금은 자산 이동
         self.assertEqual(len(pages), 5)
         self.assertEqual({p["properties"]["카테고리"]["select"]["name"] for p in pages if p["properties"]["이름"]["title"][0]["text"]["content"] == "다이소"}, {"생활용품"})
+
+
+class FakeResponse:
+    def __init__(self, status, body=None, headers=None):
+        self.status_code, self._body, self.headers, self.text = status, body or {}, headers or {}, json.dumps(body or {})
+
+    def json(self):
+        return self._body
+
+
+class FakeNotion:
+    """노션 API 흉내. 실제 API 응답 형식은 토큰을 받은 뒤 다시 확인해야 한다."""
+    def __init__(self, pages=None, fail_first=0):
+        self.pages, self.calls, self.fail_first = list(pages or []), [], fail_first
+
+    def request(self, method, url, headers=None, json=None, timeout=None):
+        self.calls.append((method, url.split("/v1")[1], json))
+        if self.fail_first:
+            self.fail_first -= 1
+            return FakeResponse(429, {}, {"Retry-After": "2"})
+        path = url.split("/v1")[1]
+        if path == "/search":
+            return FakeResponse(200, {"results": [{"id": "ds-" + json["query"], "title": [{"plain_text": json["query"]}]},
+                                                  {"id": "other", "title": [{"plain_text": json["query"] + " 사본"}]}]})
+        if path.endswith("/query"):
+            start = int((json or {}).get("start_cursor") or 0)
+            chunk = self.pages[start:start + 2]
+            more = start + 2 < len(self.pages)
+            return FakeResponse(200, {"results": chunk, "has_more": more, "next_cursor": str(start + 2) if more else None})
+        if path == "/pages":
+            self.pages.append({"properties": json["properties"]})
+            return FakeResponse(200, {"id": f"p{len(self.pages)}"})
+        return FakeResponse(404, {"message": "unknown"})
+
+
+def page(key, name="가상상점", cat="미분류", kind="지출"):
+    return {"properties": {"원본키": {"type": "rich_text", "rich_text": [{"plain_text": key}]},
+                           "이름": {"type": "title", "title": [{"plain_text": name}]},
+                           "카테고리": {"type": "select", "select": {"name": cat}}, "구분": {"type": "select", "select": {"name": kind}}}}
+
+
+class NotionSync(unittest.TestCase):
+    def client(self, fake):
+        self.slept = []
+        return notion_sync.Client("secret", session=fake, sleep=self.slept.append, clock=lambda: 0.0)
+
+    def test_rate_limit_retry_and_interval(self):
+        fake = FakeNotion(fail_first=1)
+        c = self.client(fake)
+        self.assertEqual(c.find_data_sources(["거래"]), {"거래": "ds-거래"})   # '거래 사본'은 고르지 않음
+        self.assertIn(2.0, self.slept)                                      # 429 → Retry-After만큼 대기
+        self.assertTrue(any(abs(s - 1 / 3) < 1e-9 for s in self.slept))     # 호출 간격 1/3초
+
+    def test_push_creates_only_new_keys_across_pages(self):
+        fake = FakeNotion(pages=[page("k1"), page("k2"), page("k3"), page("")])
+        c = self.client(fake)
+        created, skipped = notion_sync.push_transactions(c, "ds", [("k1", {}), ("k3", {}), ("k4", page("k4")["properties"])])
+        self.assertEqual((created, skipped), (1, 2))
+        self.assertEqual([x for x in fake.calls if x[1] == "/pages"][0][2]["parent"], {"type": "data_source_id", "data_source_id": "ds"})
+        self.assertEqual(notion_sync.push_transactions(c, "ds", [("k4", {})], dry_run=True), (0, 1))
+
+    def test_pull_corrections_feeds_categorizer(self):
+        fake = FakeNotion(pages=[page("k1", "가상상사(주)", "문화·여가"), page("k2", "다이소", "생활용품", "법인(업무)")])
+        fixes = notion_sync.pull_corrections(self.client(fake), "ds", {"k1": ("미분류", "지출"), "k2": ("생활용품", "지출")})
+        self.assertEqual(fixes, [("k1", "가상상사(주)", "문화·여가", None), ("k2", "다이소", None, "법인(업무)")])
+        cat = Categorizer()
+        for _, merchant, new_cat, _ in fixes:
+            if new_cat:
+                cat.learn(merchant, new_cat)
+        self.assertEqual(cat.categorize("가상상사")[0], "문화·여가")
+
+    def test_missing_db_and_http_error_messages(self):
+        c = self.client(FakeNotion())
+        c.session.request = lambda *a, **k: FakeResponse(200, {"results": []})
+        with self.assertRaises(notion_sync.NotionError):
+            c.find_data_sources(["거래"])
+        c.session.request = lambda *a, **k: FakeResponse(400, {"message": "bad"})
+        with self.assertRaisesRegex(notion_sync.NotionError, "400"):
+            c.create_page("ds", {})
 
 
 if __name__ == "__main__":
