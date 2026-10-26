@@ -1,0 +1,212 @@
+{
+  "reels-second-brain/migrations/001_stage1.sql": {
+    "mtime": 1792931830.1630602,
+    "seen": 1793021898.9931011,
+    "ast_hash": "ee1da91c3565a73bbdc4808d7377aa1e",
+    "semantic_hash": "ee1da91c3565a73bbdc4808d7377aa1e"
+  },
+  "reels-second-brain/pyproject.toml": {
+    "mtime": 1792931830.1630602,
+    "seen": 1793021898.9931085,
+    "ast_hash": "06ebb6b6290c2705edbbfe14f0886230",
+    "semantic_hash": "06ebb6b6290c2705edbbfe14f0886230"
+  },
+  "reels-second-brain/src/rsb/__init__.py": {
+    "mtime": 1792931830.163607,
+    "seen": 1793021898.9931118,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "reels-second-brain/src/rsb/app.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.9931135,
+    "ast_hash": "4471f141ba64583d9a595e6bc3b4e7c9",
+    "semantic_hash": "4471f141ba64583d9a595e6bc3b4e7c9"
+  },
+  "reels-second-brain/src/rsb/asgi.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.993115,
+    "ast_hash": "22c32c58ca01addce01ea489c709a3dd",
+    "semantic_hash": "22c32c58ca01addce01ea489c709a3dd"
+  },
+  "reels-second-brain/src/rsb/cli.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.9931161,
+    "ast_hash": "ea7928f0c44f4a4e30430620ee826ec2",
+    "semantic_hash": "ea7928f0c44f4a4e30430620ee826ec2"
+  },
+  "reels-second-brain/src/rsb/config.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.9931173,
+    "ast_hash": "48a60c3f908817563028b7dff363ee43",
+    "semantic_hash": "48a60c3f908817563028b7dff363ee43"
+  },
+  "reels-second-brain/src/rsb/db.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.9931188,
+    "ast_hash": "048148c3ea55fbfd462a21c5134966de",
+    "semantic_hash": "048148c3ea55fbfd462a21c5134966de"
+  },
+  "reels-second-brain/src/rsb/instagram.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.9931197,
+    "ast_hash": "7842baf55822fb471c56b2dbd5cb818d",
+    "semantic_hash": "7842baf55822fb471c56b2dbd5cb818d"
+  },
+  "reels-second-brain/src/rsb/intake.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.993121,
+    "ast_hash": "7fb3d256a3ca3d13ce68774cea594014",
+    "semantic_hash": "7fb3d256a3ca3d13ce68774cea594014"
+  },
+  "reels-second-brain/src/rsb/jobs.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.993122,
+    "ast_hash": "03e041f4b574cb739c73d468aae3c143",
+    "semantic_hash": "03e041f4b574cb739c73d468aae3c143"
+  },
+  "reels-second-brain/src/rsb/kakao.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.9931233,
+    "ast_hash": "59059a5cec15aa16cac42b0caf00c7e7",
+    "semantic_hash": "59059a5cec15aa16cac42b0caf00c7e7"
+  },
+  "reels-second-brain/src/rsb/media/__init__.py": {
+    "mtime": 1792931830.1636276,
+    "seen": 1793021898.9931247,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "reels-second-brain/src/rsb/media/fetch.py": {
+    "mtime": 1792931830.1641717,
+    "seen": 1793021898.993126,
+    "ast_hash": "ee81ad1cc434b548d71ef478769a7469",
+    "semantic_hash": "ee81ad1cc434b548d71ef478769a7469"
+  },
+  "reels-second-brain/src/rsb/media/frames.py": {
+    "mtime": 1792931830.1641717,
+    "seen": 1793021898.9931269,
+    "ast_hash": "9ded8700a39de8be01fe422a16a4c06d",
+    "semantic_hash": "9ded8700a39de8be01fe422a16a4c06d"
+  },
+  "reels-second-brain/src/rsb/media/ocr.py": {
+    "mtime": 1792931830.1641717,
+    "seen": 1793021898.9931283,
+    "ast_hash": "9a256d6a5183cc08253657feec894d7d",
+    "semantic_hash": "9a256d6a5183cc08253657feec894d7d"
+  },
+  "reels-second-brain/src/rsb/media/transcribe.py": {
+    "mtime": 1792931830.1641717,
+    "seen": 1793021898.9931293,
+    "ast_hash": "475d2575bd880b57631ef9c1b4c72d23",
+    "semantic_hash": "475d2575bd880b57631ef9c1b4c72d23"
+  },
+  "reels-second-brain/src/rsb/media/types.py": {
+    "mtime": 1792931830.1641717,
+    "seen": 1793021898.9931302,
+    "ast_hash": "2da74649b2f20559c3e7f175ff3e765e",
+    "semantic_hash": "2da74649b2f20559c3e7f175ff3e765e"
+  },
+  "reels-second-brain/src/rsb/worker.py": {
+    "mtime": 1792931830.1641717,
+    "seen": 1793021898.9931316,
+    "ast_hash": "7515ef4898201fb9952aeebc27b132a1",
+    "semantic_hash": "7515ef4898201fb9952aeebc27b132a1"
+  },
+  "reels-second-brain/tests/conftest.py": {
+    "mtime": 1792931830.1641717,
+    "seen": 1793021898.9931326,
+    "ast_hash": "3cedf4053003f9a846ef1c4047c813d2",
+    "semantic_hash": "3cedf4053003f9a846ef1c4047c813d2"
+  },
+  "reels-second-brain/tests/fixtures/mock/echo.json": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.9931338,
+    "ast_hash": "02a96d0a1508f44cd598c0b096533726",
+    "semantic_hash": "02a96d0a1508f44cd598c0b096533726"
+  },
+  "reels-second-brain/tests/fixtures/mock/multi.json": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.9931352,
+    "ast_hash": "780ecfde077d4109e265df7f76baf3e7",
+    "semantic_hash": "780ecfde077d4109e265df7f76baf3e7"
+  },
+  "reels-second-brain/tests/fixtures/mock/reel.json": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.9931366,
+    "ast_hash": "ceb3182b8776c2e879d52b810e81422d",
+    "semantic_hash": "ceb3182b8776c2e879d52b810e81422d"
+  },
+  "reels-second-brain/tests/fixtures/mock/text.json": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.993138,
+    "ast_hash": "7d8faef657ac27d38005b4e98224cf2d",
+    "semantic_hash": "7d8faef657ac27d38005b4e98224cf2d"
+  },
+  "reels-second-brain/tests/media/test_media.py": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.9931395,
+    "ast_hash": "3691668ddcbc2e8bbe85bd0d7db483fe",
+    "semantic_hash": "3691668ddcbc2e8bbe85bd0d7db483fe"
+  },
+  "reels-second-brain/tests/test_kakao.py": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.9931407,
+    "ast_hash": "f28e77fed80927e851a03c8acbd6ad45",
+    "semantic_hash": "f28e77fed80927e851a03c8acbd6ad45"
+  },
+  "reels-second-brain/tests/test_webhook.py": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.9931417,
+    "ast_hash": "7df1b5a9b9a5fef0c4984972c9078690",
+    "semantic_hash": "7df1b5a9b9a5fef0c4984972c9078690"
+  },
+  "reels-second-brain/tests/test_worker.py": {
+    "mtime": 1792931830.1646805,
+    "seen": 1793021898.993143,
+    "ast_hash": "bc44a228c4814295731e9010351ce143",
+    "semantic_hash": "bc44a228c4814295731e9010351ce143"
+  },
+  "reels-second-brain/AGENTS.md": {
+    "mtime": 1792931830.1627805,
+    "seen": 1793021898.9931443,
+    "ast_hash": "3b45b4bef96ae47514dfba01a2780497",
+    "semantic_hash": "3b45b4bef96ae47514dfba01a2780497"
+  },
+  "reels-second-brain/CLAUDE.md": {
+    "mtime": 1792931830.1627805,
+    "seen": 1793021898.9931452,
+    "ast_hash": "d4c86e0f0fbbb40b668a7ad16425c2a2",
+    "semantic_hash": "d4c86e0f0fbbb40b668a7ad16425c2a2"
+  },
+  "reels-second-brain/docs/PRD.md": {
+    "mtime": 1792931830.1630602,
+    "seen": 1793021898.9931467,
+    "ast_hash": "820154e3139d684ff81b7b4bd59b0746",
+    "semantic_hash": "820154e3139d684ff81b7b4bd59b0746"
+  },
+  "reels-second-brain/docs/module-contracts.md": {
+    "mtime": 1792931830.1630602,
+    "seen": 1793021898.9931476,
+    "ast_hash": "9823b9be7af9e0a15315e51766735b43",
+    "semantic_hash": "9823b9be7af9e0a15315e51766735b43"
+  },
+  "reels-second-brain/docs/review-codex.md": {
+    "mtime": 1792931830.1630602,
+    "seen": 1793021898.9931486,
+    "ast_hash": "ff5f6ed5959b99da1a121b24029310f6",
+    "semantic_hash": "ff5f6ed5959b99da1a121b24029310f6"
+  },
+  "reels-second-brain/docs/stage1-runbook.md": {
+    "mtime": 1792931830.1630602,
+    "seen": 1793021898.9931498,
+    "ast_hash": "9e36e6c96beecb047fc86426feebd583",
+    "semantic_hash": "9e36e6c96beecb047fc86426feebd583"
+  },
+  "reels-second-brain/tests/fixtures/mock/README.md": {
+    "mtime": 1792931830.164605,
+    "seen": 1793021898.993151,
+    "ast_hash": "6a5b333ae5f3a9a569de058e14a00094",
+    "semantic_hash": "6a5b333ae5f3a9a569de058e14a00094"
+  }
+}
