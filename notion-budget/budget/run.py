@@ -108,6 +108,7 @@ def run(samples, out, profile_path, learned_path, today=None, client=None):
             seen.add(k)
             keyed.append((k, t))
     sync_lines = sync_notion(client, keyed, cat, learned_path) if client else []
+    recon_rows = []
 
     lines = [f"# 가계부 실행 리포트 ({today:%Y-%m-%d})", "", "## 읽은 파일", ""]
     for key, f, ts, err in files:
@@ -118,7 +119,9 @@ def run(samples, out, profile_path, learned_path, today=None, client=None):
         lines += ["", "## 노션 동기화", "", *sync_lines]
     lines += ["", "## 대사", ""]
     for f, ts, totals in statements:
+        account = ts[0].account.rsplit(" ", 1)[0] if ts else f.stem
         for m, diff in statement.check_totals(ts, totals).items():
+            recon_rows.append(notion.statement_check_properties(m, account, totals[m], totals[m] - diff))
             lines.append(f"- {f.name} {m} 명세서 총액 {totals[m]:,}원: " + ("줄 합계와 일치" if diff == 0 else f"**차이 {diff:+,}원**"))
     for key, f, ts, err in files:
         if ts and ts[0].balance is not None:
@@ -154,6 +157,15 @@ def run(samples, out, profile_path, learned_path, today=None, client=None):
     lines += ["", f"## 주간 인사이트 ({ws:%m/%d} 주)", "", ins.text if ins else "이번 주에는 눈에 띄는 변화가 없습니다.", ""]
     if ins:
         lines += [f"근거: {ins.evidence}", ""]
+    if client:
+        dss = client.find_data_sources(["월별 대사", "주간 인사이트"])
+        made, had = notion_sync.push_by_title(client, dss["월별 대사"], "월", recon_rows)
+        more = [f"- 월별 대사 새로 만듦 {made}건, 이미 있어 건너뜀 {had}건"]
+        if ins:
+            made, had = notion_sync.push_by_title(client, dss["주간 인사이트"], "주", [notion.insight_properties(ws, ins)])
+            more.append(f"- 주간 인사이트 새로 만듦 {made}건, 이미 있어 건너뜀 {had}건")
+        end = lines.index("## 노션 동기화") + 2 + len(sync_lines)   # 리포트의 '노션 동기화' 칸 끝에 붙인다
+        lines[end:end] = more
     uncategorized = sum(1 for _, t in keyed if t.category == "미분류")
     lines.append(f"미분류 {uncategorized}건 — 노션에서 고치면 다음부터 기억합니다.")
 

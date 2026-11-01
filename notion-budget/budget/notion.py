@@ -93,3 +93,25 @@ def transaction_properties(key, tx):
         "할부": {"rich_text": _text(f"{tx.installment[0]}/{tx.installment[1]}" if tx.installment else "")},
         "할부 수수료": {"number": tx.fee or None},
     }
+
+
+def statement_check_properties(month, account, total, line_sum):
+    """월별 대사 DB의 카드 명세서 한 줄."""
+    return {
+        "월": {"title": _text(f"{month} {account} 명세서")},
+        "계정": {"select": {"name": account}},
+        "명세서 총액": {"number": total},
+        "줄 합계": {"number": line_sum},
+        "청구액 차이": {"number": total - line_sum},
+    }
+
+
+def insight_properties(week_start, insight):
+    """주간 인사이트 DB 한 줄. 제목은 ISO 주 번호("2026-W38")."""
+    y, w, _ = week_start.isocalendar()
+    return {
+        "주": {"title": _text(f"{y}-W{w:02d}")},
+        "내용": {"rich_text": _text(insight.text)},
+        "근거": {"rich_text": _text(insight.evidence)},
+    }
+

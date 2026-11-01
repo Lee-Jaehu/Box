@@ -97,7 +97,8 @@ def _plain(prop):
     if prop.get("type") == "select" or "select" in prop:
         return (prop.get("select") or {}).get("name", "")
     items = prop.get("rich_text") or prop.get("title") or []
-    return "".join(t.get("plain_text", "") for t in items)
+    # 노션이 돌려준 값은 plain_text, 우리가 보내는 값은 text.content에 글자가 있다. 둘 다 읽어야 비교가 맞는다.
+    return "".join(t.get("plain_text") or (t.get("text") or {}).get("content", "") for t in items)
 
 
 def existing_by_key(client, ds_id):
@@ -166,4 +167,21 @@ def rename_account(client, ds_id, old, new, file_rename=None, dry_run=False):
         if not dry_run:
             client.update_page(p["id"], patch)
     return len(pages)
+
+
+def push_by_title(client, ds_id, title_prop, rows, dry_run=False):
+    """제목이 같은 행이 없을 때만 만든다(월별 대사·주간 인사이트처럼 한 달·한 주에 한 줄인 DB용).
+    rows: [properties]. 이미 있는 행은 사용자가 메모를 달았을 수 있으므로 덮어쓰지 않는다. 돌려주는 값: (만든 수, 건너뛴 수)."""
+    have = {_plain(p.get("properties", {}).get(title_prop)) for p in client.query_all(ds_id)}
+    new = [r for r in rows if _plain(r.get(title_prop)) not in have]
+    needed = {}
+    for props in new:
+        for name, v in props.items():
+            if isinstance(v, dict) and v.get("select"):
+                needed.setdefault(name, set()).add(v["select"]["name"])
+    if new and not dry_run:
+        client.ensure_select_options(ds_id, needed)
+        for props in new:
+            client.create_page(ds_id, props)
+    return len(new), len(rows) - len(new)
 

@@ -1,7 +1,7 @@
 """카드 이용대금명세서 읽기. 명세서는 '결제월마다 무엇이 얼마 청구됐나'의 원본이다.
 
 입력은 명세서 한 줄 = 한 행인 CSV(`*_statement.csv`)다. 카드사 엑셀을 받기 전에는 앱 화면을 옮겨 적은 파일을 쓴다.
-  열: 결제월, 이용일, 가맹점, 카드, 구분, 결제금액, 거래금액, 할인
+  열: 결제월, 이용일, 가맹점, 카드, 구분, 결제금액, 거래금액, 할인, 메모(선택)
   - 구분: 일시불 / 할부(n/N) / 명세서합계(이 행의 결제금액이 그 달 명세서 총액)
   - 결제금액: 이번 명세서에 청구된 금액(할인 후). 거래금액: 할부면 원래 이용 금액 전체
 
@@ -61,7 +61,7 @@ def parse(path, account_prefix=None):
             latest = max(tx.bills)
             tx.billing_month, tx.installment, tx.billed = latest[0], (latest[1], total_n), latest[2]
             continue
-        txs.append(Transaction(date=d, amount=-billed, account=account, counterparty=r["가맹점"].strip(),
+        txs.append(Transaction(date=d, amount=-billed, account=account, counterparty=r["가맹점"].strip(), memo=(r.get("메모") or "").strip(),
                                source="statement", source_ref=f"{getattr(path, 'name', path)}:{i}",
                                billed=-billed, billing_month=month, bills=[(month, 1, -billed)],
                                extra={"card": True, "discount": _int(r.get("할인"))}))

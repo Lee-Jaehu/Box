@@ -74,17 +74,21 @@ def frequent_small(txs, week_start, min_count=4, max_each=15000):
 
 
 def new_recurring(txs, week_start):
-    """지난달과 이번 달에 같은 가맹점·같은 금액이 나왔고, 그 전 달에는 없던 결제 → 새 정기결제 후보."""
+    """지난달과 이번 달에 같은 가맹점·같은 금액이 **비슷한 날짜(±3일)**에 나왔고, 그 전 달에는 없던 결제 → 새 정기결제 후보.
+    날짜 조건이 없으면 편의점에서 우연히 같은 금액을 두 번 낸 것까지 잡힌다(2026-11 실제 데이터에서 확인)."""
     end = week_start + timedelta(days=6)
     this_m = end.replace(day=1)
     last_m = (this_m - timedelta(days=1)).replace(day=1)
     before_m = (last_m - timedelta(days=1)).replace(day=1)
-    seen = defaultdict(set)
+    seen = defaultdict(list)
     for t in _spending(txs):
-        seen[(t.counterparty, -t.amount)].add(t.date.replace(day=1))
+        seen[(t.counterparty, -t.amount)].append(t.date)
     best = None
-    for (m, amt), months in seen.items():
-        if this_m in months and last_m in months and before_m not in months and amt >= 3000 and m:
+    for (m, amt), dates in seen.items():
+        months = {d.replace(day=1) for d in dates}
+        same_day = any(abs(a.day - b.day) <= 3 for a in dates if a.replace(day=1) == last_m
+                       for b in dates if b.replace(day=1) == this_m and b <= end)
+        if same_day and before_m not in months and amt >= 3000 and m:
             cand = Insight("새 정기결제", amt * 12,
                            f"{m} {amt:,}원이 두 달 연속 결제됐습니다. 새로 시작한 정기결제라면 1년에 {amt * 12:,}원입니다.",
                            f"{last_m:%Y-%m}, {this_m:%Y-%m}에 같은 금액 결제 · {before_m:%Y-%m}에는 없음")

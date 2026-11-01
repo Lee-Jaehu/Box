@@ -319,6 +319,10 @@ class Insights(unittest.TestCase):
         ins = insights.new_recurring(txs, self.week)
         self.assertEqual(ins.impact, 13900 * 12)
 
+    def test_same_amount_on_different_days_is_not_recurring(self):
+        txs = [spend(date(2026, 9, 1), 3391, "가상편의점", "식비"), spend(date(2026, 10, 12), 3391, "가상편의점", "식비")]
+        self.assertIsNone(insights.new_recurring(txs, date(2026, 10, 12)))
+
     def test_quiet_week_and_excluded_kinds(self):
         self.assertIsNone(insights.weekly_insight(self.base(), self.week))
         biz = spend(self.week, 500000, "가상식당", "식비")
@@ -512,6 +516,12 @@ class NotionSync(unittest.TestCase):
         self.assertEqual(saved, {"가상상점": "식비"})                              # 기억은 가게만
         self.assertIn("결제 대행이라 기억하지 않음: 네이버페이", lines[0])
         self.assertIn("새로 만듦 0건, 이미 있어 건너뜀 2건", lines[1])
+
+    def test_push_by_title_skips_titles_already_in_notion(self):
+        fake = FakeNotion(pages=[{"properties": {"월": {"type": "title", "title": [{"plain_text": "2026-10 가상카드 명세서"}]}}}])
+        rows = [notion.statement_check_properties("2026-10", "가상카드", 100, 100),     # 이미 있음 (보내는 형식은 text.content)
+                notion.statement_check_properties("2026-11", "가상카드", 200, 200)]
+        self.assertEqual(notion_sync.push_by_title(self.client(fake), "ds", "월", rows), (1, 1))
 
     def test_missing_db_and_http_error_messages(self):
         c = self.client(FakeNotion())
