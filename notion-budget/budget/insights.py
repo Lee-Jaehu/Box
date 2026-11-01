@@ -81,10 +81,14 @@ def new_recurring(txs, week_start):
     last_m = (this_m - timedelta(days=1)).replace(day=1)
     before_m = (last_m - timedelta(days=1)).replace(day=1)
     seen = defaultdict(list)
+    covered = defaultdict(set)   # 계정별로 데이터가 있는 달
     for t in _spending(txs):
-        seen[(t.counterparty, -t.amount)].append(t.date)
+        seen[(t.account, t.counterparty, -t.amount)].append(t.date)
+        covered[t.account].add(t.date.replace(day=1))
     best = None
-    for (m, amt), dates in seen.items():
+    for (acct, m, amt), dates in seen.items():
+        if before_m not in covered[acct]:
+            continue   # 그 전 달 데이터가 없으면 '새로' 시작했는지 알 수 없다 (2026-11: 매달 나가던 통신요금을 새 정기결제로 잘못 봄)
         months = {d.replace(day=1) for d in dates}
         same_day = any(abs(a.day - b.day) <= 3 for a in dates if a.replace(day=1) == last_m
                        for b in dates if b.replace(day=1) == this_m and b <= end)

@@ -169,10 +169,26 @@ def rename_account(client, ds_id, old, new, file_rename=None, dry_run=False):
     return len(pages)
 
 
-def push_by_title(client, ds_id, title_prop, rows, dry_run=False):
+def _number_props(props):
+    return {k: v["number"] for k, v in props.items() if isinstance(v, dict) and "number" in v}
+
+
+def push_by_title(client, ds_id, title_prop, rows, dry_run=False, refresh_numbers=False):
     """제목이 같은 행이 없을 때만 만든다(월별 대사·주간 인사이트처럼 한 달·한 주에 한 줄인 DB용).
-    rows: [properties]. 이미 있는 행은 사용자가 메모를 달았을 수 있으므로 덮어쓰지 않는다. 돌려주는 값: (만든 수, 건너뛴 수)."""
-    have = {_plain(p.get("properties", {}).get(title_prop)) for p in client.query_all(ds_id)}
+    rows: [properties]. 이미 있는 행은 덮어쓰지 않는다. 단 refresh_numbers=True면(월별 대사처럼 엔진이 계산하는 숫자만 있는 DB)
+    숫자 속성이 달라진 행의 숫자만 고친다 — 같은 달 명세서에 카드가 더해져 총액이 바뀌는 경우(2026-11 현대카드).
+    돌려주는 값: (만든 수, 건너뛴 수). 숫자를 고친 행도 '건너뛴 수'에 들어간다."""
+    pages = {_plain(p.get("properties", {}).get(title_prop)): p for p in client.query_all(ds_id)}
+    have = set(pages)
+    if refresh_numbers and not dry_run:
+        for r in rows:
+            page = pages.get(_plain(r.get(title_prop)))
+            if page is None:
+                continue
+            want = _number_props(r)
+            cur = {k: v.get("number") for k, v in page.get("properties", {}).items() if k in want}
+            if cur != want:
+                client.update_page(page["id"], {k: {"number": v} for k, v in want.items()})
     new = [r for r in rows if _plain(r.get(title_prop)) not in have]
     needed = {}
     for props in new:

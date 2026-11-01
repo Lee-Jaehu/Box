@@ -159,7 +159,7 @@ def run(samples, out, profile_path, learned_path, today=None, client=None):
         lines += [f"근거: {ins.evidence}", ""]
     if client:
         dss = client.find_data_sources(["월별 대사", "주간 인사이트"])
-        made, had = notion_sync.push_by_title(client, dss["월별 대사"], "월", recon_rows)
+        made, had = notion_sync.push_by_title(client, dss["월별 대사"], "월", recon_rows, refresh_numbers=True)
         more = [f"- 월별 대사 새로 만듦 {made}건, 이미 있어 건너뜀 {had}건"]
         if ins:
             made, had = notion_sync.push_by_title(client, dss["주간 인사이트"], "주", [notion.insight_properties(ws, ins)])

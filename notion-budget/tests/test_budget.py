@@ -316,6 +316,8 @@ class Insights(unittest.TestCase):
 
     def test_new_recurring(self):
         txs = [spend(date(2026, 9, 15), 13900, "가상구독", "문화·여가"), spend(date(2026, 10, 15), 13900, "가상구독", "문화·여가")]
+        self.assertIsNone(insights.new_recurring(txs, self.week))                  # 8월 데이터가 없으면 '새로'인지 모름
+        txs.append(spend(date(2026, 8, 3), 5000, "가상식당", "식비"))               # 같은 카드의 8월 데이터가 있음
         ins = insights.new_recurring(txs, self.week)
         self.assertEqual(ins.impact, 13900 * 12)
 
@@ -522,6 +524,20 @@ class NotionSync(unittest.TestCase):
         rows = [notion.statement_check_properties("2026-10", "가상카드", 100, 100),     # 이미 있음 (보내는 형식은 text.content)
                 notion.statement_check_properties("2026-11", "가상카드", 200, 200)]
         self.assertEqual(notion_sync.push_by_title(self.client(fake), "ds", "월", rows), (1, 1))
+
+    def test_recon_numbers_refreshed_when_statement_grows(self):
+        old = {"id": "r1", "properties": {"월": {"type": "title", "title": [{"plain_text": "2026-10 가상카드 명세서"}]},
+                                          "명세서 총액": {"number": 100}, "줄 합계": {"number": 100}, "청구액 차이": {"number": 0}}}
+        fake = FakeNotion(pages=[old])
+        c = self.client(fake)
+        calls = []
+        c.update_page = lambda pid, props: calls.append((pid, props))
+        row = notion.statement_check_properties("2026-10", "가상카드", 250, 250)
+        self.assertEqual(notion_sync.push_by_title(c, "ds", "월", [row], refresh_numbers=True), (0, 1))
+        self.assertEqual(calls, [("r1", {"명세서 총액": {"number": 250}, "줄 합계": {"number": 250}, "청구액 차이": {"number": 0}})])
+        calls.clear()
+        notion_sync.push_by_title(c, "ds", "월", [row])                          # 기본값은 숫자도 건드리지 않음
+        self.assertEqual(calls, [])
 
     def test_missing_db_and_http_error_messages(self):
         c = self.client(FakeNotion())
