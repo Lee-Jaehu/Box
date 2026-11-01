@@ -42,6 +42,7 @@ class Transaction:
     billing_month: Optional[str] = None   # 그 명세서의 결제월 "2026-10"
     installment: Optional[tuple] = None   # (이번 회차, 전체 회차)
     fee: int = 0                          # 할부 수수료(원, 양수)
+    bills: list = field(default_factory=list)  # 회차별 청구 [(결제월, 회차, 청구액)]. 할부는 명세서마다 한 줄씩 쌓임
     category: str = ""
     category_reason: str = ""
     extra: dict = field(default_factory=dict)

@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import openpyxl
 
 from budget import alerts, excel, insights, notion, reconcile, rules
-from budget import notion_sync
+from budget import notion_sync, statement
 from budget.categories import Categorizer
 from budget.model import Kind, Transaction, assign_keys
 from budget.run import run
@@ -348,6 +348,45 @@ class EndToEnd(unittest.TestCase):
         self.assertIn("| 2026-10 | 62,000 | 2,000,000 | -50,000 | 0 |", report)   # 카드대금은 자산 이동
         self.assertEqual(len(pages), 5)
         self.assertEqual({p["properties"]["카테고리"]["select"]["name"] for p in pages if p["properties"]["이름"]["title"][0]["text"]["content"] == "다이소"}, {"생활용품"})
+
+
+class Statement(unittest.TestCase):
+    """명세서 화면을 옮긴 CSV (2026-10 실제 명세서 구조, 값은 가상)."""
+    CSV = "\n".join([
+        "결제월,이용일,가맹점,카드,구분,결제금액,거래금액,할인",
+        "2026-08,2026-07-21,가상몰,000,할부(1/3),100100,300100,",
+        "2026-08,2026-08-01,가상카페,000,일시불,4850,5000,150",
+        "2026-08,,,,명세서합계,104950,,",
+        "2026-09,2026-07-21,가상몰,000,할부(2/3),100000,300100,",
+        "2026-09,2026-08-20,가상주유소,111,일시불,50000,,",
+        "2026-09,,,,명세서합계,150000,,",
+        "2026-10,2026-07-21,가상몰,000,할부(3/3),100000,300100,",
+        "2026-10,,,,명세서합계,100001,,"])  # 마지막 달은 1원 틀린 총액
+
+    def parse(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "가상_statement.csv"
+            p.write_text(self.CSV, encoding="utf-8")
+            return statement.parse(p)
+
+    def test_installment_merged_across_statements(self):
+        txs, totals = self.parse()
+        inst = [t for t in txs if t.installment]
+        self.assertEqual(len(inst), 1)                                   # 세 명세서에 나와도 이용 건은 하나
+        self.assertEqual(inst[0].amount, -300100)                        # 이용일 기준 전액
+        self.assertEqual(inst[0].bills, [("2026-08", 1, -100100), ("2026-09", 2, -100000), ("2026-10", 3, -100000)])
+        self.assertEqual((inst[0].installment, inst[0].billing_month), ((3, 3), "2026-10"))
+        self.assertEqual(len(txs), 3)
+        self.assertEqual({t.account for t in txs}, {"카드 000", "카드 111"})
+
+    def test_totals_check_and_billed_basis(self):
+        txs, totals = self.parse()
+        self.assertEqual(statement.check_totals(txs, totals), {"2026-08": 0, "2026-09": 0, "2026-10": 1})
+        for t in txs:
+            rules.classify(t, rules.Profile())
+        billed = rules.monthly_totals(txs, basis="billed")
+        self.assertEqual([billed[m]["지출"] for m in ("2026-08", "2026-09", "2026-10")], [104950, 150000, 100000])
+        self.assertEqual(rules.monthly_totals(txs)["2026-07"]["지출"], 300100)
 
 
 class FakeResponse:

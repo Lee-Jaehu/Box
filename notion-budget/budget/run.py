@@ -8,6 +8,7 @@ usage:
 
 폴더 규칙:
   data/samples/hana_bank*.xlsx|csv, hana_card*, hyundai_card*, shinhan_card*   기관별 파일 (이름 앞부분으로 형식 선택)
+  data/samples/*_statement.csv  카드 이용대금명세서를 옮긴 파일 (statement.py 형식)
   data/samples/alerts.jsonl    알림 원문 한 줄에 하나: {"id", "sender", "text", "received_at": "2026-10-25T14:21:00"}
   data/profile.json            {"own_names": [...], "own_accounts": [...], "business_accounts": [...]}
   data/categories_learned.json 사용자가 고친 카테고리 (없으면 빈 값)
@@ -17,7 +18,7 @@ import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from . import alerts, excel, insights, notion, reconcile, rules
+from . import alerts, excel, insights, notion, reconcile, rules, statement
 from .categories import Categorizer
 from .model import assign_keys
 
@@ -33,7 +34,7 @@ def read_excels(folder):
     """(형식 키, 파일, 거래들, 오류) 목록. 형식을 모르는 파일은 오류로 보고만 하고 건너뛴다."""
     out = []
     for f in sorted(Path(folder).glob("*")):
-        if f.suffix.lower() not in (".xlsx", ".xlsm", ".csv"):
+        if f.suffix.lower() not in (".xlsx", ".xlsm", ".csv") or f.name.endswith("_statement.csv"):
             continue
         key = next((k for k in excel.FORMATS if f.name.startswith(k)), None)
         if not key:
@@ -63,6 +64,8 @@ def run(samples, out, profile_path, learned_path, today=None):
     profile, cat = load_profile(profile_path), Categorizer.load(learned_path)
     files = read_excels(samples)
     txs = [t for _, _, ts, _ in files for t in ts]
+    statements = [(f, *statement.parse(f)) for f in sorted(Path(samples).glob("*_statement.csv"))]
+    txs += [t for _, ts, _ in statements for t in ts]
 
     results = [alerts.parse(a) for a in read_alerts(Path(samples) / "alerts.jsonl")]
     watch = alerts.FormatWatch()
@@ -82,7 +85,12 @@ def run(samples, out, profile_path, learned_path, today=None):
     lines = [f"# 가계부 실행 리포트 ({today:%Y-%m-%d})", "", "## 읽은 파일", ""]
     for key, f, ts, err in files:
         lines.append(f"- {f.name}: " + (f"**오류** {err}" if err else f"{key} 형식, {len(ts)}건"))
+    for f, ts, totals in statements:
+        lines.append(f"- {f.name}: 명세서 {len(totals)}개월, 이용 건 {len(ts)}건")
     lines += ["", "## 대사", ""]
+    for f, ts, totals in statements:
+        for m, diff in statement.check_totals(ts, totals).items():
+            lines.append(f"- {f.name} {m} 명세서 총액 {totals[m]:,}원: " + ("줄 합계와 일치" if diff == 0 else f"**차이 {diff:+,}원**"))
     for key, f, ts, err in files:
         if ts and ts[0].balance is not None:
             br = reconcile.balance_breaks(ts)
@@ -97,11 +105,22 @@ def run(samples, out, profile_path, learned_path, today=None):
     lines.append(f"- 알림 {len(results)}건 중 미해석 {len(unparsed)}건")
     lines += [f"- ⚠ {w}" for w in warnings]
 
+    dates = sorted(t.date for _, t in keyed)
+    if dates:
+        first, last = dates[0], dates[-1]
+        lines += ["", f"데이터 범위: {first:%Y-%m-%d} ~ {last:%Y-%m-%d} 이용분. "
+                  f"{first:%Y-%m}" + (f"·{last:%Y-%m}" if last.strftime('%Y-%m') != first.strftime('%Y-%m') else "")
+                  + " 은 달 전체가 아닐 수 있습니다(앞뒤 명세서가 없으면 일부만 들어감)."]
     lines += ["", "## 월별 합계 (이용일 기준)", "", "| 월 | 지출 | 수입 | 자산 이동 | 법인(업무) |", "|---|---|---|---|---|"]
     for m, d in sorted(rules.monthly_totals([t for _, t in keyed]).items()):
         lines.append(f"| {m} | {d['지출']:,} | {d['수입']:,} | {d['자산 이동']:,} | {d['법인(업무)']:,} |")
 
-    ws = last_full_week(today)
+    last_data = max((t.date for _, t in keyed), default=today)
+    lines += ["", "## 월별 합계 (결제월 기준, 카드 명세서 청구액)", "", "| 결제월 | 지출 |", "|---|---|"]
+    for m, d in sorted(rules.monthly_totals([t for _, t in keyed], basis="billed").items()):
+        lines.append(f"| {m} | {d['지출']:,} |")
+
+    ws = min(last_full_week(today), last_data - timedelta(days=last_data.weekday()))  # 데이터가 있는 마지막 주
     ins = insights.weekly_insight([t for _, t in keyed], ws)
     lines += ["", f"## 주간 인사이트 ({ws:%m/%d} 주)", "", ins.text if ins else "이번 주에는 눈에 띄는 변화가 없습니다.", ""]
     if ins:

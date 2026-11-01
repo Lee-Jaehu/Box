@@ -61,16 +61,22 @@ def monthly_totals(txs, basis="usage"):
     (할부는 회차만, 수수료 포함). 명세서 정보가 없는 거래는 두 기준 모두 이용일로 센다."""
     out = {}
     for tx in txs:
-        amt, m = tx.amount, tx.date.strftime("%Y-%m")
-        if basis == "billed" and tx.billed is not None and tx.billing_month:
-            amt, m = tx.billed, tx.billing_month
-        d = out.setdefault(m, {"지출": 0, "수입": 0, "자산 이동": 0, "법인(업무)": 0})
-        if tx.kind == Kind.BUSINESS:
-            d["법인(업무)"] += -amt
-        elif tx.kind and tx.kind.is_asset_move:
-            d["자산 이동"] += amt
-        elif amt < 0 or tx.extra.get("card"):
-            d["지출"] += -amt
-        else:
-            d["수입"] += amt
+        parts = [(tx.date.strftime("%Y-%m"), tx.amount)]
+        if basis == "billed" and tx.bills:
+            parts = [(m, amt) for m, _, amt in tx.bills]
+        elif basis == "billed" and tx.billed is not None and tx.billing_month:
+            parts = [(tx.billing_month, tx.billed)]
+        for m, amt in parts:
+            _add(out.setdefault(m, {"지출": 0, "수입": 0, "자산 이동": 0, "법인(업무)": 0}), tx, amt)
     return out
+
+
+def _add(d, tx, amt):
+    if tx.kind == Kind.BUSINESS:
+        d["법인(업무)"] += -amt
+    elif tx.kind and tx.kind.is_asset_move:
+        d["자산 이동"] += amt
+    elif amt < 0 or tx.extra.get("card"):
+        d["지출"] += -amt
+    else:
+        d["수입"] += amt
