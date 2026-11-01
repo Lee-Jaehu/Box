@@ -84,6 +84,9 @@ class Client:
             self.request("PATCH", f"/data_sources/{ds_id}", {"properties": patch})
         return patch
 
+    def update_page(self, page_id, properties):
+        return self.request("PATCH", f"/pages/{page_id}", {"properties": properties})
+
     def create_page(self, ds_id, properties):
         return self.request("POST", "/pages", {"parent": {"type": "data_source_id", "data_source_id": ds_id}, "properties": properties})
 
@@ -142,3 +145,25 @@ def pull_corrections(client, ds_id, ours):
         if cat != our_cat or kind != our_kind:
             out.append((key, _plain(p.get("이름")), cat if cat != our_cat else None, kind if kind != our_kind else None))
     return out
+
+
+def rename_account(client, ds_id, old, new, file_rename=None, dry_run=False):
+    """계정 이름을 바꾼다. 원본키가 '계정|날짜|…'로 시작하므로 원본키도 함께 바꿔야 다음 실행에서 중복이 생기지 않는다.
+    file_rename=(옛 파일명, 새 파일명)이면 '원본 위치'의 파일명도 바꾼다. 카테고리 등 사용자가 고친 값은 건드리지 않는다.
+    돌려주는 값: 바꾼 페이지 수."""
+    pages = [p for p in client.query_all(ds_id) if _plain(p.get("properties", {}).get("계정")) == old]
+    if pages and not dry_run:
+        client.ensure_select_options(ds_id, {"계정": {new}})
+    for p in pages:
+        props = p["properties"]
+        key = _plain(props.get("원본키"))
+        patch = {"계정": {"select": {"name": new}}}
+        if key.startswith(old + "|"):
+            patch["원본키"] = {"rich_text": [{"type": "text", "text": {"content": new + key[len(old):]}}]}
+        ref = _plain(props.get("원본 위치"))
+        if file_rename and ref.startswith(file_rename[0]):
+            patch["원본 위치"] = {"rich_text": [{"type": "text", "text": {"content": file_rename[1] + ref[len(file_rename[0]):]}}]}
+        if not dry_run:
+            client.update_page(p["id"], patch)
+    return len(pages)
+

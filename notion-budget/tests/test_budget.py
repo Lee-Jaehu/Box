@@ -17,9 +17,9 @@ import openpyxl
 
 from budget import alerts, excel, insights, notion, reconcile, rules
 from budget import notion_sync, statement
-from budget.categories import Categorizer
+from budget.categories import Categorizer, merchant_part
 from budget.model import Kind, Transaction, assign_keys
-from budget.run import run
+from budget.run import run, sync_notion
 
 
 def bank_tx(d, amt, cp="", bal=None, ref=""):
@@ -281,6 +281,14 @@ class Categories(unittest.TestCase):
             c.save(Path(d) / "l.json")
             self.assertEqual(Categorizer.load(Path(d) / "l.json").categorize("다이소")[0], "식비")
 
+    def test_payment_aggregators_not_learned(self):
+        c = Categorizer()
+        self.assertFalse(c.learn("네이버페이", "육아"))                      # 결제 대행은 기억하지 않음
+        self.assertEqual(c.categorize("네이버페이")[0], "미분류")
+        self.assertEqual(merchant_part("토스페이먼츠주식회사 - (주)가상상점"), "(주)가상상점")
+        self.assertTrue(c.learn("토스페이먼츠주식회사 - (주)가상상점", "식비"))  # 'PG - 가게'면 가게 쪽을 기억
+        self.assertEqual(c.categorize("KCP - 가상상점")[0], "식비")
+
     def test_normalize_keeps_words_with_ju(self):
         self.assertEqual(Categorizer().categorize("가상식당")[0], "식비")   # '식'이 지워지면 안 됨
 
@@ -474,6 +482,36 @@ class NotionSync(unittest.TestCase):
             if new_cat:
                 cat.learn(merchant, new_cat)
         self.assertEqual(cat.categorize("가상상사")[0], "문화·여가")
+
+    def test_rename_account_rewrites_key_and_keeps_user_edits(self):
+        pg = page("카드 000|2026-10-01||-5000|가상상점#1", cat="식비")
+        pg["id"] = "p1"
+        pg["properties"]["계정"] = {"type": "select", "select": {"name": "카드 000"}}
+        pg["properties"]["원본 위치"] = {"type": "rich_text", "rich_text": [{"plain_text": "old.csv:3"}]}
+        fake = FakeNotion(pages=[pg])
+        calls = []
+        c = self.client(fake)
+        c.update_page = lambda pid, props: calls.append((pid, props))
+        self.assertEqual(notion_sync.rename_account(c, "ds", "카드 000", "가상카드 000", file_rename=("old.csv", "new.csv")), 1)
+        pid, props = calls[0]
+        self.assertEqual(props["원본키"]["rich_text"][0]["text"]["content"], "가상카드 000|2026-10-01||-5000|가상상점#1")
+        self.assertEqual(props["원본 위치"]["rich_text"][0]["text"]["content"], "new.csv:3")
+        self.assertNotIn("카테고리", props)                                    # 사용자가 고친 값은 건드리지 않음
+        self.assertIn("가상카드 000", fake.options["계정"])
+
+    def test_sync_learns_corrections_then_skips_existing(self):
+        txs = [Transaction(date=date(2026, 10, 1), amount=-5000, account="카드 000", counterparty="가상상점", kind=Kind.EXPENSE, category="미분류"),
+               Transaction(date=date(2026, 10, 2), amount=-9000, account="카드 000", counterparty="네이버페이", kind=Kind.EXPENSE, category="미분류")]
+        keyed = assign_keys(txs)
+        fake = FakeNotion(pages=[page(keyed[0][0], "가상상점", "식비"), page(keyed[1][0], "네이버페이", "육아")])
+        cat = Categorizer()
+        with tempfile.TemporaryDirectory() as d:
+            lines = sync_notion(self.client(fake), keyed, cat, Path(d) / "learned.json")
+            saved = json.loads((Path(d) / "learned.json").read_text(encoding="utf-8"))
+        self.assertEqual((txs[0].category, txs[1].category), ("식비", "육아"))     # 이번 실행에는 둘 다 반영
+        self.assertEqual(saved, {"가상상점": "식비"})                              # 기억은 가게만
+        self.assertIn("결제 대행이라 기억하지 않음: 네이버페이", lines[0])
+        self.assertIn("새로 만듦 0건, 이미 있어 건너뜀 2건", lines[1])
 
     def test_missing_db_and_http_error_messages(self):
         c = self.client(FakeNotion())

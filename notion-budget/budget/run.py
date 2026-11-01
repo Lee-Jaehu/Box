@@ -18,9 +18,9 @@ import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from . import alerts, excel, insights, notion, reconcile, rules, statement
+from . import alerts, excel, insights, notion, notion_sync, reconcile, rules, statement
 from .categories import Categorizer
-from .model import assign_keys
+from .model import Kind, assign_keys
 
 
 def load_profile(path):
@@ -59,7 +59,33 @@ def last_full_week(today):
     return today - timedelta(days=today.weekday() + 7)
 
 
-def run(samples, out, profile_path, learned_path, today=None):
+def sync_notion(client, keyed, cat, learned_path, push=True):
+    """노션과 맞추기: ① 사용자가 노션에서 고친 카테고리·구분을 읽어 이번 실행에 반영하고 가맹점 규칙으로 기억
+    (결제 대행은 기억하지 않음) ② 노션에 없는 거래만 새로 만든다. 돌려주는 값: 리포트 줄 목록."""
+    ds = client.find_data_sources(["거래"])["거래"]
+    ours = {k: (t.category or "미분류", t.kind.value if t.kind else "") for k, t in keyed}
+    fixes = notion_sync.pull_corrections(client, ds, ours)
+    by_key = dict(keyed)
+    learned, skipped_agg = set(), set()
+    for key, merchant, new_cat, new_kind in fixes:
+        t = by_key[key]
+        if new_cat:
+            t.category, t.category_reason = new_cat, "노션에서 직접 고침"
+            (learned if cat.learn(merchant, new_cat) else skipped_agg).add(merchant)
+        if new_kind:
+            t.kind = Kind(new_kind)
+            t.kind_reason = "노션에서 직접 고침"
+    if learned:
+        cat.save(learned_path)
+    lines = [f"- 노션에서 고친 값 {len(fixes)}건을 반영했습니다. 가맹점 {len(learned)}곳을 기억합니다"
+             + (f" (결제 대행이라 기억하지 않음: {', '.join(sorted(skipped_agg))})" if skipped_agg else "")]
+    if push:
+        created, existed = notion_sync.push_transactions(client, ds, [(k, notion.transaction_properties(k, t)) for k, t in keyed])
+        lines.append(f"- 거래 새로 만듦 {created}건, 이미 있어 건너뜀 {existed}건(사용자가 고친 값은 덮어쓰지 않음)")
+    return lines
+
+
+def run(samples, out, profile_path, learned_path, today=None, client=None):
     today = today or date.today()
     profile, cat = load_profile(profile_path), Categorizer.load(learned_path)
     files = read_excels(samples)
@@ -81,12 +107,15 @@ def run(samples, out, profile_path, learned_path, today=None):
         if k not in seen:
             seen.add(k)
             keyed.append((k, t))
+    sync_lines = sync_notion(client, keyed, cat, learned_path) if client else []
 
     lines = [f"# 가계부 실행 리포트 ({today:%Y-%m-%d})", "", "## 읽은 파일", ""]
     for key, f, ts, err in files:
         lines.append(f"- {f.name}: " + (f"**오류** {err}" if err else f"{key} 형식, {len(ts)}건"))
     for f, ts, totals in statements:
         lines.append(f"- {f.name}: 명세서 {len(totals)}개월, 이용 건 {len(ts)}건")
+    if sync_lines:
+        lines += ["", "## 노션 동기화", "", *sync_lines]
     lines += ["", "## 대사", ""]
     for f, ts, totals in statements:
         for m, diff in statement.check_totals(ts, totals).items():
@@ -143,8 +172,13 @@ def main():
     ap.add_argument("--out", default="data/out")
     ap.add_argument("--profile", default="data/profile.json")
     ap.add_argument("--learned", default="data/categories_learned.json")
+    ap.add_argument("--sync", action="store_true", help="환경 변수 NOTION_TOKEN으로 노션과 맞춤(고친 값 읽기 + 새 거래 쓰기)")
     args = ap.parse_args()
-    print("\n".join(run(args.samples, args.out, args.profile, args.learned)))
+    client = None
+    if args.sync:
+        import os
+        client = notion_sync.Client(os.environ["NOTION_TOKEN"])
+    print("\n".join(run(args.samples, args.out, args.profile, args.learned, client=client)))
 
 
 if __name__ == "__main__":

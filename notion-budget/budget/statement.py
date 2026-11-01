@@ -26,8 +26,14 @@ def _int(v):
     return int(v) if v else 0
 
 
-def parse(path, account_prefix="카드"):
-    """(거래 목록, {결제월: 명세서 총액})."""
+ISSUERS = {"shinhan_card": "신한카드", "hyundai_card": "현대카드", "hana_card": "하나카드"}
+
+
+def parse(path, account_prefix=None):
+    """(거래 목록, {결제월: 명세서 총액}). 계정 이름은 '카드사 카드끝번호'(예: 신한카드 785).
+    카드사는 파일 이름 앞부분(shinhan_card_… 등)으로 정하고, 모르면 '카드'로 둔다."""
+    name = getattr(path, "name", str(path))
+    account_prefix = account_prefix or next((v for k, v in ISSUERS.items() if name.startswith(k)), "카드")
     with open(path, encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
     totals, txs, merged = {}, [], {}

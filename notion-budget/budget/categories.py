@@ -20,6 +20,24 @@ RULES = [
 ]
 
 
+# 결제 대행(간편결제·PG). 실제 가게가 아니라서 가맹점 규칙으로 학습하면 다른 거래까지 잘못 분류된다
+# (2026-11: 사용자가 네이버페이 할부 한 건을 '육아'로 고침 → 네이버페이 전체를 육아로 기억하면 안 됨).
+# 명세서에 'PG - 실제 가맹점' 형태로 나오면 실제 가맹점 쪽을 쓴다(현대카드 명세서에서 확인).
+AGGREGATORS = ("네이버페이", "카카오페이", "토스페이", "페이코", "PAYCO", "쿠페이", "쿠팡페이", "스마일페이", "SSG페이",
+               "KCP", "이니시스", "토스페이먼츠", "나이스정보통신", "한국정보통신", "KG모빌리언스", "다날")
+
+
+def merchant_part(name):
+    """'토스페이먼츠주식회사 - (주)비바리퍼블리카' → '(주)비바리퍼블리카'. 구분자가 없으면 그대로."""
+    parts = re.split(r"\s+-\s+", name or "")
+    return parts[-1] if len(parts) > 1 else (name or "")
+
+
+def is_aggregator(name):
+    n = _norm(merchant_part(name))
+    return any(_norm(a) in n for a in AGGREGATORS)
+
+
 def _norm(s):
     s = re.sub(r"\(주\)|㈜|주식회사|\s+|[()（）]", "", s or "")  # (주)를 괄호보다 먼저 지운다
     return s.upper()
@@ -34,7 +52,7 @@ class Categorizer:
 
     def categorize(self, merchant):
         """(카테고리, 근거)를 돌려준다."""
-        key = _norm(merchant)
+        key = _norm(merchant_part(merchant))
         if not key:
             return "미분류", "가맹점 이름 없음"
         if key in self.learned:
@@ -46,7 +64,11 @@ class Categorizer:
         return "미분류", "규칙 없음"
 
     def learn(self, merchant, category):
-        self.learned[_norm(merchant)] = category
+        """사용자가 고친 카테고리를 기억한다. 결제 대행은 기억하지 않고 False를 돌려준다(그 거래에만 반영)."""
+        if is_aggregator(merchant):
+            return False
+        self.learned[_norm(merchant_part(merchant))] = category
+        return True
 
     def save(self, path):
         Path(path).write_text(json.dumps(self.learned, ensure_ascii=False, indent=1), encoding="utf-8")
