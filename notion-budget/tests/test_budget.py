@@ -401,6 +401,7 @@ class FakeNotion:
     """노션 API 흉내. 실제 API 응답 형식은 토큰을 받은 뒤 다시 확인해야 한다."""
     def __init__(self, pages=None, fail_first=0):
         self.pages, self.calls, self.fail_first = list(pages or []), [], fail_first
+        self.options = {"계정": ["카드 000"]}
 
     def request(self, method, url, headers=None, json=None, timeout=None):
         self.calls.append((method, url.split("/v1")[1], json))
@@ -417,8 +418,17 @@ class FakeNotion:
             more = start + 2 < len(self.pages)
             return FakeResponse(200, {"results": chunk, "has_more": more, "next_cursor": str(start + 2) if more else None})
         if path == "/pages":
+            for name, v in json["properties"].items():                  # 실제 노션처럼 없는 선택지는 거절
+                if isinstance(v, dict) and v.get("select") and v["select"]["name"] not in self.options.get(name, []):
+                    return FakeResponse(400, {"code": "validation_error"})
             self.pages.append({"properties": json["properties"]})
             return FakeResponse(200, {"id": f"p{len(self.pages)}"})
+        if path.startswith("/data_sources/") and method == "GET":
+            return FakeResponse(200, {"properties": {k: {"select": {"options": [{"name": o} for o in v]}} for k, v in self.options.items()}})
+        if path.startswith("/data_sources/") and method == "PATCH":
+            for k, v in json["properties"].items():
+                self.options[k] = [o["name"] for o in v["select"]["options"]]
+            return FakeResponse(200, {})
         return FakeResponse(404, {"message": "unknown"})
 
 
@@ -447,6 +457,13 @@ class NotionSync(unittest.TestCase):
         self.assertEqual((created, skipped), (1, 2))
         self.assertEqual([x for x in fake.calls if x[1] == "/pages"][0][2]["parent"], {"type": "data_source_id", "data_source_id": "ds"})
         self.assertEqual(notion_sync.push_transactions(c, "ds", [("k4", {})], dry_run=True), (0, 1))
+
+    def test_missing_select_option_added_before_create(self):
+        fake = FakeNotion()
+        c = self.client(fake)
+        props = {"원본키": {"rich_text": [{"plain_text": "k9"}]}, "계정": {"select": {"name": "카드 111"}}}
+        self.assertEqual(notion_sync.push_transactions(c, "ds", [("k9", props)]), (1, 0))
+        self.assertEqual(fake.options["계정"], ["카드 000", "카드 111"])          # 기존 선택지는 유지
 
     def test_pull_corrections_feeds_categorizer(self):
         fake = FakeNotion(pages=[page("k1", "가상상사(주)", "문화·여가"), page("k2", "다이소", "생활용품", "법인(업무)")])

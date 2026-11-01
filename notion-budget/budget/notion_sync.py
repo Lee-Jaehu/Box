@@ -70,6 +70,20 @@ class Client:
                 return out
             body["start_cursor"] = res["next_cursor"]
 
+    def ensure_select_options(self, ds_id, needed):
+        """needed: {속성 이름: {선택지 값, ...}}. 없는 선택지를 먼저 추가한다.
+        2026-11 실제 노션에서 확인: 없는 선택지 값으로 페이지를 만들면 400 validation_error로 거절된다."""
+        props = self.request("GET", f"/data_sources/{ds_id}").get("properties", {})
+        patch = {}
+        for name, values in needed.items():
+            have = [o["name"] for o in (props.get(name, {}).get("select") or {}).get("options", [])]
+            new = sorted(v for v in values if v and v not in have)
+            if new:
+                patch[name] = {"select": {"options": [{"name": n} for n in have + new]}}
+        if patch:
+            self.request("PATCH", f"/data_sources/{ds_id}", {"properties": patch})
+        return patch
+
     def create_page(self, ds_id, properties):
         return self.request("POST", "/pages", {"parent": {"type": "data_source_id", "data_source_id": ds_id}, "properties": properties})
 
@@ -96,6 +110,14 @@ def existing_by_key(client, ds_id):
 def push_transactions(client, ds_id, rows, dry_run=False):
     """rows: [(원본키, properties)]. 노션에 없는 원본키만 새로 만든다. 돌려주는 값: (새로 만든 수, 이미 있어 건너뛴 수)."""
     have = existing_by_key(client, ds_id)
+    new_rows = [(k, p) for k, p in rows if k not in have]
+    needed = {}
+    for _, props in new_rows:
+        for name, v in props.items():
+            if isinstance(v, dict) and "select" in v and v["select"]:
+                needed.setdefault(name, set()).add(v["select"]["name"])
+    if new_rows and not dry_run:
+        client.ensure_select_options(ds_id, needed)
     created = skipped = 0
     for key, props in rows:
         if key in have:

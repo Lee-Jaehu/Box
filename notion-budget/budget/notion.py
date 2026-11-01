@@ -17,7 +17,7 @@ DATABASES = {
         "계정": "select",
         "구분": ("select", [k.value for k in Kind]),
         "카테고리": ("select", CATEGORIES),
-        "출처": ("select", ["엑셀", "알림"]),
+        "출처": ("select", ["엑셀", "명세서", "알림"]),
         "분류 근거": "rich_text",
         "메모": "rich_text",
         "원본키": "rich_text",          # 중복 입력 방지. model.assign_keys
@@ -43,6 +43,8 @@ DATABASES = {
         "잔액 끊김": "number",          # reconcile.balance_breaks 건수
         "알림 누락": "number",          # reconcile.alert_coverage
         "청구액 차이": "number",        # 카드만
+        "명세서 총액": "number",        # 카드 명세서 총액 (2026-11 실제 명세서 대사로 추가)
+        "줄 합계": "number",            # 명세서 줄 청구액 합계. statement.check_totals
     },
     "주간 인사이트": {
         "주": "title",                 # "2026-W43"
@@ -81,7 +83,7 @@ def transaction_properties(key, tx):
         "계정": {"select": {"name": tx.account}},
         "구분": {"select": {"name": tx.kind.value}} if tx.kind else {"select": None},
         "카테고리": {"select": {"name": tx.category or "미분류"}},
-        "출처": {"select": {"name": "알림" if tx.source.startswith("alert:") else "엑셀"}},
+        "출처": {"select": {"name": "알림" if tx.source.startswith("alert:") else "명세서" if tx.source == "statement" else "엑셀"}},
         "분류 근거": {"rich_text": _text(tx.kind_reason)},
         "메모": {"rich_text": _text(tx.memo)},
         "원본키": {"rich_text": _text(key)},
