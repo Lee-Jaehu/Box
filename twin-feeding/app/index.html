@@ -151,6 +151,7 @@ svg .grid { stroke: var(--line); stroke-width: 1; }
 svg .bar-p { fill: var(--accent); } svg .bar-p.low { fill: var(--warn); }
 svg .tgt { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
 svg .need { stroke: var(--boy); stroke-width: 1.5; fill: none; }
+svg .ord { stroke: var(--boy); stroke-width: 2.5; fill: none; opacity: .5; }
 svg .lD { stroke: var(--girl); stroke-width: 2.5; fill: none; } svg .pD { fill: var(--girl); }
 svg .lS { stroke: var(--boy); stroke-width: 2.5; fill: none; } svg .pS { fill: var(--boy); }
 svg .birthD { stroke: var(--girl); stroke-dasharray: 3 4; opacity: .6; } svg .birthS { stroke: var(--boy); stroke-dasharray: 3 4; opacity: .6; }
@@ -213,10 +214,12 @@ const DEFAULT_CONFIG = {
   birthDate: '2026-11-06',
   names: { D: '딸', S: '아들' },
   birthG: { D: 2630, S: 2640 },
-  sonOrderMl: 0,            // NICU 처방 ml/일 (0 = 아직 모름 → 체중 추정)
-  mlPerKg: 150,             // 계획용 (소아과 확인)
-  reserveDays: 2,           // 아들 몫으로 잠가둘 일수
-  pumpBuffer: 1.2,          // 유축 목표 = 아들 필요량 × 1.2
+  sonOrderMl: 0,            // (예전 방식) 처방 ml/일. 지금은 'order' 이벤트로 기록
+  mlPerKg: 150,             // 완전수유 계획값 (소아과 확인)
+  reserveDays: 2,           // 아들 완전수유 며칠치를 잠가둘지
+  pumpBuffer: 1.2,          // 유축 목표 = 아들 완전수유 필요량 × 1.2 (현재 처방량이 아님)
+  earlyDays: 14,            // 생후 이 날짜까지 짠 초기 모유는 아들 전용
+  defaultDest: 'freezer',   // NICU에 냉동으로 전달 중
   roomH: 4, homeFridgeH: 96, nicuFridgeH: 48, freezerD: 180, thawedH: 24,
   momSleep: { start: '21:45', end: '02:30' },
   dadSleep: { start: '02:30', end: '09:00' },
@@ -254,11 +257,23 @@ function latestWeight(events, baby) {
   for (const e of events) if (e.type === 'weight' && e.baby === baby && (!best || e.t > best.t)) best = e;
   return best;
 }
+// 완전수유 필요량 (체중 × ml/kg). 공급 목표와 아들 예비분 계산에 쓴다.
 function need(events, cfg, baby) {
-  if (baby === 'S' && Number(cfg.sonOrderMl) > 0) return { ml: Math.round(Number(cfg.sonOrderMl)), src: 'NICU 처방' };
   const w = latestWeight(events, baby);
   const g = w ? Number(w.g) : cfg.birthG[baby];
-  return { ml: Math.round(g / 1000 * cfg.mlPerKg), src: (w ? '최근 체중' : '출생체중') + ' × ' + cfg.mlPerKg + 'ml/kg (추정)' };
+  return { ml: Math.round(g / 1000 * cfg.mlPerKg), g, src: (w ? g + 'g' : '출생체중') + ' × ' + cfg.mlPerKg + 'ml/kg' };
+}
+// 아들 현재 NICU 처방 (증량 중). 없으면 null
+function latestOrder(events, now) {
+  let best = null;
+  for (const e of events) if (e.type === 'order' && e.t <= now && (!best || e.t > best.t)) best = e;
+  return best;
+}
+function sonNow(events, cfg, now) {
+  const o = latestOrder(events, now);
+  if (o) return { ml: Number(o.ml) || 0, perFeed: o.perFeed, times: o.times, t: o.t, src: 'NICU 처방' + (o.perFeed ? ' ' + o.perFeed + 'ml×' + o.times + '회' : '') };
+  if (Number(cfg.sonOrderMl) > 0) return { ml: Number(cfg.sonOrderMl), src: 'NICU 처방' };
+  return null;
 }
 function hasFullDay(events, now) { return events.some(e => e.t <= now - DAY); }
 
@@ -280,7 +295,8 @@ function stats24(events, now, cfg) {
   const dFeedTimes = win.filter(e => isNurse(e) || (e.type === 'bottle' && e.baby === 'D')).map(e => e.t);
   const lastDFeed = events.filter(e => (isNurse(e) || (e.type === 'bottle' && e.baby === 'D')) && e.t <= now).reduce((m, e) => Math.max(m, e.t), 0);
   const diapers = win.filter(e => e.type === 'diaper' && e.baby === 'D');
-  const sNeed = need(events, cfg, 'S');
+  const sFull = need(events, cfg, 'S');
+  const sNow = sonNow(events, cfg, now);
   return {
     removals: inWin.length, longestGap, sinceLast, night, pumped, unmeasured,
     dFeeds: dNurse + dBottles.length, dNurse, dFeedTimes,
@@ -288,7 +304,7 @@ function stats24(events, now, cfg) {
     formula: dBottles.filter(b => b.milk === 'formula').reduce((s, b) => s + (Number(b.ml) || 0), 0),
     ebmD: dBottles.filter(b => b.milk === 'ebm').reduce((s, b) => s + (Number(b.ml) || 0), 0),
     wet: diapers.filter(d => d.wet).length, stool: diapers.filter(d => d.stool).length,
-    sNeed, pumpTarget: Math.round(sNeed.ml * cfg.pumpBuffer), full: hasFullDay(events, now),
+    sFull, sNow, pumpTarget: Math.round(sFull.ml * cfg.pumpBuffer), full: hasFullDay(events, now),
   };
 }
 
@@ -315,6 +331,7 @@ function dailySeries(events, cfg, now, n) {
     const dia = ev.filter(e => e.type === 'diaper' && e.baby === 'D');
     const taps = who => ev.filter(e => e.by === who).length + ev.filter(e => e.type === 'session' && e.endBy === who).length;
     const sends = ev.filter(e => e.type === 'nicu').reduce((s, e) => s + (Number(e.ml) || 0), 0);
+    const ord = latestOrder(events, end - 1);
     out.push({
       key, start, dol: dayOfLife(start, cfg), partial: start + DAY > now,
       removals: ev.filter(isRemoval).length,
@@ -325,6 +342,7 @@ function dailySeries(events, cfg, now, n) {
       ebmD: dB.filter(b => b.milk === 'ebm').reduce((s, b) => s + (Number(b.ml) || 0), 0),
       wet: dia.filter(d => d.wet).length, stool: dia.filter(d => d.stool).length,
       nightGap: nightGap(events, key), momTaps: taps('mom'), dadTaps: taps('dad'), toNicu: sends,
+      order: ord ? Number(ord.ml) || 0 : (Number(cfg.sonOrderMl) || 0),
       count: ev.length,
     });
   }
@@ -360,24 +378,31 @@ function inventory(bags, events, cfg, now) {
   const avail = list.filter(b => bagExpiry(b, cfg) > now);
   const expired = list.filter(b => bagExpiry(b, cfg) <= now);
   const total = avail.reduce((s, b) => s + (Number(b.ml) || 0), 0);
-  const sNeed = need(events, cfg, 'S');
-  const reserve = Math.round(sNeed.ml * cfg.reserveDays);
-  return { avail, expired, total, reserve, surplus: total - reserve, sNeed,
+  const sFull = need(events, cfg, 'S');
+  const reserve = Math.round(sFull.ml * cfg.reserveDays);
+  return { avail, expired, total, reserve, surplus: total - reserve, sFull,
     byState: s => avail.filter(b => b.state === s).reduce((a, b) => a + (Number(b.ml) || 0), 0) };
 }
-// 배분 규칙: 부족분 → 아들 우선, 딸은 분유 (설계서 1-4)
+// 배분 규칙 (설계서 1-4)
+//  예비분 = 아들 '완전수유' 필요량 × 예비일수 (증량이 빨라도 버틸 양)
+//  초기 모유(생후 earlyDays일까지 짠 것)는 아들 전용. 딸에게는 가장 최근에 짠 것부터
 function allocate(bags, events, cfg, now, ml) {
   const st = stats24(events, now, cfg);
   const inv = inventory(bags, events, cfg, now);
-  if (st.full && st.pumped < st.sNeed.ml) {
-    return { milk: 'formula', rule: 3, reason: '최근 24시간 유축 ' + st.pumped + 'ml < 아들 필요 ' + st.sNeed.ml + 'ml. 모유는 전부 아들 몫', inv };
+  if (st.full && st.sNow && st.pumped < st.sNow.ml) {
+    return { milk: 'formula', rule: 3, reason: '최근 24시간 유축 ' + st.pumped + 'ml < 아들 현재 처방 ' + st.sNow.ml + 'ml. 모유는 전부 아들 몫', inv };
   }
-  if (inv.surplus >= ml) {
-    const order = { thawed: 0, fridge: 1, freezer: 2 };
-    const pick = inv.avail.slice().sort((a, b) => (order[a.state] - order[b.state]) || (bagExpiry(a, cfg) - bagExpiry(b, cfg)))[0];
-    return { milk: 'ebm', rule: 2, bag: pick, reason: '여유분 ' + inv.surplus + 'ml (보관 ' + inv.total + ' − 아들 예비 ' + inv.reserve + ')', inv };
+  if (inv.surplus < ml) {
+    return { milk: 'formula', rule: 2, reason: '여유분 ' + Math.max(0, inv.surplus) + 'ml < ' + ml + 'ml. 아들 예비분(완전수유 ' + cfg.reserveDays + '일치 ' + inv.reserve + 'ml)을 먼저 채우는 중', inv };
   }
-  return { milk: 'formula', rule: 2, reason: '여유분 ' + Math.max(0, inv.surplus) + 'ml < ' + ml + 'ml. 아들 예비분(' + inv.reserve + 'ml)을 먼저 채우는 중', inv };
+  const earlyEnd = birthTime(cfg) + cfg.earlyDays * DAY;
+  const cand = inv.avail.filter(b => b.pumpedAt >= earlyEnd || b.for === 'any');
+  if (!cand.length) {
+    return { milk: 'formula', rule: 2, reason: '보관분이 모두 생후 ' + cfg.earlyDays + '일 이전의 초기 모유라 아들 몫', inv };
+  }
+  const order = { thawed: 0, fridge: 1, freezer: 2 };
+  const pick = cand.slice().sort((a, b) => ((b.for === 'any') - (a.for === 'any')) || (order[a.state] - order[b.state]) || (b.pumpedAt - a.pumpedAt))[0];
+  return { milk: 'ebm', rule: 2, bag: pick, reason: '여유분 ' + inv.surplus + 'ml (보관 ' + inv.total + ' − 아들 예비 ' + inv.reserve + '). 최근에 짠 것부터', inv };
 }
 
 function tasks(events, bags, cfg, now) {
@@ -400,7 +425,9 @@ function tasks(events, bags, cfg, now) {
   const sentToday = events.some(e => e.type === 'nicu' && dayKey(e.t) === dayKey(now));
   if (sBags.length && !sentToday) out.push({ kind: 'nicu', pri: 4, n: sBags.length, ml: sBags.reduce((s, b) => s + (Number(b.ml) || 0), 0) });
   const st = stats24(events, now, cfg);
-  if (st.full && st.pumped < st.sNeed.ml) out.push({ kind: 'deficit', pri: 2, pumped: st.pumped, need: st.sNeed.ml });
+  if (st.full && st.sNow && st.pumped < st.sNow.ml) out.push({ kind: 'deficit', pri: 2, pumped: st.pumped, need: st.sNow.ml });
+  const lo = latestOrder(events, now);
+  if (!lo || now - lo.t > DAY) out.push({ kind: 'order', pri: 5, last: lo });
   const w = latestWeight(events, 'D');
   if (!w || now - w.t > 3 * DAY) out.push({ kind: 'weigh', pri: 7, last: w });
   const ep = events.filter(e => e.type === 'momcheck' && e.epds !== undefined && e.epds !== null && e.epds !== '').reduce((m, e) => Math.max(m, e.t), 0);
@@ -430,6 +457,12 @@ function flags(events, cfg, now) {
     if (st.longestGap > th.maxGapH * HOUR) out.push({ level: 'plan', who: 'mom', text: '비우기 최장 공백 ' + (st.longestGap / HOUR).toFixed(1) + '시간 (목표 ≤' + th.maxGapH + ')', act: '공급 관리: 밤 교대 시각 점검' });
   }
   if (st.sinceDFeed !== null && st.sinceDFeed > th.feedGapH * HOUR) out.push({ level: 'today', who: 'D', text: '딸 마지막 수유 ' + (st.sinceDFeed / HOUR).toFixed(1) + '시간 전', act: '깨워서 수유 (소아과와 정한 최대 간격 ' + th.feedGapH + '시간)' });
+  // 공급 점검: 완료된 날 3일 이상의 평균 유축량이 아들 완전수유 필요량보다 적으면 (생후 14일부터)
+  const done = dailySeries(events, cfg, now, 8).filter(d => !d.partial && d.count > 0);
+  if (dayOfLife(now, cfg) >= 14 && done.length >= 3) {
+    const a = Math.round(done.reduce((s, d) => s + d.pumped, 0) / done.length);
+    if (a < st.sFull.ml) out.push({ level: 'plan', who: 'mom', text: '유축 평균 ' + a + 'ml/일 < 아들 완전수유 ' + st.sFull.ml + 'ml', act: '아들이 아직 적게 먹어도 공급은 지금 맞춰야 해요. IBCLC 상담' });
+  }
   const w = latestWeight(events, 'D');
   if (w && dayOfLife(now, cfg) >= 14 && Number(w.g) < cfg.birthG.D) out.push({ level: 'visit', who: 'D', text: '생후 14일 이후에도 출생체중 미회복 (' + w.g + 'g < ' + cfg.birthG.D + 'g)', act: '소아과 진료' });
   const sl = weightSlope(events, 'D', now, 7);
@@ -610,14 +643,14 @@ function quickDiaper(wet, stool) { return act(() => Store.addEvent({ type: 'diap
 function washDone(n) { return act(() => Store.addEvent({ type: 'wash', sets: n, t: Date.now(), by: state.me || 'dad' }), '세척 완료'); }
 
 function processSheet(e) {
-  let L = Number(e.mlL) || 0, R = Number(e.mlR) || 0, dest = 'fridge';
+  let L = Number(e.mlL) || 0, R = Number(e.mlR) || 0, dest = state.cfg.defaultDest || 'freezer';
   const html = sheetHead('유축분 처리', fmtT(e.t) + ' 시작 · ' + fmtDur((e.end || Date.now()) - e.t) + ' · 젖병 눈금 보고 입력') +
     '<div class="grid2">' +
     '<div class="plain"><span class="muted small">왼쪽 ml</span><div class="stepper"><button data-s="L-">−</button><output id="oL" class="num">' + L + '</output><button data-s="L+">+</button></div></div>' +
     '<div class="plain"><span class="muted small">오른쪽 ml</span><div class="stepper"><button data-s="R-">−</button><output id="oR" class="num">' + R + '</output><button data-s="R+">+</button></div></div></div>' +
     '<p>합계 <b class="num" id="oT">' + (L + R) + '</b> ml · 라벨 코드 <span class="code">' + bagCode(e.end || e.t) + '</span></p>' +
-    '<div class="plain"><span class="muted small">어디로</span>' + chips('dest', [['fridge', '냉장 · 아들용'], ['freezer', '냉동 · 아들용'], ['nicu', 'NICU 바로 전달'], ['fridge-any', '냉장 · 딸도 가능']], dest) + '</div>' +
-    '<p class="note">아들용 냉장은 ' + state.cfg.nicuFridgeH + '시간 안에 NICU로 보내거나 냉동하세요 (병원 규정 확인 후 설정에서 변경).</p>' +
+    '<div class="plain"><span class="muted small">어디로</span>' + chips('dest', [['freezer', '냉동 · 아들용'], ['fridge', '냉장 · 아들용'], ['fridge-any', '냉장 · 딸도 가능'], ['nicu', 'NICU 바로 전달']], dest) + '</div>' +
+    '<p class="note">NICU에는 냉동으로 전달 중이에요. 봉투에 라벨 코드·ml·"아들용"을 적고 납작하게 얼리세요. 생후 ' + state.cfg.earlyDays + '일까지 짠 초기 모유는 아들 전용으로 남겨요.</p>' +
     '<button class="btn wide" id="save">저장</button>';
   openSheet(html, root => {
     const upd = () => { root.querySelector('#oL').textContent = L; root.querySelector('#oR').textContent = R; root.querySelector('#oT').textContent = L + R; };
@@ -732,6 +765,39 @@ function noteSheet() {
     });
   });
 }
+function orderHistory() {
+  const os = state.events.filter(e => e.type === 'order').slice(-5);
+  if (!os.length) return '기록 없음';
+  return os.map(o => fmtMD(o.t) + ' ' + (o.perFeed ? o.perFeed + 'ml×' + o.times : o.ml + 'ml')).join(' → ') + ' (= ' + os[os.length - 1].ml + 'ml/일)';
+}
+function orderSheet() {
+  const lo = latestOrder(state.events, Date.now());
+  let per = lo && lo.perFeed ? Number(lo.perFeed) : 10, times = lo && lo.times ? Number(lo.times) : 8;
+  const g = need(state.events, state.cfg, 'S').g;
+  const html = sheetHead(NAME('S') + ' NICU 처방', '바뀔 때마다 기록하면 증량 추세가 그래프와 리포트에 남아요') +
+    '<div class="plain"><span class="muted small">회당 ml</span><div class="stepper"><button data-s="-">−</button><output id="oP" class="num">' + per + '</output><button data-s="+">+</button></div></div>' +
+    '<div class="plain"><span class="muted small">하루 횟수</span>' + chips('times', [1, 2, 3, 4, 6, 8, 12].map(v => [v, v + '회']), times) + '</div>' +
+    '<p id="oSum"></p>' +
+    '<label class="f">메모 (수액 변화, 의사 말)<input id="onote" placeholder="예: 수액 줄이기 시작"></label>' +
+    '<button class="btn wide" id="save">기록</button>';
+  openSheet(html, root => {
+    const upd = () => {
+      root.querySelector('#oP').textContent = per;
+      const day = per * times;
+      root.querySelector('#oSum').innerHTML = '하루 <b class="num">' + day + 'ml</b> · <span class="num">' + Math.round(day / (g / 1000)) + 'ml/kg/일</span> (체중 ' + g + 'g) · 완전수유(' + state.cfg.mlPerKg + ')의 ' + Math.round(day / (g / 1000) / state.cfg.mlPerKg * 100) + '%';
+    };
+    upd();
+    root.querySelectorAll('[data-s]').forEach(b => b.addEventListener('click', () => { per = Math.max(0, per + (b.dataset.s === '+' ? 5 : -5)); upd(); }));
+    bindChips(root, 'times', v => { times = Number(v); upd(); });
+    root.querySelector('#save').addEventListener('click', async () => {
+      const note = root.querySelector('#onote').value.trim();
+      const ev = { type: 'order', baby: 'S', perFeed: per, times, ml: per * times, t: Date.now(), by: state.me || 'dad' };
+      if (note) ev.note = note;
+      await act(() => Store.addEvent(ev), NAME('S') + ' 처방 ' + per + 'ml×' + times + '회');
+      closeSheet();
+    });
+  });
+}
 function bagSheet(b) {
   const x = bagExpiry(b, state.cfg);
   const opts = [];
@@ -772,6 +838,7 @@ function describe(e) {
     case 'wash': return '부품 세척 ' + (e.sets || '') + '세트';
     case 'momcheck': return '엄마 상태' + (e.temp ? ' ' + e.temp + '°C' : '') + (e.pain !== undefined ? ' 통증 ' + e.pain : '') + (e.epds !== undefined ? ' EPDS ' + e.epds : '');
     case 'note': return '메모: ' + e.text;
+    case 'order': return NAME('S') + ' NICU 처방 ' + (e.perFeed ? e.perFeed + 'ml×' + e.times + '회 = ' : '') + e.ml + 'ml/일' + (e.note ? ' · ' + e.note : '');
     default: return e.type;
   }
 }
@@ -814,7 +881,8 @@ function viewNow() {
   h += '<section class="card"><h2>한 번에 기록</h2><div class="quick">' +
     '<button class="qbtn" data-q="wet">기저귀<small>소변</small></button><button class="qbtn" data-q="stool">기저귀<small>대변</small></button><button class="qbtn" data-q="both">기저귀<small>둘 다</small></button>' +
     '<button class="qbtn" data-q="bottle">' + NAME('D') + ' 젖병<small>모유/분유 자동 판정</small></button><button class="qbtn" data-q="weight">체중<small>딸·아들</small></button><button class="qbtn" data-q="mom">엄마 상태<small>통증·체온·EPDS</small></button>' +
-    '<button class="qbtn" data-start="nurse+pump">대신 시작<small>직수+유축</small></button><button class="qbtn" data-start="pump">대신 시작<small>유축만</small></button><button class="qbtn" data-q="note">메모<small>처방 변경 등</small></button>' +
+    '<button class="qbtn" data-start="nurse+pump">대신 시작<small>직수+유축</small></button><button class="qbtn" data-start="pump">대신 시작<small>유축만</small></button><button class="qbtn" data-q="note">메모<small>의사 말 등</small></button>' +
+    '<button class="qbtn" data-q="order">' + NAME('S') + ' 처방<small>NICU 증량 기록</small></button><button class="qbtn" data-go="stock">NICU 배송<small>냉동분 고르기</small></button><button class="qbtn" data-go="report">리포트<small>진료용 7일</small></button>' +
     '</div></section>';
   h += recentHtml(8);
   return h;
@@ -827,7 +895,8 @@ function taskHtml(t) {
     case 'expired': return row('crit', '기한 지난 모유 <span class="code">' + esc(t.bag.code) + '</span>', STATE_KO[t.bag.state] + ' ' + t.bag.ml + 'ml', '<button class="btn danger" data-bag="' + t.bag.id + '">처리</button>');
     case 'expiring': return row('warn', '기한 임박 <span class="code">' + esc(t.bag.code) + '</span>', STATE_KO[t.bag.state] + ' ' + t.bag.ml + 'ml · ' + fmtDur(t.at - now) + ' 남음', '<button class="btn ghost" data-bag="' + t.bag.id + '">처리</button>');
     case 'nicu': return row('info', 'NICU 배송', '아들용 ' + t.n + '개 · ' + t.ml + 'ml (보냉백·아이스팩)', '<button class="btn ghost" data-go="stock">재고</button>');
-    case 'deficit': return row('warn', '아들 몫 부족', '최근 24시간 유축 ' + t.pumped + 'ml < 필요 ' + t.need + 'ml → IBCLC 상담, NICU에 부족분 계획 문의', '');
+    case 'deficit': return row('warn', '아들 몫 부족', '최근 24시간 유축 ' + t.pumped + 'ml < 현재 처방 ' + t.need + 'ml → IBCLC 상담, NICU에 부족분 계획 문의', '');
+    case 'order': return row('info', NAME('S') + ' 처방 확인', t.last ? '마지막 기록 ' + fmtMD(t.last.t) + ' ' + (t.last.perFeed ? t.last.perFeed + 'ml×' + t.last.times : t.last.ml + 'ml') + ' · 증량 중이면 오늘 처방 기록' : 'NICU 처방을 기록하면 증량 추세가 남아요', '<button class="btn ghost" data-q="order">기록</button>');
     case 'weigh': return row('info', NAME('D') + ' 체중 재기', t.last ? '마지막 ' + fmtMD(t.last.t) + ' ' + t.last.g + 'g' : '집 체중 기록 없음', '<button class="btn ghost" data-q="weight">기록</button>');
     case 'epds': return row('info', '엄마 주간 체크 (K-EPDS)', '7일 안에 기록 없음. 점수만 적으면 돼요', '<button class="btn ghost" data-q="mom">기록</button>');
     default: return '';
@@ -851,14 +920,15 @@ function viewStatus() {
   const now = Date.now(), cfg = state.cfg, st = stats24(state.events, now, cfg);
   const fl = flags(state.events, cfg, now);
   const dNeed = need(state.events, cfg, 'D');
-  const cover = st.sNeed.ml ? Math.round(st.pumped / st.sNeed.ml * 100) : 0;
+  const ready = st.sFull.ml ? Math.round(st.pumped / st.sFull.ml * 100) : 0;
+  const nowPct = st.sNow && st.sFull.ml ? Math.round(st.sNow.ml / st.sFull.ml * 100) : null;
   let h = '';
   if (fl.length) h += '<div class="plain">' + fl.map(flagHtml).join('') + '</div>';
   h += '<section class="card"><h2>엄마 · 최근 24시간</h2><div class="tiles">' +
     tile('젖 비우기', st.removals + '<small>/' + cfg.th.removalsMin + '회</small>', '새벽(1–5시) ' + (st.night ? '있음' : '없음'), st.full ? (st.removals >= cfg.th.removalsMin && st.night ? 'ok' : 'warn') : '') +
     tile('최장 공백', (st.longestGap / HOUR).toFixed(1) + '<small>시간</small>', '목표 ≤ ' + cfg.th.maxGapH + '시간 · 마지막 ' + fmtDur(st.sinceLast) + ' 전', st.full ? (st.longestGap <= cfg.th.maxGapH * HOUR ? 'ok' : 'warn') : '') +
-    tile('유축량', st.pumped + '<small>ml</small>', '목표 ' + st.pumpTarget + 'ml' + (st.unmeasured ? ' · 미입력 ' + st.unmeasured + '회' : ''), st.full ? (st.pumped >= st.pumpTarget ? 'ok' : st.pumped >= st.sNeed.ml ? 'warn' : 'crit') : '') +
-    tile(NAME('S') + ' 몫 충족', cover + '<small>%</small>', '필요 ' + st.sNeed.ml + 'ml · ' + esc(st.sNeed.src), st.full ? (cover >= 100 ? 'ok' : 'crit') : '') +
+    tile('유축량', st.pumped + '<small>ml</small>', '목표 ' + st.pumpTarget + 'ml = 아들 완전수유 ' + st.sFull.ml + ' × ' + cfg.pumpBuffer + (st.unmeasured ? ' · 미입력 ' + st.unmeasured + '회' : ''), st.full ? (st.pumped >= st.pumpTarget ? 'ok' : st.pumped >= st.sFull.ml ? 'warn' : 'crit') : '') +
+    tile(NAME('S') + ' 현재 처방', st.sNow ? st.sNow.ml + '<small>ml/일</small>' : '—', st.sNow ? esc(st.sNow.src) + ' · 완전수유의 ' + nowPct + '% · 유축은 ' + ready + '% 준비' : '\'' + NAME('S') + ' 처방\' 버튼으로 기록', st.sNow && st.full ? (st.pumped >= st.sNow.ml ? 'ok' : 'crit') : '') +
     '</div>' + (st.full ? '' : '<p class="note">기록이 24시간 쌓이면 색 표시와 연락 기준 점검이 켜져요.</p>') + '</section>';
   h += '<section class="card"><h2><span class="who D">' + NAME('D') + '</span> · 최근 24시간</h2><div class="tiles">' +
     tile('수유', st.dFeeds + '<small>회</small>', '직수 ' + st.dNurse + ' · 젖병 ' + (st.dFeeds - st.dNurse), st.full ? (st.dFeeds >= cfg.th.feedsMin ? 'ok' : 'warn') : '') +
@@ -868,8 +938,8 @@ function viewStatus() {
     '</div></section>';
   // 유축 추세
   const ser = dailySeries(state.events, cfg, now, 14);
-  h += '<section class="card"><h2>하루 유축량 · 14일</h2>' + pumpChart(ser, st.pumpTarget, st.sNeed.ml) +
-    '<div class="legend"><span><i style="background:var(--accent)"></i>유축량</span><span><i style="background:var(--ink)"></i>목표 (아들 × ' + cfg.pumpBuffer + ')</span><span><i style="background:var(--boy)"></i>아들 필요량</span></div>' +
+  h += '<section class="card"><h2>하루 유축량 · 14일</h2>' + pumpChart(ser, st.pumpTarget, st.sFull.ml) +
+    '<div class="legend"><span><i style="background:var(--accent)"></i>유축량</span><span><i style="background:var(--ink)"></i>목표 (완전수유 × ' + cfg.pumpBuffer + ')</span><span><i style="background:var(--boy)"></i>아들 완전수유</span><span><i style="background:var(--boy);opacity:.5"></i>아들 실제 처방 (계단)</span></div>' +
     '<p class="note">7일 평균 ' + avg(ser.slice(-8, -1).map(d => d.pumped)) + 'ml/일 (오늘 제외). 하루 숫자보다 추세로 판단해요.</p></section>';
   // 체중
   const sD = weightSlope(state.events, 'D', now, 7), sS = weightSlope(state.events, 'S', now, 7);
@@ -899,6 +969,11 @@ function pumpChart(ser, target, needMl) {
     if (i % 2 === (ser.length - 1) % 2) s += '<text x="' + (x + (bw - 4) / 2) + '" y="' + (Hh - 6) + '" text-anchor="middle">' + Number(d.key.slice(8)) + '</text>';
   });
   s += '<line class="need" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(needMl) + '" y2="' + y(needMl) + '"/>';
+  if (ser.some(d => d.order > 0)) {
+    let pts = '';
+    ser.forEach((d, i) => { const x0 = L + i * bw, x1 = x0 + bw; pts += x0.toFixed(1) + ',' + y(d.order).toFixed(1) + ' ' + x1.toFixed(1) + ',' + y(d.order).toFixed(1) + ' '; });
+    s += '<polyline class="ord" points="' + pts.trim() + '"/>';
+  }
   s += '<line class="tgt" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(target) + '" y2="' + y(target) + '"/>';
   return s + '</svg>';
 }
@@ -932,7 +1007,7 @@ function viewStock() {
     '<div class="tiles">' + tile('보관 중', inv.total + '<small>ml</small>', '냉장 ' + inv.byState('fridge') + ' · 냉동 ' + inv.byState('freezer') + ' · 해동 ' + inv.byState('thawed')) +
     tile(NAME('S') + ' 예비분', Math.min(inv.total, inv.reserve) + '<small>/' + inv.reserve + 'ml</small>', cfg.reserveDays + '일치 · ' + resPct + '% 채움', resPct >= 100 ? 'ok' : 'warn') + '</div>' +
     '<div class="bar" aria-hidden="true"><i style="width:' + resPct + '%;background:var(--boy)"></i></div>' +
-    '<p class="note">규칙: 짠 모유는 기본 아들용 → 아들 ' + cfg.reserveDays + '일치를 넘는 여유분만 딸 젖병에 → 최근 24시간 유축이 아들 필요량보다 적으면 딸은 분유.</p></section>';
+    '<p class="note">규칙: 짠 모유는 기본 아들용 → 아들 완전수유 ' + cfg.reserveDays + '일치를 넘는 여유분만 딸 젖병에 (생후 ' + cfg.earlyDays + '일까지 짠 초기 모유 제외, 최근 것부터) → 최근 24시간 유축이 아들 현재 처방보다 적으면 딸은 분유. NICU에는 오래된 것부터 보내요.</p></section>';
   const groups = [['thawed', '해동 중'], ['fridge', '냉장'], ['freezer', '냉동']];
   const list = Object.values(state.bags).filter(b => ACTIVE.includes(b.state));
   if (!list.length) h += '<section class="card"><h2>보관 목록</h2><div class="empty"><b>보관 중인 모유가 없어요</b><span class="small">유축분을 처리하면 여기에 라벨 코드와 기한이 생겨요.</span></div></section>';
@@ -962,23 +1037,24 @@ function reportData() {
 }
 function reportTable(d) {
   const gap = ms => ms ? (ms / HOUR).toFixed(1) : '—';
-  const th = d.cfg.th, sN = d.st.sNeed.ml;
+  const th = d.cfg.th, sN = d.st.sFull.ml;
   const rows = d.ser.map(x => '<tr><td>' + fmtMD(x.start) + (x.partial ? '*' : '') + ' <span class="muted">' + x.dol + '일</span></td>' +
     '<td' + (!x.partial && x.removals < th.removalsMin ? ' class="bad"' : '') + '>' + x.removals + '</td><td>' + gap(x.nightGap) + '</td>' +
-    '<td' + (!x.partial && x.pumped < sN ? ' class="bad"' : '') + '>' + x.pumped + '</td><td>' + x.toNicu + '</td>' +
+    '<td' + (!x.partial && x.pumped < sN ? ' class="bad"' : '') + '>' + x.pumped + '</td><td>' + (x.order || '—') + '</td><td>' + x.toNicu + '</td>' +
     '<td' + (!x.partial && x.dFeeds < th.feedsMin ? ' class="bad"' : '') + '>' + x.dFeeds + '</td><td>' + x.ebmD + '/' + x.formula + '</td>' +
     '<td' + (!x.partial && x.wet < th.wetMin ? ' class="bad"' : '') + '>' + x.wet + '</td><td' + (!x.partial && x.stool < th.stoolMin ? ' class="bad"' : '') + '>' + x.stool + '</td>' +
     '<td>' + x.momTaps + '/' + x.dadTaps + '</td></tr>').join('');
-  return '<div class="tablewrap"><table><thead><tr><th>날짜</th><th>비우기</th><th>밤공백h</th><th>유축ml</th><th>NICU ml</th><th>딸수유</th><th>모유/분유</th><th>소변</th><th>대변</th><th>입력 엄/아</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  return '<div class="tablewrap"><table><thead><tr><th>날짜</th><th>비우기</th><th>밤공백h</th><th>유축ml</th><th>아들처방</th><th>NICU ml</th><th>딸수유</th><th>모유/분유</th><th>소변</th><th>대변</th><th>입력 엄/아</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 function viewReport() {
   const d = reportData(), cfg = d.cfg;
-  const w = (lw, b, sl) => (lw ? lw.g + 'g (' + fmtMD(lw.t) + ', ' + (lw.src === 'nicu' ? 'NICU' : lw.src === 'clinic' ? '소아과' : '집') + ')' : '측정 없음') + ' · 출생 ' + cfg.birthG[b] + 'g' + (lw ? ' (' + (lw.g - cfg.birthG[b] >= 0 ? '+' : '') + (lw.g - cfg.birthG[b]) + 'g)' : '') + ' · 7일 ' + (sl === null ? '—' : (sl >= 0 ? '+' : '') + Math.round(sl) + 'g/일');
+  const w = (lw, b, sl) => (lw ? lw.g + 'g (' + fmtMD(lw.t) + ', ' + (lw.src === 'nicu' ? 'NICU' : lw.src === 'clinic' ? '소아과' : lw.src === 'home' ? '집' : '출처 미기록') + ')' : '측정 없음') + ' · 출생 ' + cfg.birthG[b] + 'g' + (lw ? ' (' + (lw.g - cfg.birthG[b] >= 0 ? '+' : '') + (lw.g - cfg.birthG[b]) + 'g)' : '') + ' · 7일 ' + (sl === null ? '—' : (sl >= 0 ? '+' : '') + Math.round(sl) + 'g/일');
   let h = '<section class="card"><h2>진료용 요약 · ' + fmtMD(d.ser[0].start) + '–' + fmtMD(d.now) + '</h2>' +
     '<p><b>쌍둥이</b> 2026-11-06 출생, 재태 37+0주 · 생후 ' + dayOfLife(d.now, cfg) + '일</p>' +
     '<p><span class="who D">' + NAME('D') + '</span> 집, 직수 중심 · ' + w(d.wD, 'D', d.sD) + '</p>' +
     '<p><span class="who S">' + NAME('S') + '</span> NICU (장회전이상 수술 후), 엄마 유축모유 · ' + w(d.wS, 'S', d.sS) + '</p>' +
-    '<p>아들 필요량 <b class="num">' + d.st.sNeed.ml + 'ml/일</b> (' + esc(d.st.sNeed.src) + ') · 최근 24시간 유축 <b class="num">' + d.st.pumped + 'ml</b> · 7일 평균 <b class="num">' + avg(d.ser.filter(x => !x.partial).map(x => x.pumped)) + 'ml</b></p>' +
+    '<p>아들 경장영양: ' + orderHistory() + ' (수액 병행) · 완전수유 시 약 <b class="num">' + d.st.sFull.ml + 'ml/일</b> (' + esc(d.st.sFull.src) + ')</p>' +
+    '<p>엄마 유축: 최근 24시간 <b class="num">' + d.st.pumped + 'ml</b> · 7일 평균 <b class="num">' + avg(d.ser.filter(x => !x.partial).map(x => x.pumped)) + 'ml</b> · 목표 ' + d.st.pumpTarget + 'ml</p>' +
     reportTable(d) + '<p class="note">* 오늘(진행 중). 빨간 숫자 = 기준 미달 (기준: 비우기 ' + cfg.th.removalsMin + '회, 유축 ≥ 아들 필요량, 딸 수유 ' + cfg.th.feedsMin + '회, 소변 ' + cfg.th.wetMin + '회, 대변 ' + cfg.th.stoolMin + '회' + (cfg.th.confirmed ? ', 소아과 확인됨' : ', 소아과 확인 전 기본값') + '). 밤공백 = 엄마 최장 수면 추정.</p>';
   if (d.fl.length) h += '<div class="plain">' + d.fl.map(flagHtml).join('') + '</div>';
   if (d.mc.length) h += '<p class="small"><b>엄마</b> ' + d.mc.map(m => fmtMD(m.t) + ' ' + esc(describe(m).replace('엄마 상태', ''))).join(' · ') + '</p>';
@@ -1010,8 +1086,10 @@ function viewSettings() {
   const f = (id, label, val, hint, mode) => '<label class="f">' + label + '<input id="' + id + '" value="' + esc(val) + '" ' + (mode ? 'inputmode="' + mode + '"' : '') + '>' + (hint ? '<span class="note">' + hint + '</span>' : '') + '</label>';
   const modeTxt = { db: '공유 중: 이 링크를 연 가족 모두가 같은 기록을 봐요', 'db-wait': '공유 저장소에 연결하는 중', 'db-slow': '공유 저장소 응답이 늦어요. 기록은 연결되면 반영돼요', 'db-error': '공유 저장소 오류 (' + esc(state.err || '') + ')', local: '이 기기에만 저장 중 (공유 안 됨)', loading: '불러오는 중' }[state.mode];
   return '<section class="card"><h2>' + NAME('S') + ' NICU 처방</h2>' +
-    f('sonOrderMl', '아들 하루 처방량 (ml/일)', c.sonOrderMl || '', '회당 ml × 하루 횟수. 비워두면 체중 × ' + c.mlPerKg + 'ml/kg 추정값을 써요. 처방이 바뀌면 바로 고쳐 주세요.', 'numeric') +
-    '<div class="grid2">' + f('reserveDays', '아들 예비분 (일)', c.reserveDays, '', 'decimal') + f('pumpBuffer', '유축 목표 배수', c.pumpBuffer, '아들 필요량 × 이 값', 'decimal') + '</div></section>' +
+    '<p class="small">현재 처방: ' + orderHistory() + '</p><p class="note">처방이 바뀔 때마다 \'지금\' 탭의 \'' + NAME('S') + ' 처방\' 버튼으로 기록하세요. 유축 목표는 현재 처방이 아니라 완전수유 필요량(체중 × ' + c.mlPerKg + 'ml/kg)으로 잡아요.</p>' +
+    '<div class="grid2">' + f('reserveDays', '아들 예비분 (완전수유 일수)', c.reserveDays, '', 'decimal') + f('pumpBuffer', '유축 목표 배수', c.pumpBuffer, '완전수유 필요량 × 이 값', 'decimal') +
+    f('earlyDays', '아들 전용 초기 모유 (생후 일)', c.earlyDays, '이 날짜까지 짠 모유는 딸에게 안 줘요', 'numeric') +
+    '<label class="f">유축분 기본 보관<select id="defaultDest"><option value="freezer"' + (c.defaultDest === 'freezer' ? ' selected' : '') + '>냉동 (NICU 냉동 전달)</option><option value="fridge"' + (c.defaultDest === 'fridge' ? ' selected' : '') + '>냉장</option></select></label></div></section>' +
     '<section class="card"><h2>보관 기한</h2><div class="grid2">' +
     f('nicuFridgeH', 'NICU용 냉장 (시간)', c.nicuFridgeH, '병원 규정으로 바꾸세요', 'numeric') + f('homeFridgeH', '집용 냉장 (시간)', c.homeFridgeH, 'CDC·ABM: 96시간', 'numeric') +
     f('freezerD', '냉동 (일)', c.freezerD, '권장 180일', 'numeric') + f('thawedH', '해동 후 (시간)', c.thawedH, '냉장 해동 후 24시간', 'numeric') +
@@ -1038,7 +1116,8 @@ function saveSettings() {
   const cfg = {
     birthDate: c.birthDate, names: { D: v('nameD') || c.names.D, S: v('nameS') || c.names.S },
     birthG: { D: n('birthD', c.birthG.D), S: n('birthS', c.birthG.S) },
-    sonOrderMl: n('sonOrderMl', 0), mlPerKg: n('mlPerKg', c.mlPerKg), reserveDays: n('reserveDays', c.reserveDays), pumpBuffer: n('pumpBuffer', c.pumpBuffer),
+    sonOrderMl: c.sonOrderMl || 0, mlPerKg: n('mlPerKg', c.mlPerKg), reserveDays: n('reserveDays', c.reserveDays), pumpBuffer: n('pumpBuffer', c.pumpBuffer),
+    earlyDays: n('earlyDays', c.earlyDays), defaultDest: v('defaultDest') || c.defaultDest,
     roomH: n('roomH', c.roomH), homeFridgeH: n('homeFridgeH', c.homeFridgeH), nicuFridgeH: n('nicuFridgeH', c.nicuFridgeH), freezerD: n('freezerD', c.freezerD), thawedH: n('thawedH', c.thawedH),
     momSleep: { start: hm('momStart', c.momSleep.start), end: hm('momEnd', c.momSleep.end) }, dadSleep: { start: hm('dadStart', c.dadSleep.start), end: hm('dadEnd', c.dadSleep.end) },
     spareSets: n('spareSets', c.spareSets),
@@ -1117,6 +1196,7 @@ document.addEventListener('click', async e => {
     case 'weight': return weightSheet();
     case 'mom': return momSheet();
     case 'note': return noteSheet();
+    case 'order': return orderSheet();
   }
 });
 

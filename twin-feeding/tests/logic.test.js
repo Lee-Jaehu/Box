@@ -10,7 +10,7 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'app', 'index.html'), 'u
 const src = html.split('/* LOGIC START')[1].split('/* LOGIC END */')[0].replace(/^[^\n]*\n/, '');
 const ctx = {};
 vm.createContext(ctx);
-vm.runInContext(src + '\n;Object.assign(this, {HOUR, DAY, DEFAULT_CONFIG, mergeConfig, dayKey, dayOfLife, inWindow, stats24, nightGap, dailySeries, weightSlope, need, bagExpiry, inventory, allocate, tasks, flags});', ctx);
+vm.runInContext(src + '\n;Object.assign(this, {HOUR, DAY, DEFAULT_CONFIG, mergeConfig, sonNow, latestOrder, dayKey, dayOfLife, inWindow, stats24, nightGap, dailySeries, weightSlope, need, bagExpiry, inventory, allocate, tasks, flags});', ctx);
 const L = ctx;
 const H = L.HOUR, D = L.DAY;
 
@@ -44,12 +44,21 @@ test('inWindow handles windows crossing midnight', () => {
   assert.ok(!L.inWindow(at('2026-11-17T03:00'), { start: '21:45', end: '02:30' }));
 });
 
-test('son need: NICU order wins, otherwise weight estimate', () => {
+test('son: full need by weight, current order from latest order event', () => {
   assert.strictEqual(L.need([], cfg, 'S').ml, Math.round(2.64 * 150));
-  const c = L.mergeConfig({ sonOrderMl: 360 });
-  assert.strictEqual(L.need([], c, 'S').ml, 360);
-  const ev = [{ type: 'weight', baby: 'S', g: 3000, t: NOW - H }];
-  assert.strictEqual(L.need(ev, cfg, 'S').ml, 450);
+  const ev = [{ type: 'weight', baby: 'S', g: 2730, t: NOW - H }];
+  assert.strictEqual(L.need(ev, cfg, 'S').ml, 410);
+  assert.strictEqual(L.sonNow(ev, cfg, NOW), null);
+  const o = ev.concat([{ type: 'order', baby: 'S', perFeed: 10, times: 1, ml: 10, t: at('2026-11-16T12:00') }, { type: 'order', baby: 'S', perFeed: 10, times: 8, ml: 80, t: at('2026-11-17T09:00') }]);
+  assert.strictEqual(L.sonNow(o, cfg, NOW).ml, 80);
+  assert.strictEqual(L.sonNow(o, cfg, at('2026-11-16T20:00')).ml, 10);
+});
+
+test('pump target follows full need, not the small current order', () => {
+  const ev = [{ type: 'weight', baby: 'S', g: 2730, t: NOW - H }, { type: 'order', baby: 'S', ml: 10, perFeed: 10, times: 1, t: NOW - 2 * H }];
+  const st = L.stats24(ev, NOW, cfg);
+  assert.strictEqual(st.pumpTarget, Math.round(410 * 1.2));
+  assert.strictEqual(st.sNow.ml, 10);
 });
 
 test('stats24: removals, night removal, longest gap, pumped', () => {
@@ -75,31 +84,44 @@ test('bag expiry: NICU fridge 48h vs home fridge 96h, freezer 180d', () => {
   assert.strictEqual(L.bagExpiry({ state: 'nicu', pumpedAt: t }, cfg), null);
 });
 
-test('allocate rule 3: pumped below son need → formula even with stock', () => {
-  const ev = day('2026-11-16', 40).concat(day('2026-11-17', 40).filter(e => e.t <= NOW)); // 320ml < 396
+test('allocate rule 3: pumped below current NICU order → formula even with stock', () => {
+  const ev = day('2026-11-16', 40).concat(day('2026-11-17', 40).filter(e => e.t <= NOW)); // 320ml
+  ev.push({ type: 'order', baby: 'S', ml: 360, perFeed: 45, times: 8, t: NOW - 3 * H });
   const bags = { a: { id: 'a', code: 'x', ml: 2000, pumpedAt: NOW - 2 * D, for: 'S', state: 'freezer' } };
   const a = L.allocate(bags, ev, cfg, NOW, 60);
   assert.strictEqual(a.milk, 'formula');
   assert.strictEqual(a.rule, 3);
 });
 
-test('allocate rule 2: surplus beyond 2-day reserve → EBM, oldest fridge first', () => {
-  const ev = day('2026-11-16', 70).concat(day('2026-11-17', 70).filter(e => e.t <= NOW)); // 560 ≥ 396
+test('no order recorded → rule 3 never fires', () => {
+  const ev = day('2026-11-16', 10).concat(day('2026-11-17', 10).filter(e => e.t <= NOW));
+  assert.ok(!L.tasks(ev, {}, cfg, NOW).some(t => t.kind === 'deficit'));
+});
+
+test('early milk (before day 14) stays with son even when surplus exists', () => {
+  const bags = { z: { id: 'z', code: 'early', ml: 2000, pumpedAt: NOW - 3 * D, for: 'S', state: 'freezer' } };
+  const a = L.allocate(bags, [], cfg, NOW, 60);
+  assert.strictEqual(a.milk, 'formula');
+  assert.ok(/초기 모유/.test(a.reason));
+});
+
+test('allocate rule 2: surplus beyond reserve → EBM, newest non-early bag first', () => {
+  const N2 = at('2026-11-25T12:00');
   const bags = {
-    f1: { id: 'f1', code: 'old', ml: 100, pumpedAt: NOW - 30 * H, for: 'S', state: 'fridge' },
-    f2: { id: 'f2', code: 'new', ml: 100, pumpedAt: NOW - 2 * H, for: 'S', state: 'fridge' },
-    z1: { id: 'z1', code: 'frz', ml: 800, pumpedAt: NOW - 3 * D, for: 'S', state: 'freezer' },
+    e1: { id: 'e1', code: 'early', ml: 800, pumpedAt: at('2026-11-15T08:00'), for: 'S', state: 'freezer' },
+    f1: { id: 'f1', code: 'old', ml: 100, pumpedAt: N2 - 30 * H, for: 'S', state: 'fridge' },
+    f2: { id: 'f2', code: 'new', ml: 100, pumpedAt: N2 - 2 * H, for: 'S', state: 'fridge' },
+    z1: { id: 'z1', code: 'frz', ml: 300, pumpedAt: N2 - 3 * D, for: 'S', state: 'freezer' },
   };
-  const a = L.allocate(bags, ev, cfg, NOW, 60); // total 1000, reserve 792, surplus 208
+  const a = L.allocate(bags, [], cfg, N2, 60); // total 1300, reserve 792
   assert.strictEqual(a.milk, 'ebm');
-  assert.strictEqual(a.bag.id, 'f1');
+  assert.strictEqual(a.bag.id, 'f2');
   assert.strictEqual(a.inv.reserve, 792);
 });
 
 test('allocate rule 2: no surplus → formula', () => {
-  const ev = day('2026-11-16', 70).concat(day('2026-11-17', 70).filter(e => e.t <= NOW));
   const bags = { f1: { id: 'f1', code: 'a', ml: 500, pumpedAt: NOW - H, for: 'S', state: 'fridge' } };
-  assert.strictEqual(L.allocate(bags, ev, cfg, NOW, 60).milk, 'formula');
+  assert.strictEqual(L.allocate(bags, [], cfg, NOW, 60).milk, 'formula');
 });
 
 test('expired bags are excluded from inventory and surfaced as tasks', () => {
