@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>쌍둥이 수유 기록지</title>
+<style>
+@page { size: A4 landscape; margin: 9mm; }
+* { box-sizing: border-box; }
+body { font-family: "Noto Sans CJK KR", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; color: #1B262A; margin: 0; font-size: 9.5pt; }
+.page { page-break-after: always; display: flex; flex-direction: column; gap: 3mm; }
+.page:last-child { page-break-after: auto; }
+.head { display: flex; align-items: flex-end; gap: 6mm; border-bottom: 1.5pt solid #1B262A; padding-bottom: 2mm; }
+.head h1 { font-size: 15pt; margin: 0; }
+.head .f { font-size: 10pt; }
+.head .f b { display: inline-block; min-width: 22mm; border-bottom: .6pt solid #777; }
+.head .sp { margin-left: auto; font-size: 8pt; color: #5B6A6E; text-align: right; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+th, td { border: .6pt solid #9AA6A9; padding: 0 1.5mm; height: 6.3mm; font-size: 8.5pt; }
+th { background: #E9EDEB; font-weight: 700; height: auto; padding: 1.2mm; line-height: 1.25; }
+th small { display: block; font-weight: 400; color: #5B6A6E; font-size: 7pt; }
+td.o { color: #9AA6A9; font-size: 7.5pt; text-align: center; }
+.girl { color: #C25E3A; } .boy { color: #1E7A86; }
+.foot { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 3mm; }
+.box { border: .8pt solid #1B262A; border-radius: 2mm; padding: 2mm 3mm; display: flex; flex-direction: column; gap: 1.2mm; font-size: 8.6pt; }
+.box h2 { font-size: 9pt; margin: 0 0 .5mm; }
+.box p { margin: 0; line-height: 1.55; }
+.bl { display: inline-block; min-width: 13mm; border-bottom: .6pt solid #777; }
+.crit { color: #BC3426; font-weight: 700; }
+.note { font-size: 7.4pt; color: #5B6A6E; }
+.two { display: grid; grid-template-columns: 1.55fr 1fr; gap: 4mm; align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 3mm; }
+</style>
+</head>
+<body>
+
+<!-- 1쪽: 24시간 기록 -->
+<section class="page">
+  <div class="head">
+    <h1>24시간 수유 기록</h1>
+    <span class="f">날짜 <b></b></span>
+    <span class="f">생후 <b style="min-width:10mm"></b>일</span>
+    <span class="f"><span class="boy">아들</span> NICU 처방 <b></b> ml/일</span>
+    <span class="f">유축 목표 (×1.2) <b></b> ml</span>
+    <span class="sp">쌍둥이 2026-11-06 출생 · 37+0주<br>앱과 같은 칸 구조 · 나중에 옮겨 적기</span>
+  </div>
+  <table>
+    <colgroup>
+      <col style="width:21mm"><col style="width:11mm"><col style="width:25mm"><col style="width:15mm"><col style="width:15mm"><col style="width:34mm"><col style="width:30mm"><col style="width:20mm"><col>
+    </colgroup>
+    <thead><tr>
+      <th>시각<small>시작 – 끝</small></th>
+      <th>누가<small>엄/아</small></th>
+      <th class="girl">딸 직수<small>왼·오·양 / 분</small></th>
+      <th>유축 왼<small>ml</small></th>
+      <th>유축 오<small>ml</small></th>
+      <th>보관 · 라벨 코드<small>냉장/냉동/NICU · 월일-시분</small></th>
+      <th class="girl">딸 젖병<small>모유 / 분유 ml</small></th>
+      <th class="girl">딸 기저귀<small>소 · 대</small></th>
+      <th>메모<small>통증, 래치, NICU 연락, 체온</small></th>
+    </tr></thead>
+    <tbody>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+      <tr><td></td><td></td><td class="o">왼 · 오 · 양 /</td><td></td><td></td><td class="o">냉장 · 냉동 · NICU</td><td class="o">모 ___ / 분 ___</td><td class="o">소 · 대</td><td></td></tr>
+    </tbody>
+  </table>
+  <div class="foot">
+    <div class="box">
+      <h2>하루 합계 (아빠가 아침에)</h2>
+      <p>젖 비우기 <span class="bl"></span> / 8회 &nbsp; 새벽(1–5시) 비우기 ☐ 있음 &nbsp; 최장 공백 <span class="bl"></span> 시간 (목표 ≤ 5)</p>
+      <p>유축 합계 <span class="bl"></span> ml &nbsp;÷ 아들 처방 <span class="bl"></span> ml = <span class="bl"></span> % &nbsp; NICU 보냄 <span class="bl"></span> ml</p>
+      <p><span class="girl">딸</span> 수유 <span class="bl"></span> 회 (8+) &nbsp; 소변 <span class="bl"></span> (6+) &nbsp; 대변 <span class="bl"></span> (1+) &nbsp; 분유 <span class="bl"></span> ml</p>
+      <p>엄마: 통증 <span class="bl"></span>/10 &nbsp; 체온 <span class="bl"></span>°C &nbsp; 유방 ☐괜찮음 ☐뭉침 ☐붉고 아픔 &nbsp; 부품 세척 ☐☐☐</p>
+    </div>
+    <div class="box">
+      <h2>교대</h2>
+      <p>엄마 보호 수면 <span class="bl"></span> – <span class="bl"></span> (아빠 담당)</p>
+      <p>아빠 수면 <span class="bl"></span> – <span class="bl"></span> (엄마 담당)</p>
+      <p>젖병 1회: 아들 예비분(처방 × 2일)을 넘는 여유분이 있을 때만 모유, 없으면 분유. 세워 안고 천천히(페이스드).</p>
+      <p class="note">유축 후 4시간 안에 냉장. 밤엔 침대 옆 보냉백+아이스팩.</p>
+    </div>
+    <div class="box">
+      <h2>연락 기준 (기본값 · 소아과 확인 전)</h2>
+      <p><span class="crit">즉시</span> 딸 체온 38.0°C+, 초록 구토, 축 늘어짐 · 엄마 자해 생각 → 109 / 119</p>
+      <p><b>당일</b> 딸 24시간 소변 6회 미만, 대변 0, 수유 8회 미만, 4시간 넘게 안 먹음 · 엄마 38.5°C+ 유방 붉음</p>
+      <p class="note">자세한 기준과 근거: twin-feeding/docs/plan.md 4장</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2쪽: 모유 재고·NICU 배송 + 체중 -->
+<section class="page">
+  <div class="head">
+    <h1>모유 재고 · NICU 배송 대장</h1>
+    <span class="f">시작일 <b></b></span>
+    <span class="sp">라벨 코드 = 유축 끝난 월일-시분 (예: 1117-0830)<br>봉투에도 같은 코드 + ml + "아들용"</span>
+  </div>
+  <div class="two">
+    <table>
+      <colgroup><col style="width:24mm"><col style="width:13mm"><col style="width:20mm"><col style="width:22mm"><col style="width:26mm"><col></colgroup>
+      <thead><tr>
+        <th>라벨 코드<small>월일-시분</small></th>
+        <th>ml</th>
+        <th>누구용<small>아들 / 딸 가능</small></th>
+        <th>보관<small>냉장 / 냉동</small></th>
+        <th>기한<small>NICU 냉장 __h · 냉동 6개월</small></th>
+        <th>처리<small>NICU 보낸 날 / 딸 먹임 / 버림</small></th>
+      </tr></thead>
+      <tbody>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+        <tr><td></td><td></td><td class="o">아들 · 딸</td><td class="o">냉장 · 냉동</td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    <div class="stack">
+      <table>
+        <colgroup><col style="width:18mm"><col><col><col style="width:18mm"></colgroup>
+        <thead><tr><th>날짜</th><th class="girl">딸 g</th><th class="boy">아들 g<small>NICU 측정</small></th><th>어디서<small>집/병원</small></th></tr></thead>
+        <tbody>
+          <tr><td class="o">11/06 출생</td><td>2630</td><td>2640</td><td>병원</td></tr>
+          <tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="box">
+        <h2>보관 기한 (집 기준 · CDC/ABM #8)</h2>
+        <p>실온 4시간 · 냉장 4일 · 냉동 6개월(최대 12개월)</p>
+        <p>냉장 해동 후 24시간, 다시 얼리지 않기 · 먹다 남은 건 1–2시간 안에 버림</p>
+        <p><b>NICU로 가는 모유는 병원 규정이 우선</b> (용기·라벨·반입 시간)</p>
+      </div>
+      <div class="box">
+        <h2>배분 규칙</h2>
+        <p>1. 짠 모유는 모두 아들용으로 라벨</p>
+        <p>2. 아들 처방 × 2일을 넘는 여유분만 딸 젖병에 (기한 빠른 것부터)</p>
+        <p>3. 24시간 유축 &lt; 아들 처방이면 딸은 분유 + IBCLC·NICU 상담</p>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
