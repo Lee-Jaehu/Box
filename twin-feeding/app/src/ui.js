@@ -46,9 +46,17 @@ function validTab() {
 }
 
 /* ---------- 저장소: 공유 DB, 없으면 이 기기 저장 ---------- */
+// 구글 Apps Script 서버(1단계): google.script.run 호출을 Promise로
+const GAS = {
+  on: () => window.TF_BACKEND === 'gas' && window.google && google.script && google.script.run,
+  call(fn, ...args) {
+    return new Promise((ok, no) => google.script.run.withSuccessHandler(ok).withFailureHandler(e => no({ code: /unauthorized/.test(String(e && e.message)) ? 'invalid_argument' : 'unavailable', message: String(e && e.message) }))[fn](window.TF_TOKEN, ...args));
+  },
+};
 const Store = {
-  db: null, local: null,
+  db: null, local: null, gas: false, rev: -1,
   async init() {
+    if (GAS.on()) { this.gas = true; state.mode = 'db-wait'; render(); await this.gasLoad(); setInterval(() => this.gasPoll(), 8000); return; }
     let db = null;
     try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch { db = null; }
     if (db) { this.db = db; state.mode = 'db-wait'; this.subscribe(); }
@@ -70,6 +78,19 @@ const Store = {
     }, fail);
     this.db.doc('config/main').onSnapshot(snap => { ok(snap); state.cfgRaw = snap.exists ? snap.data() : null; state.cfg = mergeConfig(state.cfgRaw); render(); }, fail);
   },
+  async gasLoad() {
+    try {
+      const d = await GAS.call('api_getAll');
+      this.rev = d.rev; state.links = { sheet: d.sheetUrl, exec: d.execUrl };
+      const b = {}; for (const id in d.bags) if (!d.bags[id].deleted) b[id] = Object.assign({ id }, d.bags[id]);
+      state.bags = b; state.cfgRaw = d.config; state.cfg = mergeConfig(d.config); state.mode = 'db';
+      setEvents(d.events.filter(e => !e.deleted));
+    } catch (e) { state.mode = 'db-error'; state.err = e.code; render(); }
+  },
+  async gasPoll() {
+    if (document.visibilityState === 'hidden') return;
+    try { const r = await GAS.call('api_rev'); if (r !== this.rev) await this.gasLoad(); } catch {}
+  },
   applyLocal() {
     const evs = [];
     for (const k in this.local.days) for (const id in this.local.days[k]) { const e = this.local.days[k][id]; if (!e.deleted) evs.push(Object.assign({ id }, e)); }
@@ -87,6 +108,7 @@ const Store = {
   },
   async addEvent(ev) {
     const id = ev.id || uid(); const body = Object.assign({}, ev); delete body.id;
+    if (this.gas) { await GAS.call('api_addEvent', Object.assign({ id, src: 'web' }, body)); await this.gasLoad(); return id; }
     const key = dayKey(ev.t);
     if (!this.db) { (this.local.days[key] = this.local.days[key] || {})[id] = body; this.saveLocal(); return id; }
     const ref = this.db.doc('days/' + key);
@@ -101,12 +123,14 @@ const Store = {
     return id;
   },
   async patchEvent(ev, patch) {
+    if (this.gas) { await GAS.call('api_patchEvent', ev.id, patch); await this.gasLoad(); return; }
     const key = dayKey(ev.t);
     if (!this.db) { const d = this.local.days[key]; if (d && d[ev.id]) Object.assign(d[ev.id], patch); this.saveLocal(); return; }
     await this.db.doc('days/' + key).update({ events: { [ev.id]: patch } });
   },
   async setBag(bag) {
     const body = Object.assign({}, bag); delete body.id;
+    if (this.gas) { await GAS.call('api_setBag', bag); await this.gasLoad(); return; }
     if (!this.db) { this.local.bags[bag.id] = body; this.saveLocal(); return; }
     await this.db.doc('bags/' + bag.id).set(body);
   },
@@ -125,6 +149,19 @@ const Store = {
     return run;
   },
   async _updateBag(id, fn) {
+    if (this.gas) {
+      // 최신 팩과 version을 읽어 계산 → 서버가 version이 같을 때만 반영 (다르면 다시 시도)
+      for (let i = 0; i < 3; i++) {
+        const g = await GAS.call('api_getBag', id);
+        if (!g) return 'missing';
+        const patch = fn(Object.assign({ id }, g.bag));
+        if (!patch) return 'ok';
+        const r = await GAS.call('api_updateBag', id, patch, g.version);
+        if (r === 'ok') { await this.gasLoad(); return 'ok'; }
+        if (r === 'missing') return 'missing';
+      }
+      return 'busy';
+    }
     if (!this.db) { const b = this.local.bags[id]; if (!b) return 'missing'; const patch = fn(Object.assign({ id }, b)); if (patch) { Object.assign(b, patch); this.saveLocal(); } return 'ok'; }
     const ref = this.db.doc('bags/' + id);
     const lease = await ref.acquire({ holder: DEVICE, ttlMs: 8000 });
@@ -136,6 +173,7 @@ const Store = {
     return 'ok';
   },
   async setConfig(cfg) {
+    if (this.gas) { await GAS.call('api_setConfig', cfg); await this.gasLoad(); return; }
     if (!this.db) { this.local.config = cfg; this.saveLocal(); return; }
     await this.db.doc('config/main').set(cfg);
   },
@@ -395,7 +433,17 @@ function reconcileNicu() {
     }
   }
 }
+function planShortcutBottles() {
+  if (state.me !== 'dad') return;                       // 한 기기에서만 계획 (두 폰이 서로 다른 팩을 고르지 않게)
+  for (const e of state.events) if (e.type === 'bottle' && e.milk === 'ebm' && !e.plan && e.applied === false && e.src && e.src !== 'web' && !reconciled.has('p' + e.id)) {
+    reconciled.add('p' + e.id);
+    const a = allocate(state.bags, state.events.filter(x => x.id !== e.id), state.cfg, e.t, e.ml);
+    const pl = bottlePlan(a, e.ml).map(p => ({ id: p.id, use: p.use }));
+    Store.patchEvent(e, pl.length ? { plan: pl } : { applied: true, short: e.ml }).catch(() => reconciled.delete('p' + e.id));
+  }
+}
 function reconcileBottles() {
+  planShortcutBottles();
   reconcileNicu();
   // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(24시간 이내)을 다시 반영. 값이 절대값이라 여러 번 해도 같음
   for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < 7 * DAY && !reconciled.has(e.id)) {
@@ -576,6 +624,9 @@ function describe(e) {
     case 'wash': return '유축 부품 세척';
     case 'momcheck': return '엄마 상태' + (e.temp ? ' ' + e.temp + '°C' : '') + (e.pain !== undefined ? ' · 통증 ' + e.pain : '') + (e.epds !== undefined ? ' · EPDS ' + e.epds : '');
     case 'note': return e.text;
+    case 'cry': return NAME('D') + ' 울음' + (e.rank && e.rank[0] ? ' · 1순위 ' + e.rank[0].why : '');
+    case 'calm': return '울음 그침 · ' + ({ feed: '먹여서', diaper: '기저귀', sleep: '재워서', hold: '안아줘서', other: '그 밖', unknown: '모름' }[e.how] || e.how);
+    case 'sleep': return NAME('D') + ' 잠' + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 자는 중');
     case 'order': return NAME('S') + ' 처방 ' + (e.perFeed ? e.perFeed + 'ml×' + e.times + '번 = ' : '') + e.ml + 'ml/일' + (e.note ? ' · ' + e.note : '');
     default: return e.type;
   }
@@ -590,6 +641,9 @@ function eventIcon(e) {
     case 'wash': return ['wash', 'blue'];
     case 'momcheck': return ['heart', 'red'];
     case 'order': return ['clip', 'boy'];
+    case 'cry': return ['alert', 'amber'];
+    case 'calm': return ['check', 'green'];
+    case 'sleep': return ['moon', 'violet'];
     default: return ['note', ''];
   }
 }
@@ -627,7 +681,9 @@ function settingsSheet() {
       '<div class="grid2">' + f('nameD', '첫째 이름', c.names.D) + f('nameS', '둘째 이름', c.names.S) + f('birthD', '첫째 출생체중 g', c.birthG.D, 'numeric') + f('birthS', '둘째 출생체중 g', c.birthG.S, 'numeric') + '</div>') +
     '</div>' +
     '<div class="li">' + bub(state.mode === 'db' ? 'check' : 'alert', state.mode === 'db' ? 'green' : 'amber') + '<span class="tx"><span class="t">저장 상태</span><span class="d">' + modeTxt + '</span></span></div>' +
-    '<p class="xs muted">아내도 같은 기록을 쓰려면 이 페이지를 공유하고 편집 권한을 주세요.</p>', root => {
+    (state.links && state.links.exec ? '<label class="f">단축어에 넣을 주소<input id="execUrl" readonly value="' + esc(state.links.exec + '?k=' + window.TF_TOKEN) + '"></label><button class="btn gray" id="copyUrl">주소 복사</button><p class="xs muted">이 주소를 아는 사람은 기록을 보고 쓸 수 있어요. 가족에게만 주세요.</p>'
+      : '<p class="xs muted">아내도 같은 기록을 쓰려면 이 페이지를 공유하고 편집 권한을 주세요.</p>'), root => {
+    const cu = root.querySelector('#copyUrl'); if (cu) cu.addEventListener('click', () => { const i = root.querySelector('#execUrl'); try { navigator.clipboard.writeText(i.value).then(() => toast('주소를 복사했어요'), () => { i.select(); }); } catch { i.select(); } });
     root.querySelectorAll('[data-role]').forEach(b => b.addEventListener('click', () => { state.me = b.dataset.role; ls.set('tf.me', state.me); state.tab = null; validTab(); closeSheet(); }));
     const sw = root.querySelector('#confirmed'); sw.addEventListener('click', () => sw.setAttribute('aria-checked', sw.getAttribute('aria-checked') !== 'true'));
     root.querySelectorAll('[data-savecfg]').forEach(b => b.addEventListener('click', () => saveSettings(root)));
@@ -929,7 +985,7 @@ function viewReport() {
   if (d.fl.length) h += d.fl.map(f => '<p class="small"><b>' + { now: '즉시', today: '당일 연락', visit: '진료 때 상의', plan: '공급 관리' }[f.level] + '</b> · ' + esc(f.text) + '</p>').join('');
   if (d.mc.length) h += '<p class="small"><b>엄마</b> ' + d.mc.map(m => fmtMD(m.t) + ' ' + esc(describe(m).replace('엄마 상태', ''))).join(' · ') + '</p>';
   if (d.notes.length) h += '<p class="small"><b>메모</b> ' + d.notes.map(n => fmtMD(n.t) + ' ' + esc(n.text)).join(' · ') + '</p>';
-  h += '</div><div class="row2"><button class="btn gray" id="dl-html">리포트 파일</button><button class="btn gray" id="dl-csv">전체 기록 CSV</button></div>';
+  h += '</div>' + (state.links && state.links.sheet ? '<a class="btn gray" href="' + esc(state.links.sheet) + '" target="_blank" rel="noopener">구글 시트에서 전체 기록 보기</a>' : '<div class="row2"><button class="btn gray" id="dl-html">리포트 파일</button><button class="btn gray" id="dl-csv">전체 기록 CSV</button></div>');
   return h;
 }
 const avg = a => { const v = a.filter(x => x > 0); return v.length ? Math.round(v.reduce((s, x) => s + x, 0) / v.length) : 0; };
