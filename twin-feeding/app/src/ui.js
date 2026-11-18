@@ -163,7 +163,7 @@ function openSheet(html, bind) {
 function closeSheet() { $('#sheet').hidden = true; $('#panel').innerHTML = ''; render(); }
 $('#sheet').addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
-function sheetHead(title, sub) { return '<header><div><h3>' + title + '</h3>' + (sub ? '<p>' + sub + '</p>' : '') + '</div><button class="x" data-close="1" aria-label="닫기">' + icon('more', '') .replace('i-more', 'i-more') + '</button></header>'; }
+function sheetHead(title, sub) { return '<header><div><h3>' + title + '</h3>' + (sub ? '<p>' + sub + '</p>' : '') + '</div><button class="x" data-close="1" aria-label="닫기">' + icon('x') + '</button></header>'; }
 function chips(name, opts, val) {
   return '<div class="chips" data-chips="' + name + '">' + opts.map(([v, l]) => '<button type="button" data-v="' + esc(v) + '" aria-pressed="' + (String(v) === String(val)) + '">' + esc(l) + '</button>').join('') + '</div>';
 }
@@ -194,8 +194,14 @@ function endSession(e) {
   const handoff = e.kind === 'nurse' ? '' : state.mode === 'db' ? ' 유축분 처리는 아빠 할 일로 넘겼어요.' : '';
   return act(() => Store.patchEvent(e, { end: Date.now(), endBy: state.me || 'mom' }), kindDesc(e.kind, e.side) + ' 기록했어요.' + handoff);
 }
+function offerUndo(label, fn) { state.undo = { label, fn, until: Date.now() + 15000 }; render(); setTimeout(render, 15100); }
 async function cancelSession(e) {
-  if (await act(() => Store.patchEvent(e, { deleted: true }))) toast('기록을 취소했어요', false, 6000, () => act(() => Store.patchEvent(e, { deleted: false }), '되돌렸어요'));
+  if (await act(() => Store.patchEvent(e, { deleted: true }))) offerUndo('기록을 취소했어요', () => Store.patchEvent(e, { deleted: false }));
+}
+function undoBar() {
+  const u = state.undo;
+  if (!u || Date.now() > u.until) { state.undo = null; return ''; }
+  return '<div class="alert info">' + icon('swap') + '<div style="flex:1"><b>' + esc(u.label) + '</b></div><button class="sbtn" id="undo">되돌리기</button></div>';
 }
 function quickDiaper(wet, stool) { return act(() => Store.addEvent({ type: 'diaper', baby: 'D', wet, stool, t: Date.now(), by: by() }), NAME('D') + ' 기저귀(' + (wet && stool ? '소변+대변' : wet ? '소변' : '대변') + ')를 기록했어요'); }
 function washDone(n) { return act(() => Store.addEvent({ type: 'wash', sets: n, t: Date.now(), by: by() }), '세척을 기록했어요'); }
@@ -204,7 +210,8 @@ function washDone(n) { return act(() => Store.addEvent({ type: 'wash', sets: n, 
 function processSheet(e) {
   let L = Number(e.mlL) || 0, R = Number(e.mlR) || 0, dest = state.cfg.defaultDest || 'freezer';
   const ob = e.bagId && state.bags[e.bagId];
-  if (ob && ACTIVE.includes(ob.state)) dest = ob.state === 'fridge' && ob.for === 'any' ? 'fridge-any' : ob.state === 'thawed' ? 'fridge' : ob.state;
+  let destTouched = false;
+  if (ob) dest = ob.state === 'fridge' && ob.for === 'any' ? 'fridge-any' : (ob.state === 'fridge' || ob.state === 'freezer') ? ob.state : '';  // 해동·보냄·먹임은 아무것도 고르지 않음
   const html = sheetHead('유축한 양을 적어 주세요', fmtT(e.t) + ' ' + KIND[e.kind].label + ' · ' + fmtDur((e.end || Date.now()) - e.t) + ' · 젖병 눈금을 보고 입력해요') +
     '<div class="grid2">' +
     '<div class="plain"><p class="lab">왼쪽 ml</p><div class="stepper"><button data-s="L-" aria-label="왼쪽 10ml 빼기">−</button><output id="oL">' + L + '</output><button data-s="L+" aria-label="왼쪽 10ml 더하기">+</button></div></div>' +
@@ -219,18 +226,27 @@ function processSheet(e) {
       const s = b.dataset.s, d = s[1] === '+' ? 10 : -10;
       if (s[0] === 'L') L = Math.max(0, L + d); else R = Math.max(0, R + d); upd();
     }));
-    bindChips(root, 'dest', v => { dest = v; });
+    bindChips(root, 'dest', v => { dest = v; destTouched = true; });
     const old = e.bagId ? state.bags[e.bagId] : null;      // 다시 고치는 경우: 같은 팩을 갱신
+    const prevTotal = sessionMl(e);
     const newBagId = uid(), nicuEvId = uid();               // 재시도해도 같은 id → 중복 없음
     root.querySelector('#save').addEventListener('click', async () => {
       const total = L + R, now = Date.now();
       const st = dest === 'fridge-any' ? 'fridge' : dest;
+      if (!old && total > 0 && !dest) { toast('어디에 둘지 골라 주세요', true); return; }
       const ok = await act(async () => {
         let bagId = old ? old.id : (total > 0 ? newBagId : null);
         if (old) {
-          if (total === 0) await Store.patchBag(old.id, { ml: 0, state: 'discard', stateAt: now });
-          else if (ACTIVE.includes(old.state)) await Store.patchBag(old.id, { ml: total, state: st, for: dest === 'fridge-any' ? 'any' : 'S', stateAt: now });
-          else await Store.patchBag(old.id, { ml: total });  // 이미 보냈거나 먹인 팩은 양만 고침
+          // 팩의 현재 양에 '고친 만큼'만 더하고 뺌 (일부 쓴 팩의 남은 양을 원래 양으로 덮어쓰지 않음)
+          const diff = total - prevTotal;
+          const patch = { ml: Math.max(0, (Number(old.ml) || 0) + diff) };
+          if (destTouched && ACTIVE.includes(old.state) && dest !== 'nicu') { patch.state = st; patch.for = dest === 'fridge-any' ? 'any' : 'S'; patch.stateAt = now; }
+          if (patch.ml === 0 && ACTIVE.includes(old.state)) { patch.state = 'discard'; patch.stateAt = now; }
+          await Store.patchBag(old.id, patch);
+          if (old.state === 'nicu' && diff) {
+            const sent = state.events.filter(x => x.type === 'nicu' && (x.bagIds || []).includes(old.id)).sort((a, b) => b.t - a.t)[0];
+            if (sent) await Store.patchEvent(sent, { ml: Math.max(0, (Number(sent.ml) || 0) + diff) });
+          }
         } else if (bagId) {
           await Store.setBag({ id: bagId, code: bagCode(e.end || e.t), ml: total, pumpedAt: e.end || e.t, for: dest === 'fridge-any' ? 'any' : 'S', state: st, stateAt: now, sessionId: e.id, by: by() });
           if (dest === 'nicu') await Store.addEvent({ id: nicuEvId, type: 'nicu', bagIds: [bagId], ml: total, t: now, by: by() });
@@ -273,22 +289,34 @@ function bottleSheet() {
       const x = Number(ev.target.value); ml = x > 0 && x < 400 ? x : null;
       root.querySelectorAll('[data-chips="ml"] button').forEach(c => c.setAttribute('aria-pressed', 'false')); draw(root);
     });
+    let plan = null, busy = false;
     root.querySelector('#save').addEventListener('click', async () => {
-      if (!(ml > 0 && milk)) return;
-      const a = draw(root), now = Date.now();
-      const bag = milk === 'ebm' ? (a.bag || allocBagAny()) : null;
+      if (!(ml > 0 && milk) || busy) return;
+      // 첫 클릭에서 '어느 팩에서 얼마나'를 정해 두고, 재시도해도 같은 계획을 씀 (두 번 차감 방지)
+      if (!plan || plan.ml !== ml || plan.milk !== milk) plan = { ml, milk, t: Date.now(), patches: milk === 'ebm' ? bottlePlan(draw(root), ml) : [] };
+      busy = true; const btn = root.querySelector('#save'); btn.disabled = true;
       const ok = await act(async () => {
-        await Store.addEvent({ id: evId, type: 'bottle', baby: 'D', ml, milk, bagId: bag ? bag.id : null, t: now, by: by() });
-        if (bag) {
-          const left = (Number(bag.ml) || 0) - ml;
-          // 팩 일부만 썼으면 남은 양은 해동 상태로 재고에 남김 (해동 후 24시간)
-          if (left > 0) await Store.patchBag(bag.id, { ml: left, state: bag.state === 'freezer' ? 'thawed' : bag.state, stateAt: bag.state === 'freezer' ? now : (bag.stateAt || now) });
-          else await Store.patchBag(bag.id, { state: 'used', stateAt: now, usedFor: 'D' });
-        }
+        await Store.addEvent({ id: evId, type: 'bottle', baby: 'D', ml, milk, bagId: plan.patches[0] ? plan.patches[0].id : null, bagIds: plan.patches.map(p => p.id), t: plan.t, by: by() });
+        for (const p of plan.patches) await Store.patchBag(p.id, p.patch);
       }, NAME('D') + ' ' + (milk === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요');
-      if (ok) closeSheet();
+      busy = false;
+      if (ok) closeSheet(); else draw(root);
     });
   });
+}
+// 젖병에 쓸 팩들: 판정이 고른 팩부터, 모자라면 최근에 짠 팩 순서로 이어서. 남은 양은 해동 상태로 재고에 남김
+function bottlePlan(a, ml) {
+  const now = Date.now();
+  const inv = inventory(state.bags, state.events, state.cfg, now);
+  const order = inv.avail.slice().sort((x, y) => y.pumpedAt - x.pumpedAt);
+  if (a.bag) order.sort((x, y) => (y.id === a.bag.id) - (x.id === a.bag.id));
+  const out = []; let rest = ml;
+  for (const b of order) {
+    if (rest <= 0) break;
+    const have = Number(b.ml) || 0, use = Math.min(have, rest); rest -= use;
+    out.push({ id: b.id, patch: have - use > 0 ? { ml: have - use, state: b.state === 'freezer' ? 'thawed' : b.state, stateAt: b.state === 'freezer' ? now : (b.stateAt || now) } : { state: 'used', stateAt: now, usedFor: 'D' } });
+  }
+  return out;
 }
 function allocBagAny() {
   const inv = inventory(state.bags, state.events, state.cfg, Date.now());
@@ -446,7 +474,7 @@ function eventSheet(e) {
     '<div>' + (vol ? '<button class="li" id="vol">' + bub('pump', 'violet') + '<span class="tx"><span class="t">유축한 양 ' + (e.processed ? '고치기' : '적기') + '</span></span>' + icon('chev', 'chev') + '</button>' : '') +
     '<button class="li" id="del">' + bub('alert', 'red') + '<span class="tx"><span class="t">이 기록 지우기</span></span>' + icon('chev', 'chev') + '</button></div>', root => {
     const v = root.querySelector('#vol'); if (v) v.addEventListener('click', () => processSheet(e));
-    root.querySelector('#del').addEventListener('click', async () => { if (await act(() => Store.patchEvent(e, { deleted: true }))) { closeSheet(); toast('기록을 지웠어요', false, 6000, () => act(() => Store.patchEvent(e, { deleted: false }), '되돌렸어요')); } });
+    root.querySelector('#del').addEventListener('click', async () => { if (await act(() => Store.patchEvent(e, { deleted: true }))) { closeSheet(); offerUndo('기록을 지웠어요', () => Store.patchEvent(e, { deleted: false })); } });
   });
 }
 function describe(e) {
@@ -846,7 +874,7 @@ function render() {
   const sy = $('#sync'); sy.className = 'sync ' + (state.mode === 'db' ? 'ok' : state.mode === 'db-wait' || state.mode === 'loading' ? '' : 'warn');
   sy.title = state.mode === 'db' ? '공유 중' : '공유 안 됨';
   const views = { feed: viewFeed, todo: viewTodo, kids: viewKids, milk: viewMilk, log: viewLog };
-  $('#main').innerHTML = state.me ? (views[state.tab] || viewFeed)() : viewRole();
+  $('#main').innerHTML = (state.me ? undoBar() : '') + (state.me ? (views[state.tab] || viewFeed)() : viewRole());
   // 아빠 할 일 화면의 하단 고정 빠른 기록
   const dock = state.me === 'dad' && state.tab === 'todo';
   $('#dock').hidden = !dock;
@@ -891,6 +919,7 @@ document.addEventListener('click', async e => {
     else if (wakeLock) { try { wakeLock.release(); } catch {} wakeLock = null; }
     render(); return;
   }
+  if (b.id === 'undo' && state.undo) { const u = state.undo; if (await act(u.fn, '되돌렸어요')) { state.undo = null; render(); } return; }
   if (b.id === 'dl-html') return download('html');
   if (b.id === 'dl-csv') return download('csv');
   switch (d.q) {
