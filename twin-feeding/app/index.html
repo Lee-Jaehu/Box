@@ -677,8 +677,10 @@ const Store = {
     await this.db.doc('bags/' + bag.id).set(body);
   },
   async patchBag(id, patch) {
-    if (!this.db) { Object.assign(this.local.bags[id], patch); this.saveLocal(); return; }
-    await this.db.doc('bags/' + id).update(patch);
+    // 상태 바꾸기·NICU 보내기도 차감과 같은 잠금 경로로 (서로 덮어쓰지 않게)
+    const r = await this.updateBagLocked(id, () => patch);
+    if (r === 'busy') throw { code: 'busy' };
+    if (r === 'missing') throw { code: 'invalid_argument' };
   },
   // 팩 하나를 '잠금 → 최신 값 읽기 → 고치기' 순서로 바꿈. 다른 폰과 동시에 같은 팩을 고쳐도 차감이 사라지지 않게
   queue: {},
@@ -708,7 +710,7 @@ async function act(fn, okMsg) {
   try { await fn(); if (okMsg) toast(okMsg); return true; }
   catch (e) {
     const code = e && e.code;
-    toast(code === 'invalid_argument' ? '저장 권한이 없어요. 공유 메뉴에서 편집 권한을 받아 주세요.' : code === 'quota_exceeded' ? '저장 공간이 다 찼어요.' : code === 'local_failed' ? '이 폰에 저장하지 못했어요. 새로고침하면 사라질 수 있어요.' : '저장하지 못했어요. 잠시 후 다시 눌러 주세요.', true);
+    toast(code === 'invalid_argument' ? '저장 권한이 없어요. 공유 메뉴에서 편집 권한을 받아 주세요.' : code === 'quota_exceeded' ? '저장 공간이 다 찼어요.' : code === 'local_failed' ? '이 폰에 저장하지 못했어요. 새로고침하면 사라질 수 있어요.' : code === 'busy' ? '다른 폰에서 같은 모유를 고치는 중이에요. 잠시 후 다시 눌러 주세요.' : '저장하지 못했어요. 잠시 후 다시 눌러 주세요.', true);
     return false;
   }
 }
@@ -835,10 +837,13 @@ function processSheet(e) {
         if (old) {
           // 팩의 현재 양에 '고친 만큼'만 더하고 뺌 (일부 쓴 팩의 남은 양을 원래 양으로 덮어쓰지 않음)
           const diff = total - prevTotal;
-          const patch = { ml: Math.max(0, (Number(old.ml) || 0) + diff) };
-          if (destTouched && ACTIVE.includes(old.state) && dest !== 'nicu') { patch.state = st; patch.for = dest === 'fridge-any' ? 'any' : 'S'; patch.stateAt = now; }
-          if (patch.ml === 0 && ACTIVE.includes(old.state)) { patch.state = 'discard'; patch.stateAt = now; }
-          await Store.patchBag(old.id, patch);
+          const r = await Store.updateBagLocked(old.id, cur => {
+            const patch = { ml: Math.max(0, (Number(cur.ml) || 0) + diff) };
+            if (destTouched && ACTIVE.includes(cur.state) && dest !== 'nicu') { patch.state = st; patch.for = dest === 'fridge-any' ? 'any' : 'S'; patch.stateAt = now; }
+            if (patch.ml === 0 && ACTIVE.includes(cur.state)) { patch.state = 'discard'; patch.stateAt = now; }
+            return patch;
+          });
+          if (r === 'busy') throw { code: 'busy' };
           if (old.state === 'nicu' && diff) {
             const sent = state.events.filter(x => x.type === 'nicu' && (x.bagIds || []).includes(old.id)).sort((a, b) => b.t - a.t)[0];
             if (sent) await Store.patchEvent(sent, { ml: Math.max(0, (Number(sent.ml) || 0) + diff) });
@@ -1524,7 +1529,7 @@ function tick() {
   if (r && el) { const s = Math.floor((Date.now() - r.t) / 1000); el.textContent = (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); }
 }
 setInterval(tick, 1000);
-setInterval(() => { if ($('#sheet').hidden) render(); }, 30000);
+setInterval(() => { if ($('#sheet').hidden) render(); reconcileBottles(); }, 30000);
 document.addEventListener('focusout', () => setTimeout(() => { if (state.pending && $('#sheet').hidden) render(); }, 0));
 
 /* ---------- 이벤트 위임 ---------- */
