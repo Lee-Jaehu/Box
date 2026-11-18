@@ -384,7 +384,18 @@ async function applyBottlePlan(ev) {
   return true;
 }
 const reconciled = new Set();
+function reconcileNicu() {
+  // 배송 기록에 있는데 아직 '보냄'이 아닌 팩을 맞춤 (여러 팩 보내기 중 일부가 다른 폰에 잠겨 있던 경우)
+  for (const e of state.events) if (e.type === 'nicu' && Date.now() - e.t < DAY) for (const id of e.bagIds || []) {
+    const b = state.bags[id];
+    if (b && ACTIVE.includes(b.state) && !reconciled.has('n' + id)) {
+      reconciled.add('n' + id);
+      Store.patchBag(id, { state: 'nicu', stateAt: e.t }).catch(() => {}).finally(() => reconciled.delete('n' + id));
+    }
+  }
+}
 function reconcileBottles() {
+  reconcileNicu();
   // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(24시간 이내)을 다시 반영. 값이 절대값이라 여러 번 해도 같음
   for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < DAY && !reconciled.has(e.id)) {
     reconciled.add(e.id); applyBottlePlan(e).then(done => { if (!done) { reconciled.delete(e.id); setTimeout(reconcileBottles, 30000); } }, () => reconciled.delete(e.id));
@@ -535,7 +546,12 @@ function sendSheet() {
     root.querySelector('#send').addEventListener('click', async () => {
       const sel = list.filter(b => picked.has(b.id)); if (!sel.length) return;
       const t = Date.now(), ml = sel.reduce((s, x) => s + x.ml, 0);
-      if (await act(async () => { for (const x of sel) await Store.patchBag(x.id, { state: 'nicu', stateAt: t }); await Store.addEvent({ id: sendId, type: 'nicu', bagIds: sel.map(x => x.id), ml, t, by: by() }); }, 'NICU에 ' + ml + 'ml 보낸 걸 기록했어요')) closeSheet();
+      // 배송 기록을 먼저 남기고 팩 상태를 바꿈. 일부 팩이 잠겨 있어도 기록이 기준이 되어 나중에 맞춰짐
+      const ok = await act(async () => {
+        await Store.addEvent({ id: sendId, type: 'nicu', bagIds: sel.map(x => x.id), ml, t, by: by() });
+        for (const x of sel) await Store.patchBag(x.id, { state: 'nicu', stateAt: t });
+      }, 'NICU에 ' + ml + 'ml 보낸 걸 기록했어요');
+      if (ok) closeSheet();
     });
     draw(root);
   });
