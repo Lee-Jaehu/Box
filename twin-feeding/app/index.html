@@ -573,6 +573,7 @@ const ls = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
 };
+const DEVICE = (() => { let d = null; try { d = localStorage.getItem('tf.device'); if (!d) { d = 'dev-' + Math.random().toString(36).slice(2, 10); localStorage.setItem('tf.device', d); } } catch {} return d || 'dev-' + Math.random().toString(36).slice(2, 10); })();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const fmtT = t => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
 const fmtMD = t => { const d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate(); };
@@ -678,6 +679,25 @@ const Store = {
   async patchBag(id, patch) {
     if (!this.db) { Object.assign(this.local.bags[id], patch); this.saveLocal(); return; }
     await this.db.doc('bags/' + id).update(patch);
+  },
+  // 팩 하나를 '잠금 → 최신 값 읽기 → 고치기' 순서로 바꿈. 다른 폰과 동시에 같은 팩을 고쳐도 차감이 사라지지 않게
+  queue: {},
+  updateBagLocked(id, fn) {
+    // 같은 기기 안에서는 팩별로 한 번에 하나씩 (잠금은 기기 단위라 기기 안 동시 실행은 못 막음)
+    const run = (this.queue[id] || Promise.resolve()).then(() => this._updateBag(id, fn));
+    this.queue[id] = run.catch(() => {});
+    return run;
+  },
+  async _updateBag(id, fn) {
+    if (!this.db) { const b = this.local.bags[id]; if (!b) return 'missing'; const patch = fn(Object.assign({ id }, b)); if (patch) { Object.assign(b, patch); this.saveLocal(); } return 'ok'; }
+    const ref = this.db.doc('bags/' + id);
+    const lease = await ref.acquire({ holder: DEVICE, ttlMs: 8000 });
+    if (!lease.acquired) return 'busy';
+    const snap = await ref.get();
+    if (!snap.exists) return 'missing';
+    const patch = fn(Object.assign({ id }, snap.data()));
+    if (patch) await ref.update(patch);
+    return 'ok';
   },
   async setConfig(cfg) {
     if (!this.db) { this.local.config = cfg; this.saveLocal(); return; }
@@ -874,14 +894,16 @@ function bottleSheet() {
       if (!(ml > 0 && milk) || busy) return;
       // 첫 클릭에서 '어느 팩에서 얼마나'를 정해 두고, 재시도해도 같은 계획을 씀 (두 번 차감 방지)
       if (!plan || plan.ml !== ml || plan.milk !== milk) plan = { ml, milk, t: Date.now(), patches: milk === 'ebm' ? bottlePlan(draw(root), ml) : [] };
-      busy = true; const btn = root.querySelector('#save'); btn.disabled = true;
+      busy = true; let deferred = false; const btn = root.querySelector('#save'); btn.disabled = true;
       const ok = await act(async () => {
         const ev = { id: evId, type: 'bottle', baby: 'D', ml, milk, bagId: plan.patches[0] ? plan.patches[0].id : null, bagIds: plan.patches.map(p => p.id), t: plan.t, by: by() };
         if (plan.patches.length) { ev.plan = plan.patches.map(p => ({ id: p.id, use: p.use })); ev.applied = false; }
         reconciled.add(evId);   // 지금 이 시트가 직접 반영하는 중: 자동 반영과 겹치지 않게
         await Store.addEvent(ev);
-        await applyBottlePlan(ev);
-      }, NAME('D') + ' ' + (milk === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요' + (plan.patches.short ? ' (보관분에서 ' + (ml - plan.patches.short) + 'ml만 뺐어요)' : ''));
+        deferred = !(await applyBottlePlan(ev));
+      }, null);
+      if (ok) toast(NAME('D') + ' ' + (milk === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요' + (deferred ? '. 팩 차감은 잠시 뒤 자동으로 반영돼요' : plan.patches.short ? ' (보관분에서 ' + (ml - plan.patches.short) + 'ml만 뺐어요)' : ''));
+      if (ok && deferred) reconciled.delete(evId);
       busy = false;
       if (ok) closeSheet(); else { reconciled.delete(evId); draw(root); }
     });
@@ -905,17 +927,19 @@ function bottlePlan(a, ml) {
 }
 async function applyBottlePlan(ev) {
   if (!ev.plan || ev.applied) return true;
-  if (ev.plan.some(p => !state.bags[p.id])) return false;            // 팩 목록이 아직 안 들어왔으면 나중에
   const now = Date.now();
   for (const p of ev.plan) {
-    const b = state.bags[p.id];
-    if (b.used && b.used[ev.id]) continue;                            // 이미 이 젖병만큼 뺐음
-    const used = Object.assign({}, b.used, { [ev.id]: p.use });
-    if (!ACTIVE.includes(b.state)) { await Store.patchBag(p.id, { used }); continue; }   // 그사이 보냈거나 다 쓴 팩은 표시만
-    const left = (Number(b.ml) || 0) - p.use;                          // 지금 남은 양에서 뺌 (덮어쓰지 않음)
-    await Store.patchBag(p.id, left > 0
-      ? { used, ml: left, state: b.state === 'freezer' ? 'thawed' : b.state, stateAt: b.state === 'freezer' ? now : (b.stateAt || now) }
-      : { used, state: 'used', stateAt: now, usedFor: 'D' });
+    // 잠금 안에서 최신 팩 값을 읽고, 이 젖병 표시가 없을 때만 지금 남은 양에서 뺌
+    const r = await Store.updateBagLocked(p.id, b => {
+      if (b.used && b.used[ev.id]) return null;                       // 이미 이 젖병만큼 뺐음
+      const used = Object.assign({}, b.used, { [ev.id]: p.use });
+      if (!ACTIVE.includes(b.state)) return { used };                  // 그사이 보냈거나 다 쓴 팩은 표시만
+      const left = (Number(b.ml) || 0) - p.use;
+      return left > 0
+        ? { used, ml: left, state: b.state === 'freezer' ? 'thawed' : b.state, stateAt: b.state === 'freezer' ? now : (b.stateAt || now) }
+        : { used, state: 'used', stateAt: now, usedFor: 'D' };
+    });
+    if (r !== 'ok') return false;                                     // 다른 폰이 고치는 중이거나 팩이 아직 없음 → 나중에 다시
   }
   await Store.patchEvent(ev, { applied: true });
   return true;
@@ -924,7 +948,7 @@ const reconciled = new Set();
 function reconcileBottles() {
   // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(24시간 이내)을 다시 반영. 값이 절대값이라 여러 번 해도 같음
   for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < DAY && !reconciled.has(e.id)) {
-    reconciled.add(e.id); applyBottlePlan(e).then(done => { if (!done) reconciled.delete(e.id); }, () => reconciled.delete(e.id));
+    reconciled.add(e.id); applyBottlePlan(e).then(done => { if (!done) { reconciled.delete(e.id); setTimeout(reconcileBottles, 30000); } }, () => reconciled.delete(e.id));
   }
 }
 function allocBagAny() {
