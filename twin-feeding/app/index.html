@@ -952,18 +952,19 @@ async function applyBottlePlan(ev) {
 const reconciled = new Set();
 function reconcileNicu() {
   // 배송 기록에 있는데 아직 '보냄'이 아닌 팩을 맞춤 (여러 팩 보내기 중 일부가 다른 폰에 잠겨 있던 경우)
-  for (const e of state.events) if (e.type === 'nicu' && Date.now() - e.t < DAY) for (const id of e.bagIds || []) {
+  for (const e of state.events) if (e.type === 'nicu' && Date.now() - e.t < 7 * DAY) for (const id of e.bagIds || []) {
     const b = state.bags[id];
     if (b && ACTIVE.includes(b.state) && !reconciled.has('n' + id)) {
       reconciled.add('n' + id);
-      Store.patchBag(id, { state: 'nicu', stateAt: e.t }).catch(() => {}).finally(() => reconciled.delete('n' + id));
+      // 잠금 안에서 최신 상태를 다시 보고, 아직 보관 중일 때만 '보냄'으로 (그사이 먹였거나 버린 팩은 그대로)
+      Store.updateBagLocked(id, cur => ACTIVE.includes(cur.state) ? { state: 'nicu', stateAt: e.t } : null).catch(() => {}).finally(() => reconciled.delete('n' + id));
     }
   }
 }
 function reconcileBottles() {
   reconcileNicu();
   // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(24시간 이내)을 다시 반영. 값이 절대값이라 여러 번 해도 같음
-  for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < DAY && !reconciled.has(e.id)) {
+  for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < 7 * DAY && !reconciled.has(e.id)) {
     reconciled.add(e.id); applyBottlePlan(e).then(done => { if (!done) { reconciled.delete(e.id); setTimeout(reconcileBottles, 30000); } }, () => reconciled.delete(e.id));
   }
 }
