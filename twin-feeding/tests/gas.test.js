@@ -135,4 +135,19 @@ test('two phones hearing the same cry within 5 minutes make one record', () => {
   assert.strictEqual(X.readEvents_().filter(e => e.type === 'cry').length, before + 1);
 });
 
+test('switching sides mid-feed: split is spoken, and next start suggests the less-fed side', () => {
+  const B = T0 + 20 * 3600e3;
+  assert.strictEqual(act({ a: 'start', kind: 'nurse', side: 'L' }, B), '왼쪽 직수 시작했어요.');
+  assert.strictEqual(act({ a: 'switch' }, B + 5 * 60e3), '오른쪽으로 바꿨어요.');
+  assert.strictEqual(act({ a: 'end' }, B + 7 * 60e3), '직수 끝. 7분이에요. 왼쪽 5, 오른쪽 2분.');
+  // 왼 5, 오 2 → 다음은 덜 먹인 오른쪽
+  assert.strictEqual(act({ a: 'start', kind: 'nurse' }, B + 60 * 60e3), '오른쪽 직수 시작했어요.');
+  assert.strictEqual(act({ a: 'end' }, B + 68 * 60e3), '직수 끝. 8분이에요.');
+  // 한쪽만 먹였으면 반대쪽
+  assert.strictEqual(act({ a: 'start', kind: 'nurse' }, B + 120 * 60e3), '왼쪽 직수 시작했어요.');
+  assert.strictEqual(act({ a: 'switch' }, B + 121 * 60e3) !== '바꿀 직수가 없어요.', true);
+  act({ a: 'end' }, B + 130 * 60e3);
+  assert.strictEqual(act({ a: 'switch' }, B + 131 * 60e3), '바꿀 직수가 없어요.');
+});
+
 console.log('\n' + n + ' tests passed');

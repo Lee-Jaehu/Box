@@ -176,6 +176,30 @@ details.fold .items b { display: block; }
 .day { font-size: 14px; font-weight: 700; color: var(--sub); padding: 8px 4px 0; }
 .tl .time { font-size: 13px; color: var(--muted); width: 44px; flex: none; }
 
+/* 타임라인: 왼쪽 간격 알약 | 시각 | 세로선·점 | 제목·설명 */
+.tlbar { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.tlbar .chips button { min-height: 38px; min-width: 0; padding: 0 12px; font-size: 14px; }
+.card.tl2 { padding: 8px 12px 16px; gap: 0; position: relative; }
+.card.tl2::before { content: ""; position: absolute; top: 16px; bottom: 16px; left: calc(12px + 78px + 54px + 11px); width: 2px; background: var(--line); border-radius: 1px; }
+.trow, .tgap, .tday { display: grid; grid-template-columns: 78px 54px 22px minmax(0, 1fr); position: relative; width: 100%; text-align: left; }
+.trow { padding-block: 8px; align-items: start; }
+.trow:active { opacity: .7; }
+.ttime { text-align: right; padding-right: 6px; font-size: 15px; font-weight: 700; line-height: 1.3; }
+.ttime small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.tdot { width: 12px; height: 12px; border-radius: 50%; margin: 4px auto 0; background: var(--muted); box-shadow: 0 0 0 4px var(--surface); position: relative; z-index: 1; }
+.tdot.girl { background: var(--girl); } .tdot.blue { background: var(--primary); } .tdot.violet { background: var(--violet); } .tdot.amber { background: var(--warn); } .tdot.green { background: var(--ok); }
+.tdot.live { animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 4px var(--surface); } 50% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 9px var(--primary-weak); } }
+@media (prefers-reduced-motion: reduce) { .tdot.live { animation: none; } }
+.tbody { display: flex; flex-direction: column; padding-left: 6px; min-width: 0; }
+.tbody b { font-size: 17px; font-weight: 800; line-height: 1.3; }
+.tbody b.girl { color: var(--girl); } .tbody b.blue { color: var(--primary); } .tbody b.violet { color: var(--violet); } .tbody b.amber { color: var(--warn); } .tbody b.green { color: var(--ok); }
+.tbody span { font-size: 14px; color: var(--ink); }
+.tgap { min-height: 30px; align-items: center; }
+.gappill { grid-column: 1; justify-self: stretch; text-align: center; border: 1px solid var(--line); background: var(--fill); border-radius: 999px; padding: 3px 4px; font-size: 13px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+.tday { padding: 10px 0 2px; }
+.tday span { grid-column: 1 / 3; font-size: 13px; font-weight: 700; color: var(--sub); }
+
 /* 표·차트 */
 .tablewrap { overflow-x: auto; margin: 0 -6px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -811,14 +835,35 @@ function bindChips(root, name, onPick) {
 /* ---------- 기록 동작 ---------- */
 const by = () => state.me || 'dad';
 const running = () => state.events.filter(e => e.type === 'session' && !e.end).sort((a, b) => b.t - a.t)[0];
+// 쪽 구간: segs=[{side,t}] (수유 중 반대쪽으로 바꾸면 하나씩 늘어남). 예전 기록은 side 하나
+const segsOf = e => (e.segs && e.segs.length ? e.segs : [{ side: e.side, t: e.t }]);
+const curSide = e => segsOf(e)[segsOf(e).length - 1].side;
+function sideTimes(e) {
+  if (e.kind === 'pump') return [];
+  const s = segsOf(e), end = e.end || Date.now();
+  return s.map((x, i) => ({ side: x.side, ms: Math.max(0, (i + 1 < s.length ? s[i + 1].t : end) - x.t) }));
+}
+function splitText(e) {
+  const st = sideTimes(e).filter(x => x.ms >= 30e3);
+  if (st.length < 2) return '';
+  return st.map(x => (x.side === 'L' ? '왼' : '오') + ' ' + Math.max(1, Math.round(x.ms / 60000))).join(' → ');
+}
+// 다음 쪽: 지난 수유에서 덜 먹인 쪽 (한쪽만 먹였으면 반대쪽)
 function suggestSide() {
-  const last = state.events.filter(isNurse).sort((a, b) => b.t - a.t)[0];
-  if (!last || !last.side || last.side === 'B') return 'L';
-  return OTHER[last.side];
+  const last = state.events.filter(e => isNurse(e) && e.side && e.side !== 'B').sort((a, b) => b.t - a.t)[0];
+  if (!last) return 'L';
+  const tot = { L: 0, R: 0 };
+  for (const x of sideTimes(last)) if (x.side === 'L' || x.side === 'R') tot[x.side] += x.ms;
+  if (tot.L === tot.R) return OTHER[curSide(last)] || 'L';
+  return tot.L < tot.R ? 'L' : 'R';
+}
+function switchSide(e) {
+  const now = Date.now(), to = OTHER[curSide(e)] || 'L';
+  return act(() => Store.patchEvent(e, { segs: segsOf(e).concat({ side: to, t: now }) }), SIDE_KO[to] + '으로 바꿨어요');
 }
 const lastOf = pred => { const e = state.events.filter(pred).sort((a, b) => b.t - a.t)[0]; return e || null; };
 const isDFeed = e => (isNurse(e) && e.end) || (e.type === 'bottle' && e.baby === 'D');
-const feedDesc = e => e.type === 'bottle' ? '젖병 ' + (e.milk === 'ebm' ? '모유 ' : '분유 ') + e.ml + 'ml' : kindDesc(e.kind, e.side);
+const feedDesc = e => e.type === 'bottle' ? '젖병 ' + (e.milk === 'ebm' ? '모유 ' : '분유 ') + e.ml + 'ml' : (splitText(e) ? '양쪽 직수 (' + splitText(e) + ')' : kindDesc(e.kind, e.side));
 function startSession(kind) {
   const side = kind === 'pump' ? 'B' : (state.side || suggestSide());
   state.side = null;
@@ -1182,7 +1227,7 @@ function eventSheet(e) {
 }
 function describe(e) {
   switch (e.type) {
-    case 'session': return NAME('D') && e.kind !== 'pump' ? NAME('D') + ' ' + kindDesc(e.kind, e.side) + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 중') + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '') : '양쪽 유축' + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 중') + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '');
+    case 'session': return NAME('D') && e.kind !== 'pump' ? NAME('D') + ' ' + (splitText(e) ? '양쪽 직수' + (e.kind === 'nurse+pump' ? '+유축' : '') + ' (' + splitText(e) + ')' : kindDesc(e.kind, curSide(e))) + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 중') + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '') : '양쪽 유축' + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 중') + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '');
     case 'bottle': return NAME(e.baby) + ' 젖병 ' + (e.milk === 'ebm' ? '모유 ' : '분유 ') + e.ml + 'ml';
     case 'diaper': return NAME(e.baby) + ' 기저귀 ' + (e.wet && e.stool ? '소변+대변' : e.wet ? '소변' : '대변');
     case 'weight': return NAME(e.baby) + ' 체중 ' + n0(e.g) + 'g';
@@ -1306,10 +1351,11 @@ function viewFeed() {
   const lastFeed = lastOf(isDFeed);
   let h = '<div class="feed">';
   if (r) {
-    h += title(kindDesc(r.kind, r.side) + ' 중이에요', fmtT(r.t) + '에 시작했어요');
+    h += title(kindDesc(r.kind, curSide(r)) + ' 중이에요', fmtT(r.t) + '에 시작했어요' + (splitText(r) ? ' · ' + splitText(r) : ''));
     h += syncBanner() + '<div class="spacer"></div>';
-    h += '<div class="card">' + '<div class="li" style="min-height:auto">' + bub(KIND[r.kind].ic, KIND[r.kind].tone) + '<span class="tx"><span class="t">' + KIND[r.kind].label + '</span><span class="d">' + kindDesc(r.kind, r.side) + '</span></span></div>' +
+    h += '<div class="card">' + '<div class="li" style="min-height:auto">' + bub(KIND[r.kind].ic, KIND[r.kind].tone) + '<span class="tx"><span class="t">' + KIND[r.kind].label + '</span><span class="d">' + kindDesc(r.kind, curSide(r)) + '</span></span></div>' +
       '<div class="timer" id="clock">00:00</div>' +
+      (r.kind !== 'pump' ? '<button class="btn weak" data-switch="' + r.id + '">' + icon('swap') + SIDE_KO[OTHER[curSide(r)]] + '으로 바꾸기</button>' : '') +
       '<button class="btn" data-end="' + r.id + '">끝내기</button>' +
       '<button class="btn gray" data-cancel="' + r.id + '">잘못 눌렀어요 · 기록 취소</button></div>';
   } else {
@@ -1337,7 +1383,7 @@ function viewTodo() {
   let h = title(tk.length ? '할 일이 ' + tk.length + '개 있어요' : '지금은 할 일이 없어요', tk.length ? '위에서부터 처리하면 돼요' : '엄마가 유축을 끝내면 여기에 처리할 일이 생겨요');
   h += syncBanner();
   h += flagsBlock(fl);
-  if (r) h += '<div class="alert info">' + icon(KIND[r.kind].ic) + '<div><b>엄마가 ' + kindDesc(r.kind, r.side) + ' 중이에요 · <span id="clock">00:00</span></b><span>물 한 컵 챙겨 주세요.</span></div></div>';
+  if (r) h += '<div class="alert info">' + icon(KIND[r.kind].ic) + '<div><b>엄마가 ' + kindDesc(r.kind, curSide(r)) + ' 중이에요 · <span id="clock">00:00</span></b><span>물 한 컵 챙겨 주세요.</span></div></div>';
   if (tk.length) h += '<div class="card tight">' + tk.map(taskRow).join('') + '</div>';
   const lf = lastOf(isDFeed);
   const ld = lastOf(e => e.type === 'diaper');
@@ -1494,31 +1540,58 @@ function pumpChart(ser, target, needMl) {
 }
 
 /* ---------- 화면: 기록 ---------- */
+/* ---------- 화면: 기록 (타임라인) ---------- */
+const TL_FILTERS = [['all', '전체'], ['feed', '수유'], ['sleep', '잠'], ['diaper', '기저귀']];
+function tlMatch(e, f) {
+  if (e.deleted) return false;
+  if (f === 'feed') return e.type === 'session' || e.type === 'bottle';
+  if (f === 'sleep') return e.type === 'sleep';
+  if (f === 'diaper') return e.type === 'diaper';
+  return true;
+}
+function tlItem(e) {
+  // 제목·색·설명 (예시 화면처럼: '왼쪽 직수' / '7분 (왼 5 → 오 2)')
+  const dur = e.end ? fmtDur(e.end - e.t) : '진행 중 ' + fmtDur(Date.now() - e.t);
+  switch (e.type) {
+    case 'session': {
+      const sp = splitText(e);
+      if (e.kind === 'pump') return { tone: 'violet', t: '유축', d: dur + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '') };
+      const name = sp ? '양쪽 직수' : SIDE_KO[curSide(e)] + ' 직수';
+      return { tone: e.kind === 'nurse' ? 'girl' : 'blue', t: name + (e.kind === 'nurse+pump' ? ' + 유축' : ''), d: dur + (sp ? ' (' + sp + ')' : '') + (e.processed ? ' · 유축 ' + sessionMl(e) + 'ml' : '') };
+    }
+    case 'bottle': return { tone: 'girl', t: '젖병 ' + (e.milk === 'ebm' ? '모유' : '분유'), d: e.ml + 'ml' };
+    case 'sleep': return { tone: 'violet', t: e.end ? '잠' : '자는 중', d: e.end ? fmtDur(e.end - e.t) : fmtDur(Date.now() - e.t) + '째' };
+    case 'diaper': return { tone: e.stool ? 'amber' : 'blue', t: '기저귀', d: e.wet && e.stool ? '소변 + 대변' : e.wet ? '소변' : '대변' };
+    case 'cry': return { tone: 'amber', t: '울음', d: e.rank && e.rank[0] ? '1순위 ' + e.rank[0].why : '' };
+    case 'calm': return { tone: 'green', t: '울음 그침', d: { feed: '먹여서', diaper: '기저귀 갈아서', sleep: '재워서', hold: '안아줘서', other: '그 밖', unknown: '모름' }[e.how] || '' };
+    default: return { tone: 'gray', t: describe(e), d: '' };
+  }
+}
 function viewLog() {
   const now = Date.now(), lastFeed = lastOf(isDFeed);
-  let h = lastFeed ? '<div class="title"><p>' + NAME('D') + ' 마지막 수유</p><h1>' + fmtAgo(lastFeed.end || lastFeed.t) + '</h1><p>' + fmtT(lastFeed.t) + ' · ' + feedDesc(lastFeed) + '</p></div>' : title('아직 기록이 없어요');
+  const f = state.tlFilter || ls.get('tf.tlf', 'all');
+  let h = lastFeed ? '<div class="title"><p>' + NAME('D') + ' 마지막 수유</p><h1>' + fmtAgo(lastFeed.end || lastFeed.t) + '</h1><p>' + fmtT(lastFeed.t) + ' · ' + feedDesc(lastFeed) + ' · 다음은 ' + SIDE_KO[suggestSide()] + '</p></div>' : title('아직 기록이 없어요');
   h += syncBanner();
-  h += '<div class="seg" role="group" aria-label="보기"><button data-logview="list" aria-pressed="' + (state.logView === 'list') + '">시간순 기록</button><button data-logview="report" aria-pressed="' + (state.logView === 'report') + '">진료용 7일</button></div>';
+  h += '<div class="seg" role="group" aria-label="보기"><button data-logview="list" aria-pressed="' + (state.logView === 'list') + '">타임라인</button><button data-logview="report" aria-pressed="' + (state.logView === 'report') + '">진료용 7일</button></div>';
   if (state.logView === 'report') return h + viewReport();
-  h += '<button class="btn weak" data-add="1">' + icon('note') + '다른 기록 추가하기</button>';
-  const st = stats24(state.events, now, state.cfg);
-  h += '<div class="card"><h2>' + bub('clock', 'blue') + '최근 24시간</h2><div class="stats3">' +
-    '<div class="stat"><span class="k">젖 비우기</span><span class="vv">' + st.removals + '<small>/' + state.cfg.th.removalsMin + '</small></span></div>' +
-    '<div class="stat"><span class="k">가장 긴 공백</span><span class="vv">' + (st.longestGap / HOUR).toFixed(1) + '<small>시간</small></span></div>' +
-    '<div class="stat"><span class="k">유축</span><span class="vv">' + n0(st.pumped) + '<small>ml</small></span></div>' +
-    '<div class="stat"><span class="k">' + NAME('D') + ' 수유</span><span class="vv">' + st.dFeeds + '<small>회</small></span></div>' +
-    '<div class="stat"><span class="k">기저귀</span><span class="vv">' + st.wet + '<small>소</small> ' + st.stool + '<small>대</small></span></div>' +
-    '<div class="stat"><span class="k">분유</span><span class="vv">' + st.formula + '<small>ml</small></span></div></div></div>';
-  const evs = state.events.filter(e => e.t > now - 3 * DAY).slice().reverse();
-  if (!evs.length) return h + '<div class="card"><div class="empty">' + bub('clock', '') + '<b>기록이 아직 없어요</b><span class="xs">엄마 폰에서 수유를 시작하면 여기에 쌓여요</span></div></div>';
-  let cur = '';
+  h += '<div class="tlbar"><div class="chips" role="group" aria-label="보기 거르기">' + TL_FILTERS.map(([v, l]) => '<button data-tlf="' + v + '" aria-pressed="' + (f === v) + '">' + l + '</button>').join('') + '</div><button class="sbtn gray" data-add="1">+ 기록</button></div>';
+  const evs = state.events.filter(e => e.t > now - 3 * DAY && tlMatch(e, f)).sort((a, b) => b.t - a.t);
+  if (!evs.length) return h + '<div class="card"><div class="empty">' + bub('clock', '') + '<b>기록이 아직 없어요</b><span class="xs">수유를 시작하면 여기에 쌓여요</span></div></div>';
+  // 수유 사이 간격 (시작 → 다음 시작). 딸 수유(직수·젖병)끼리만
+  const feeds = state.events.filter(e => (isNurse(e)) || (e.type === 'bottle' && e.baby === 'D')).sort((a, b) => b.t - a.t);
+  const gapAfter = {};
+  for (let i = 0; i + 1 < feeds.length; i++) gapAfter[feeds[i].id] = feeds[i].t - feeds[i + 1].t;
+  let cur = '', body = '';
   for (const e of evs) {
     const k = dayKey(e.t);
-    if (k !== cur) { if (cur) h += '</div>'; cur = k; h += '<p class="day">' + (k === dayKey(now) ? '오늘' : k === dayKey(now - DAY) ? '어제' : fmtMD(e.t)) + '</p><div class="card tight tl">'; }
-    const [ic, tone] = eventIcon(e);
-    h += '<button class="li" data-ev="' + e.id + '"><span class="time">' + fmtT(e.t) + '</span>' + bub(ic, tone) + '<span class="tx"><span class="t">' + esc(describe(e)) + '</span><span class="d">' + (e.by === 'mom' ? '엄마' : e.by === 'dad' ? '아빠' : esc(e.by || '')) + '</span></span>' + icon('chev', 'chev') + '</button>';
+    if (k !== cur) { cur = k; body += '<div class="tday"><span>' + (k === dayKey(now) ? '오늘' : k === dayKey(now - DAY) ? '어제' : '') + ' ' + fmtMD(e.t) + '</span></div>'; }
+    const it = tlItem(e);
+    const endT = e.end ? '~' + fmtT(e.end) : (e.type === 'session' || e.type === 'sleep') ? '~지금' : '';
+    body += '<button class="trow" data-ev="' + e.id + '"><span class="tgapcol"></span><span class="ttime">' + fmtT(e.t) + (endT ? '<small>' + endT + '</small>' : '') + '</span><span class="tdot ' + it.tone + (endT === '~지금' ? ' live' : '') + '"></span><span class="tbody"><b class="' + it.tone + '">' + esc(it.t) + '</b>' + (it.d ? '<span>' + esc(it.d) + '</span>' : '') + '</span></button>';
+    if (gapAfter[e.id] !== undefined && (f === 'all' || f === 'feed')) body += '<div class="tgap"><span class="gappill">' + fmtDur(gapAfter[e.id]) + '</span></div>';
   }
-  return h + '</div><p class="foot">3일 전까지 보여요. 전체 기록은 진료용 7일에서 파일로 받을 수 있어요.</p>';
+  h += '<div class="card tl2">' + body + '</div>';
+  return h + '<p class="foot">3일 전까지 보여요. 왼쪽 숫자는 수유 시작부터 다음 수유 시작까지의 간격이에요. 기록을 누르면 고치거나 지울 수 있어요.</p>';
 }
 function reportData() {
   const now = Date.now(), cfg = state.cfg;
@@ -1616,6 +1689,8 @@ document.addEventListener('click', async e => {
   if (d.start) return startSession(d.start);
   if (d.end) { const r = state.events.find(x => x.id === d.end); if (r) endSession(r); return; }
   if (d.cancel) { const r = state.events.find(x => x.id === d.cancel); if (r) cancelSession(r); return; }
+  if (d.switch) { const r = state.events.find(x => x.id === d.switch); if (r) switchSide(r); return; }
+  if (d.tlf) { state.tlFilter = d.tlf; ls.set('tf.tlf', d.tlf); render(); return; }
   if (d.side) { state.side = d.side; render(); return; }
   if (d.proc) { const r = state.events.find(x => x.id === d.proc); if (r) processSheet(r); return; }
   if (d.wash) return washDone(Number(d.wash));

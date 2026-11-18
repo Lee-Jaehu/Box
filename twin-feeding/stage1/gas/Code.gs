@@ -79,7 +79,7 @@ function putEvent_(ev) {
 }
 function summary_(e) {
   switch (e.type) {
-    case 'session': return (e.kind === 'pump' ? '양쪽 유축' : SIDE_KO[e.side] + ' ' + KIND_KO[e.kind]) + (e.end ? ' ' + Math.round((e.end - e.t) / 60000) + '분' : ' 진행 중') + (e.processed ? ' · ' + ((+e.mlL || 0) + (+e.mlR || 0)) + 'ml' : '');
+    case 'session': return (e.kind === 'pump' ? '양쪽 유축' : splitText_(e, e.end || Date.now()) ? '양쪽 ' + KIND_KO[e.kind] + ' (' + splitText_(e, e.end || Date.now()) + ')' : SIDE_KO[curSide_(e)] + ' ' + KIND_KO[e.kind]) + (e.end ? ' ' + Math.round((e.end - e.t) / 60000) + '분' : ' 진행 중') + (e.processed ? ' · ' + ((+e.mlL || 0) + (+e.mlR || 0)) + 'ml' : '');
     case 'diaper': return '기저귀 ' + (e.wet && e.stool ? '소변+대변' : e.wet ? '소변' : '대변');
     case 'bottle': return '젖병 ' + (e.milk === 'ebm' ? '모유 ' : '분유 ') + e.ml + 'ml';
     case 'weight': return (e.baby === 'S' ? '아들' : '딸') + ' 체중 ' + e.g + 'g';
@@ -186,7 +186,7 @@ function act_(p, now) {
   const recent = all.filter(e => e.t > now - 3 * DAY);
   const add = ev => { ev.id = ev.id || ('s' + now.toString(36) + Math.random().toString(36).slice(2, 6)); ev.t = ev.t || now; ev.updatedAt = now; ev.by = by; ev.src = src; putEvent_(ev); return ev; };
   const open = recent.filter(e => e.type === 'session' && !e.end && e.t > now - 4 * HOUR).sort((a, b) => b.t - a.t)[0];
-  const side = sideParam_(p.side) || suggestSide_(recent);
+  const side = sideParam_(p.side) || suggestSide_(recent, now);
   switch (p.a) {
     case 'feed': {                                            // 액션 버튼: 진행 중이면 끝, 아니면 시작
       if (open) return endSession_(open, by, now);
@@ -203,6 +203,12 @@ function act_(p, now) {
       return pre + startSession_(add, kind, side);
     }
     case 'end': return open ? endSession_(open, by, now) : '진행 중인 수유가 없어요.';
+    case 'switch': {
+      if (!open || open.kind === 'pump') return '바꿀 직수가 없어요.';
+      const to = curSide_(open) === 'L' ? 'R' : 'L';
+      open.segs = segs_(open).concat({ side: to, t: now }); open.updatedAt = now; putEvent_(open);
+      return SIDE_KO[to] + '으로 바꿨어요.';
+    }
     case 'diaper': {
       const wet = p.wet === '1', stool = p.stool === '1';
       if (!wet && !stool) return '소변인지 대변인지 알려 주세요.';
@@ -251,14 +257,31 @@ function startSession_(add, kind, side) {
 }
 function endSession_(s, by, now) {
   s.end = now; s.endBy = by; s.endedAt = now; s.updatedAt = now; putEvent_(s);
-  return (s.kind === 'pump' ? '유축' : KIND_KO[s.kind]) + ' 끝. ' + mins_(now - s.t) + '이에요.';
+  const sp = s.kind === 'pump' ? '' : splitText_(s, now);
+  return (s.kind === 'pump' ? '유축' : KIND_KO[s.kind]) + ' 끝. ' + mins_(now - s.t) + '이에요.' + (sp ? ' ' + sp.replace(/왼/g, '왼쪽').replace(/오 /g, '오른쪽 ').replace(/ → /g, ', ') + '분.' : '');
 }
 function sideParam_(v) { v = String(v || ''); return /^(L|왼)/i.test(v) ? 'L' : /^(R|오)/i.test(v) ? 'R' : null; }
 function kindParam_(v) { v = String(v || ''); return v === 'nurse' || v === 'nurse+pump' || v === 'pump' ? v : /직수.*유축|both/.test(v) ? 'nurse+pump' : /유축/.test(v) ? 'pump' : /직수/.test(v) ? 'nurse' : null; }
 function calmParam_(v) { v = String(v || ''); return /먹|수유|젖/.test(v) ? 'feed' : /기저귀/.test(v) ? 'diaper' : /재|잠/.test(v) ? 'sleep' : /안/.test(v) ? 'hold' : v ? 'other' : 'unknown'; }
-function suggestSide_(evs) {
+// 쪽 구간: segs=[{side,t}] (수유 중 반대쪽으로 바꾸면 늘어남). 예전 기록은 side 하나
+function segs_(e) { return e.segs && e.segs.length ? e.segs : [{ side: e.side, t: e.t }]; }
+function curSide_(e) { const s = segs_(e); return s[s.length - 1].side; }
+function sideTimes_(e, now) {
+  const s = segs_(e), end = e.end || now;
+  return s.map((x, i) => ({ side: x.side, ms: Math.max(0, (i + 1 < s.length ? s[i + 1].t : end) - x.t) }));
+}
+function splitText_(e, now) {
+  const st = sideTimes_(e, now).filter(x => x.ms >= 30e3);
+  return st.length < 2 ? '' : st.map(x => (x.side === 'L' ? '왼' : '오') + ' ' + Math.max(1, Math.round(x.ms / 60000))).join(' → ');
+}
+// 다음 쪽: 지난 수유에서 덜 먹인 쪽 (한쪽만 먹였으면 반대쪽)
+function suggestSide_(evs, now) {
   const last = evs.filter(e => e.type === 'session' && e.kind !== 'pump' && e.side && e.side !== 'B').sort((a, b) => b.t - a.t)[0];
-  return last ? (last.side === 'L' ? 'R' : 'L') : 'L';
+  if (!last) return 'L';
+  const tot = { L: 0, R: 0 };
+  for (const x of sideTimes_(last, now || Date.now())) if (tot[x.side] !== undefined) tot[x.side] += x.ms;
+  if (tot.L === tot.R) return curSide_(last) === 'L' ? 'R' : 'L';
+  return tot.L < tot.R ? 'L' : 'R';
 }
 function mins_(ms) { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? m + '분' : Math.floor(m / 60) + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : ''); }
 function lastFeedEnd_(evs) {
@@ -273,7 +296,7 @@ function status_(evs, now, side) {
   const lf = lastFeedEnd_(evs);
   const ld = evs.filter(e => e.type === 'diaper').reduce((m, e) => Math.max(m, e.t), 0);
   const open = evs.filter(e => e.type === 'session' && !e.end && e.t > now - 4 * HOUR)[0];
-  return (open ? (open.kind === 'pump' ? '유축' : KIND_KO[open.kind]) + ' ' + mins_(now - open.t) + '째예요. ' : '') +
+  return (open ? (open.kind === 'pump' ? '유축' : SIDE_KO[curSide_(open)] + ' ' + KIND_KO[open.kind]) + ' ' + mins_(now - open.t) + '째예요. ' : '') +
     '마지막 수유 ' + (lf ? mins_(now - lf) + ' 전' : '기록 없음') + ', 다음은 ' + SIDE_KO[side] + '. ' +
     '기저귀 ' + (ld ? mins_(now - ld) + ' 전' : '기록 없음') + '.';
 }
