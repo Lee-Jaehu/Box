@@ -76,7 +76,14 @@ const Store = {
     state.cfgRaw = this.local.config; state.cfg = mergeConfig(this.local.config);
     setEvents(evs);
   },
-  saveLocal() { const ok = ls.set('tf.data', this.local); this.applyLocal(); if (!ok) throw { code: 'local_failed' }; },
+  saveLocal() {
+    if (!ls.set('tf.data', this.local)) {
+      // 저장 실패: 화면도 마지막으로 저장된 상태로 되돌림 (저장 안 된 변경이 화면에만 남지 않게)
+      this.local = ls.get('tf.data', { days: {}, bags: {}, config: null }); this.applyLocal();
+      throw { code: 'local_failed' };
+    }
+    this.applyLocal();
+  },
   async addEvent(ev) {
     const id = ev.id || uid(); const body = Object.assign({}, ev); delete body.id;
     const key = dayKey(ev.t);
@@ -195,14 +202,16 @@ function endSession(e) {
   const handoff = e.kind === 'nurse' ? '' : state.mode === 'db' ? ' 유축분 처리는 아빠 할 일로 넘겼어요.' : '';
   return act(() => Store.patchEvent(e, { end: Date.now(), endBy: state.me || 'mom' }), kindDesc(e.kind, e.side) + ' 기록했어요.' + handoff);
 }
-function offerUndo(label, fn) { state.undo = { label, fn, until: Date.now() + 15000 }; render(); setTimeout(render, 15100); }
+function offerUndo(label, fn) { state.undos = (state.undos || []).concat({ label, fn, until: Date.now() + 30000 }); render(); setTimeout(render, 30100); }
 async function cancelSession(e) {
   if (await act(() => Store.patchEvent(e, { deleted: true }))) offerUndo('기록을 취소했어요', () => Store.patchEvent(e, { deleted: false }));
 }
 function undoBar() {
-  const u = state.undo;
-  if (!u || Date.now() > u.until) { state.undo = null; return ''; }
-  return '<div class="alert info">' + icon('swap') + '<div style="flex:1"><b>' + esc(u.label) + '</b></div><button class="sbtn" id="undo">되돌리기</button></div>';
+  state.undos = (state.undos || []).filter(x => Date.now() < x.until);
+  const u = state.undos[state.undos.length - 1];
+  if (!u) return '';
+  const more = state.undos.length - 1;
+  return '<div class="alert info">' + icon('swap') + '<div style="flex:1"><b>' + esc(u.label) + '</b>' + (more ? '<span>되돌릴 수 있는 기록이 ' + more + '개 더 있어요</span>' : '') + '</div><button class="sbtn" id="undo">되돌리기</button></div>';
 }
 function quickDiaper(wet, stool) { return act(() => Store.addEvent({ type: 'diaper', baby: 'D', wet, stool, t: Date.now(), by: by() }), NAME('D') + ' 기저귀(' + (wet && stool ? '소변+대변' : wet ? '소변' : '대변') + ')를 기록했어요'); }
 function washDone(n) { return act(() => Store.addEvent({ type: 'wash', sets: n, t: Date.now(), by: by() }), '세척을 기록했어요'); }
@@ -302,13 +311,13 @@ function bottleSheet() {
       busy = true; const btn = root.querySelector('#save'); btn.disabled = true;
       const ok = await act(async () => {
         const ev = { id: evId, type: 'bottle', baby: 'D', ml, milk, bagId: plan.patches[0] ? plan.patches[0].id : null, bagIds: plan.patches.map(p => p.id), t: plan.t, by: by() };
-        if (plan.patches.length) { ev.plan = plan.patches.map(p => ({ id: p.id, patch: p.patch })); ev.applied = false; }
+        if (plan.patches.length) { ev.plan = plan.patches.map(p => ({ id: p.id, use: p.use })); ev.applied = false; }
         reconciled.add(evId);   // 지금 이 시트가 직접 반영하는 중: 자동 반영과 겹치지 않게
         await Store.addEvent(ev);
         await applyBottlePlan(ev);
       }, NAME('D') + ' ' + (milk === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요' + (plan.patches.short ? ' (보관분에서 ' + (ml - plan.patches.short) + 'ml만 뺐어요)' : ''));
       busy = false;
-      if (ok) closeSheet(); else draw(root);
+      if (ok) closeSheet(); else { reconciled.delete(evId); draw(root); }
     });
   });
 }
@@ -323,21 +332,33 @@ function bottlePlan(a, ml) {
   for (const b of order) {
     if (rest <= 0) break;
     const have = Number(b.ml) || 0, use = Math.min(have, rest); rest -= use;
-    out.push({ id: b.id, patch: have - use > 0 ? { ml: have - use, state: b.state === 'freezer' ? 'thawed' : b.state, stateAt: b.state === 'freezer' ? now : (b.stateAt || now) } : { state: 'used', stateAt: now, usedFor: 'D' } });
+    if (use > 0) out.push({ id: b.id, use });
   }
   out.short = Math.max(0, rest);   // 보관분에서 못 뺀 양 (막 짠 모유를 바로 준 경우 등)
   return out;
 }
 async function applyBottlePlan(ev) {
-  if (!ev.plan || ev.applied) return;
-  for (const p of ev.plan) if (state.bags[p.id]) await Store.patchBag(p.id, p.patch);
+  if (!ev.plan || ev.applied) return true;
+  if (ev.plan.some(p => !state.bags[p.id])) return false;            // 팩 목록이 아직 안 들어왔으면 나중에
+  const now = Date.now();
+  for (const p of ev.plan) {
+    const b = state.bags[p.id];
+    if (b.used && b.used[ev.id]) continue;                            // 이미 이 젖병만큼 뺐음
+    const used = Object.assign({}, b.used, { [ev.id]: p.use });
+    if (!ACTIVE.includes(b.state)) { await Store.patchBag(p.id, { used }); continue; }   // 그사이 보냈거나 다 쓴 팩은 표시만
+    const left = (Number(b.ml) || 0) - p.use;                          // 지금 남은 양에서 뺌 (덮어쓰지 않음)
+    await Store.patchBag(p.id, left > 0
+      ? { used, ml: left, state: b.state === 'freezer' ? 'thawed' : b.state, stateAt: b.state === 'freezer' ? now : (b.stateAt || now) }
+      : { used, state: 'used', stateAt: now, usedFor: 'D' });
+  }
   await Store.patchEvent(ev, { applied: true });
+  return true;
 }
 const reconciled = new Set();
 function reconcileBottles() {
   // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(24시간 이내)을 다시 반영. 값이 절대값이라 여러 번 해도 같음
   for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < DAY && !reconciled.has(e.id)) {
-    reconciled.add(e.id); applyBottlePlan(e).catch(() => reconciled.delete(e.id));
+    reconciled.add(e.id); applyBottlePlan(e).then(done => { if (!done) reconciled.delete(e.id); }, () => reconciled.delete(e.id));
   }
 }
 function allocBagAny() {
@@ -941,7 +962,7 @@ document.addEventListener('click', async e => {
     else if (wakeLock) { try { wakeLock.release(); } catch {} wakeLock = null; }
     render(); return;
   }
-  if (b.id === 'undo' && state.undo) { const u = state.undo; if (await act(u.fn, '되돌렸어요')) { state.undo = null; render(); } return; }
+  if (b.id === 'undo' && state.undos && state.undos.length) { const u = state.undos[state.undos.length - 1]; if (await act(u.fn, '되돌렸어요')) { state.undos = state.undos.filter(x => x !== u); render(); } return; }
   if (b.id === 'dl-html') return download('html');
   if (b.id === 'dl-csv') return download('csv');
   switch (d.q) {
