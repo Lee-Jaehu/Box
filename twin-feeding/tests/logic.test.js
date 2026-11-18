@@ -170,4 +170,14 @@ test('dailySeries counts per calendar day and taps per role', () => {
   assert.strictEqual(d16.momTaps, 16);
 });
 
+test('nurse-only session: counts as removal and daughter feed, not pumped, no processing task', () => {
+  const ev = [{ id: 'n1', type: 'session', kind: 'nurse', baby: 'D', side: 'L', t: NOW - H, end: NOW - 40 * 60e3, by: 'mom' }];
+  const st = L.stats24(ev, NOW, cfg);
+  assert.strictEqual(st.removals, 1);
+  assert.strictEqual(st.dFeeds, 1);
+  assert.strictEqual(st.pumped, 0);
+  const tk = L.tasks(ev, {}, cfg, NOW);
+  assert.ok(!tk.some(t => t.kind === 'process' || t.kind === 'wash'));
+});
+
 console.log('\n' + n + ' tests passed');
