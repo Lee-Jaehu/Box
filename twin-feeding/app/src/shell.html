@@ -64,6 +64,7 @@ main .wrap { display: flex; flex-direction: column; gap: 12px; }
 .title { padding: 8px 4px 12px; display: flex; flex-direction: column; gap: 4px; }
 .title h1 { font-size: 25px; line-height: 1.36; font-weight: 800; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
 .title p { color: var(--sub); font-size: 15px; }
+body { word-break: keep-all; }
 
 /* 카드와 목록 */
 .card { background: var(--surface); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -94,7 +95,7 @@ button.li:active { opacity: .7; }
 .btn.gray { background: var(--fill); color: var(--ink); }
 .btn.danger { background: var(--crit-weak); color: var(--crit); }
 .btn:disabled { opacity: .4; cursor: default; }
-.sbtn { min-height: 38px; padding: 0 14px; border-radius: 10px; background: var(--primary-weak); color: var(--primary); font-weight: 700; font-size: 14px; white-space: nowrap; flex: none; }
+.sbtn { min-height: 44px; padding: 0 14px; border-radius: 10px; background: var(--primary-weak); color: var(--primary); font-weight: 700; font-size: 14px; white-space: nowrap; flex: none; }
 .sbtn.gray { background: var(--fill); color: var(--sub); }
 .btn:active, .sbtn:active, .act:active, .qk:active { transform: scale(.98); }
 @media (prefers-reduced-motion: reduce) { .btn:active, .sbtn:active, .act:active, .qk:active { transform: none; } }
@@ -203,7 +204,7 @@ svg.chart .step { stroke: var(--boy); stroke-width: 2.5; fill: none; } svg.chart
 #sheet .panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 #sheet .panel > header h3 { font-size: 21px; font-weight: 800; margin: 0; text-wrap: balance; }
 #sheet .panel > header p { font-size: 14px; color: var(--sub); margin-top: 4px; }
-#sheet .x { width: 36px; height: 36px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; flex: none; color: var(--sub); }
+#sheet .x { width: 44px; height: 44px; margin: -6px -6px 0 0; border-radius: 50%; background: var(--fill); display: grid; place-items: center; flex: none; color: var(--sub); }
 .lab { font-size: 14px; color: var(--sub); font-weight: 500; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips button { min-height: 44px; min-width: 52px; padding: 0 14px; border-radius: 12px; background: var(--fill); font-weight: 700; font-size: 15px; color: var(--sub); border: 2px solid transparent; }
@@ -238,7 +239,8 @@ details.grp .body { display: flex; flex-direction: column; gap: 12px; padding-bo
 .switch[aria-checked="true"] { background: var(--primary); }
 .switch[aria-checked="true"]::after { transform: translateX(20px); }
 
-#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabh) + 120px + env(safe-area-inset-bottom, 0px)); z-index: 30; background: #333D4B; color: #fff; padding: 14px 20px; border-radius: 14px; font-weight: 500; font-size: 15px; max-width: calc(100% - 32px); box-shadow: 0 8px 24px rgba(0,0,0,.2); text-align: center; }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabh) + 120px + env(safe-area-inset-bottom, 0px)); z-index: 30; background: #333D4B; color: #fff; padding: 14px 20px; border-radius: 14px; font-weight: 500; font-size: 15px; width: max-content; max-width: min(480px, calc(100% - 32px)); box-shadow: 0 8px 24px rgba(0,0,0,.2); text-align: center; display: flex; align-items: center; gap: 14px; word-break: keep-all; }
+#toast .undo { color: #8DB4FF; font-weight: 700; white-space: nowrap; min-height: 32px; }
 #toast.alert-t { top: calc(env(safe-area-inset-top, 0px) + 60px); bottom: auto; background: var(--crit); }
 .empty { text-align: center; padding: 20px 8px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .empty .bub { width: 56px; height: 56px; }

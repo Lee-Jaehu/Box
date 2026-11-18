@@ -5,13 +5,14 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ls = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const fmtT = t => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
 const fmtMD = t => { const d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate(); };
 const fmtDur = ms => { if (ms === null || ms === undefined) return '—'; const m = Math.round(ms / 60000); return m < 60 ? m + '분' : Math.floor(m / 60) + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : ''); };
 const fmtAgo = t => { if (!t) return '기록 없음'; const ms = Date.now() - t; return ms < 90e3 ? '방금' : fmtDur(ms) + ' 전'; };
+const fmtAgoShort = t => { if (!t) return '—'; const m = Math.round((Date.now() - t) / 60000); return m < 2 ? '방금' : m < 60 ? m + '분 전' : Math.floor(m / 60) + '시간 전'; };
 const n0 = v => Number(v || 0).toLocaleString('ko-KR');
 const bagCode = t => { const d = new Date(t); return pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()); };
 const NAME = b => b === 'D' ? state.cfg.names.D : b === 'S' ? state.cfg.names.S : '';
@@ -75,7 +76,7 @@ const Store = {
     state.cfgRaw = this.local.config; state.cfg = mergeConfig(this.local.config);
     setEvents(evs);
   },
-  saveLocal() { ls.set('tf.data', this.local); this.applyLocal(); },
+  saveLocal() { const ok = ls.set('tf.data', this.local); this.applyLocal(); if (!ok) throw { code: 'local_failed' }; },
   async addEvent(ev) {
     const id = ev.id || uid(); const body = Object.assign({}, ev); delete body.id;
     const key = dayKey(ev.t);
@@ -114,7 +115,7 @@ async function act(fn, okMsg) {
   try { await fn(); if (okMsg) toast(okMsg); return true; }
   catch (e) {
     const code = e && e.code;
-    toast(code === 'invalid_argument' ? '저장 권한이 없어요. 공유 메뉴에서 편집 권한을 받아 주세요.' : code === 'quota_exceeded' ? '저장 공간이 다 찼어요.' : '저장하지 못했어요. 잠시 후 다시 눌러 주세요.', true);
+    toast(code === 'invalid_argument' ? '저장 권한이 없어요. 공유 메뉴에서 편집 권한을 받아 주세요.' : code === 'quota_exceeded' ? '저장 공간이 다 찼어요.' : code === 'local_failed' ? '이 폰에 저장하지 못했어요. 새로고침하면 사라질 수 있어요.' : '저장하지 못했어요. 잠시 후 다시 눌러 주세요.', true);
     return false;
   }
 }
@@ -149,11 +150,13 @@ function alertDad(e) {
 
 /* ---------- 토스트·시트 ---------- */
 let toastTimer;
-function toast(msg, alert, ms) {
+function toast(msg, alert, ms, undo) {
   const el = $('#toast'); el.textContent = msg; el.className = alert ? 'alert-t' : ''; el.hidden = false;
+  if (undo) { const b = document.createElement('button'); b.className = 'undo'; b.textContent = '되돌리기'; b.addEventListener('click', () => { el.hidden = true; undo(); }); el.appendChild(b); }
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, ms || 2400);
 }
 function openSheet(html, bind) {
+  $('#toast').hidden = true;
   $('#panel').innerHTML = html; $('#sheet').hidden = false; $('#panel').scrollTop = 0;
   if (bind) bind($('#panel'));
 }
@@ -180,6 +183,8 @@ function suggestSide() {
   return OTHER[last.side];
 }
 const lastOf = pred => { const e = state.events.filter(pred).sort((a, b) => b.t - a.t)[0]; return e || null; };
+const isDFeed = e => (isNurse(e) && e.end) || (e.type === 'bottle' && e.baby === 'D');
+const feedDesc = e => e.type === 'bottle' ? '젖병 ' + (e.milk === 'ebm' ? '모유 ' : '분유 ') + e.ml + 'ml' : kindDesc(e.kind, e.side);
 function startSession(kind) {
   const side = kind === 'pump' ? 'B' : (state.side || suggestSide());
   state.side = null;
@@ -189,13 +194,17 @@ function endSession(e) {
   const handoff = e.kind === 'nurse' ? '' : state.mode === 'db' ? ' 유축분 처리는 아빠 할 일로 넘겼어요.' : '';
   return act(() => Store.patchEvent(e, { end: Date.now(), endBy: state.me || 'mom' }), kindDesc(e.kind, e.side) + ' 기록했어요.' + handoff);
 }
-function cancelSession(e) { return act(() => Store.patchEvent(e, { deleted: true }), '취소했어요'); }
+async function cancelSession(e) {
+  if (await act(() => Store.patchEvent(e, { deleted: true }))) toast('기록을 취소했어요', false, 6000, () => act(() => Store.patchEvent(e, { deleted: false }), '되돌렸어요'));
+}
 function quickDiaper(wet, stool) { return act(() => Store.addEvent({ type: 'diaper', baby: 'D', wet, stool, t: Date.now(), by: by() }), NAME('D') + ' 기저귀(' + (wet && stool ? '소변+대변' : wet ? '소변' : '대변') + ')를 기록했어요'); }
 function washDone(n) { return act(() => Store.addEvent({ type: 'wash', sets: n, t: Date.now(), by: by() }), '세척을 기록했어요'); }
 
 /* ---------- 시트: 유축분 처리 ---------- */
 function processSheet(e) {
   let L = Number(e.mlL) || 0, R = Number(e.mlR) || 0, dest = state.cfg.defaultDest || 'freezer';
+  const ob = e.bagId && state.bags[e.bagId];
+  if (ob && ACTIVE.includes(ob.state)) dest = ob.state === 'fridge' && ob.for === 'any' ? 'fridge-any' : ob.state === 'thawed' ? 'fridge' : ob.state;
   const html = sheetHead('유축한 양을 적어 주세요', fmtT(e.t) + ' ' + KIND[e.kind].label + ' · ' + fmtDur((e.end || Date.now()) - e.t) + ' · 젖병 눈금을 보고 입력해요') +
     '<div class="grid2">' +
     '<div class="plain"><p class="lab">왼쪽 ml</p><div class="stepper"><button data-s="L-" aria-label="왼쪽 10ml 빼기">−</button><output id="oL">' + L + '</output><button data-s="L+" aria-label="왼쪽 10ml 더하기">+</button></div></div>' +
@@ -211,53 +220,73 @@ function processSheet(e) {
       if (s[0] === 'L') L = Math.max(0, L + d); else R = Math.max(0, R + d); upd();
     }));
     bindChips(root, 'dest', v => { dest = v; });
+    const old = e.bagId ? state.bags[e.bagId] : null;      // 다시 고치는 경우: 같은 팩을 갱신
+    const newBagId = uid(), nicuEvId = uid();               // 재시도해도 같은 id → 중복 없음
     root.querySelector('#save').addEventListener('click', async () => {
-      const total = L + R, now = Date.now(), bagId = total > 0 ? uid() : null;
-      await act(async () => {
-        if (bagId) {
-          const st = dest === 'fridge-any' ? 'fridge' : dest;
+      const total = L + R, now = Date.now();
+      const st = dest === 'fridge-any' ? 'fridge' : dest;
+      const ok = await act(async () => {
+        let bagId = old ? old.id : (total > 0 ? newBagId : null);
+        if (old) {
+          if (total === 0) await Store.patchBag(old.id, { ml: 0, state: 'discard', stateAt: now });
+          else if (ACTIVE.includes(old.state)) await Store.patchBag(old.id, { ml: total, state: st, for: dest === 'fridge-any' ? 'any' : 'S', stateAt: now });
+          else await Store.patchBag(old.id, { ml: total });  // 이미 보냈거나 먹인 팩은 양만 고침
+        } else if (bagId) {
           await Store.setBag({ id: bagId, code: bagCode(e.end || e.t), ml: total, pumpedAt: e.end || e.t, for: dest === 'fridge-any' ? 'any' : 'S', state: st, stateAt: now, sessionId: e.id, by: by() });
-          if (dest === 'nicu') await Store.addEvent({ type: 'nicu', bagIds: [bagId], ml: total, t: now, by: by() });
+          if (dest === 'nicu') await Store.addEvent({ id: nicuEvId, type: 'nicu', bagIds: [bagId], ml: total, t: now, by: by() });
         }
         await Store.patchEvent(e, { mlL: L, mlR: R, processed: true, procBy: by(), bagId });
       }, total + 'ml를 저장했어요');
-      closeSheet();
+      if (ok) closeSheet();
     });
   });
 }
 
-/* ---------- 시트: 딸 젖병 ---------- */
+/* ---------- 시트: 딸 젖병 (미리 고른 값 없음: 양·종류를 직접 골라야 저장) ---------- */
 function bottleSheet() {
-  let ml = 60, milk = null;
+  let ml = null, milk = null;
+  const evId = uid();
   const draw = root => {
-    const a = allocate(state.bags, state.events, state.cfg, Date.now(), ml);
-    const m = milk || a.milk;
     const v = root.querySelector('#verdict');
+    const a = allocate(state.bags, state.events, state.cfg, Date.now(), ml || 60);
     v.className = 'verdict ' + a.milk;
-    v.innerHTML = bub(a.milk === 'ebm' ? 'milk' : 'bottle', a.milk === 'ebm' ? 'green' : 'amber') + '<div><b>' + (a.milk === 'ebm' ? '모유를 줘도 돼요' : '분유를 주세요') + '</b><span>' + (a.milk === 'ebm' ? STATE_KO[a.bag.state] + ' <span class="code">' + esc(a.bag.code) + '</span> ' + a.bag.ml + 'ml' : '아들 몫을 먼저 채우는 중이에요') + '</span></div>';
+    v.innerHTML = bub(a.milk === 'ebm' ? 'milk' : 'bottle', a.milk === 'ebm' ? 'green' : 'amber') + '<div><b>' + (a.milk === 'ebm' ? '모유를 줘도 돼요' : '분유를 권해요') + (ml ? ' (' + ml + 'ml)' : '') + '</b><span>' + (a.milk === 'ebm' ? STATE_KO[a.bag.state] + ' <span class="code">' + esc(a.bag.code) + '</span> ' + a.bag.ml + 'ml부터' : '아들 몫을 먼저 채우는 중이에요') + '</span></div>';
     root.querySelector('#why').textContent = a.reason;
-    root.querySelectorAll('[data-chips="milk"] button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === m));
-    root.querySelector('#warn').hidden = !(m === 'ebm' && a.milk !== 'ebm');
+    root.querySelector('#warn').hidden = !(milk === 'ebm' && a.milk !== 'ebm');
+    const btn = root.querySelector('#save');
+    btn.disabled = !(ml > 0 && milk);
+    btn.textContent = ml > 0 && milk ? (milk === 'ebm' ? '모유 ' : '분유 ') + ml + 'ml 기록하기' : !ml ? '준 양을 골라 주세요' : '준 것을 골라 주세요';
     return a;
   };
   const html = sheetHead(NAME('D') + '에게 젖병을 줘요', '세워 안고, 젖병은 수평에 가깝게, 중간중간 쉬어 가며 (페이스드 피딩)') +
     '<div id="verdict" class="verdict"></div><details class="why"><summary>판정 근거</summary><p id="why"></p></details>' +
-    '<p class="lab">얼마나 줬나요? (ml)</p>' + chips('ml', [30, 40, 50, 60, 70, 80, 90, 100, 120].map(v => [v, v]), ml) +
     '<p class="lab">실제로 준 것</p>' + chips('milk', [['ebm', '모유'], ['formula', '분유']], '') +
-    '<div class="alert info" id="warn" hidden>' + icon('alert') + '<div><b>아들 예비분에서 꺼내게 돼요</b><span>정말 모유를 줄 때만 고르세요.</span></div></div>' +
-    '<button class="btn" id="save">기록하기</button>';
+    '<p class="lab">실제로 준 양 (ml)</p>' + chips('ml', [30, 40, 50, 60, 70, 80, 90, 100, 120].map(v => [v, v]), '') +
+    '<label class="f">목록에 없으면 직접 적기<input id="mlx" inputmode="numeric" pattern="[0-9]*" placeholder="예: 75"></label>' +
+    '<div class="alert info" id="warn" hidden>' + icon('alert') + '<div><b>아들 예비분에서 꺼내게 돼요</b><span>정말 모유를 줬을 때만 고르세요.</span></div></div>' +
+    '<button class="btn" id="save" disabled>준 양을 골라 주세요</button>';
   openSheet(html, root => {
     draw(root);
-    bindChips(root, 'ml', v => { ml = Number(v); draw(root); });
+    bindChips(root, 'ml', v => { ml = Number(v); root.querySelector('#mlx').value = ''; draw(root); });
     bindChips(root, 'milk', v => { milk = v; draw(root); });
+    root.querySelector('#mlx').addEventListener('input', ev => {
+      const x = Number(ev.target.value); ml = x > 0 && x < 400 ? x : null;
+      root.querySelectorAll('[data-chips="ml"] button').forEach(c => c.setAttribute('aria-pressed', 'false')); draw(root);
+    });
     root.querySelector('#save').addEventListener('click', async () => {
-      const a = draw(root), m = milk || a.milk, now = Date.now();
-      const bag = m === 'ebm' ? (a.bag || allocBagAny()) : null;
-      await act(async () => {
-        await Store.addEvent({ type: 'bottle', baby: 'D', ml, milk: m, bagId: bag ? bag.id : null, t: now, by: by() });
-        if (bag) await Store.patchBag(bag.id, { state: 'used', stateAt: now, usedFor: 'D' });
-      }, NAME('D') + ' ' + (m === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요');
-      closeSheet();
+      if (!(ml > 0 && milk)) return;
+      const a = draw(root), now = Date.now();
+      const bag = milk === 'ebm' ? (a.bag || allocBagAny()) : null;
+      const ok = await act(async () => {
+        await Store.addEvent({ id: evId, type: 'bottle', baby: 'D', ml, milk, bagId: bag ? bag.id : null, t: now, by: by() });
+        if (bag) {
+          const left = (Number(bag.ml) || 0) - ml;
+          // 팩 일부만 썼으면 남은 양은 해동 상태로 재고에 남김 (해동 후 24시간)
+          if (left > 0) await Store.patchBag(bag.id, { ml: left, state: bag.state === 'freezer' ? 'thawed' : bag.state, stateAt: bag.state === 'freezer' ? now : (bag.stateAt || now) });
+          else await Store.patchBag(bag.id, { state: 'used', stateAt: now, usedFor: 'D' });
+        }
+      }, NAME('D') + ' ' + (milk === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요');
+      if (ok) closeSheet();
     });
   });
 }
@@ -269,6 +298,7 @@ function allocBagAny() {
 /* ---------- 시트: 체중·처방·엄마 상태·메모 ---------- */
 function weightSheet(baby) {
   let src = baby === 'S' ? 'nicu' : 'home';
+  const wid = uid();
   openSheet(sheetHead(NAME(baby) + ' 체중을 적어 주세요', '같은 체중계로, 수유 전·기저귀 벗고 재면 추세가 정확해요') +
     '<label class="f">체중 (g)<input id="g" inputmode="numeric" pattern="[0-9]*" placeholder="예: 2850"></label>' +
     '<p class="lab">어디서 쟀나요?</p>' + chips('src', [['home', '집'], ['nicu', 'NICU'], ['clinic', '소아과']], src) +
@@ -278,15 +308,14 @@ function weightSheet(baby) {
     root.querySelector('#save').addEventListener('click', async () => {
       const g = Number(root.querySelector('#g').value);
       if (!(g > 1000 && g < 10000)) { toast('그램 단위로 적어 주세요 (예: 2850)', true); return; }
-      await act(() => Store.addEvent({ type: 'weight', baby, g, src, t: Date.now(), by: by() }), NAME(baby) + ' ' + n0(g) + 'g을 기록했어요');
-      closeSheet();
+      if (await act(() => Store.addEvent({ id: wid, type: 'weight', baby, g, src, t: Date.now(), by: by() }), NAME(baby) + ' ' + n0(g) + 'g을 기록했어요')) closeSheet();
     });
   });
 }
 function orderSheet() {
   const lo = latestOrder(state.events, Date.now());
   let per = lo && lo.perFeed ? Number(lo.perFeed) : 10, times = lo && lo.times ? Number(lo.times) : 8;
-  const g = need(state.events, state.cfg, 'S').g;
+  const g = need(state.events, state.cfg, 'S').g, oid = uid();
   openSheet(sheetHead(NAME('S') + ' 오늘 처방을 적어 주세요', '바뀔 때마다 적으면 늘어나는 모습이 그래프로 남아요') +
     '<p class="lab">한 번에 몇 ml?</p><div class="stepper"><button data-s="-" aria-label="5ml 빼기">−</button><output id="oP">' + per + '</output><button data-s="+" aria-label="5ml 더하기">+</button></div>' +
     '<p class="lab">하루 몇 번?</p>' + chips('times', [1, 2, 3, 4, 6, 8, 12].map(v => [v, v + '번']), times) +
@@ -303,15 +332,15 @@ function orderSheet() {
     bindChips(root, 'times', v => { times = Number(v); upd(); });
     root.querySelector('#save').addEventListener('click', async () => {
       const note = root.querySelector('#onote').value.trim();
-      const ev = { type: 'order', baby: 'S', perFeed: per, times, ml: per * times, t: Date.now(), by: by() };
+      const ev = { id: oid, type: 'order', baby: 'S', perFeed: per, times, ml: per * times, t: Date.now(), by: by() };
       if (note) ev.note = note;
-      await act(() => Store.addEvent(ev), NAME('S') + ' 처방 ' + per + 'ml×' + times + '번을 기록했어요');
-      closeSheet();
+      if (await act(() => Store.addEvent(ev), NAME('S') + ' 처방 ' + per + 'ml×' + times + '번을 기록했어요')) closeSheet();
     });
   });
 }
 function momSheet() {
   let pain = '', breast = 'ok', e10 = '';
+  const mid = uid();
   openSheet(sheetHead('엄마 몸 상태를 적어요', '아는 칸만 채워도 돼요. K-EPDS는 보건소·국가정신건강정보포털의 공식 문항으로 하고 점수만 적어요') +
     '<p class="lab">수유할 때 통증 (0–10)</p>' + chips('pain', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => [v, v]), pain) +
     '<div class="grid2"><label class="f">체온 °C<input id="temp" inputmode="decimal" placeholder="36.8"></label><label class="f">K-EPDS 총점<input id="epds" inputmode="numeric" placeholder="0–30"></label></div>' +
@@ -324,23 +353,22 @@ function momSheet() {
     bindChips(root, 'e10', v => { e10 = Number(v); root.querySelector('#e10w').hidden = !(e10 >= 1); });
     root.querySelector('#save').addEventListener('click', async () => {
       const temp = root.querySelector('#temp').value.trim(), epds = root.querySelector('#epds').value.trim();
-      const ev = { type: 'momcheck', t: Date.now(), by: by(), breast };
+      const ev = { id: mid, type: 'momcheck', t: Date.now(), by: by(), breast };
       if (pain !== '') ev.pain = pain;
       if (temp) ev.temp = Number(temp);
       if (epds) ev.epds = Number(epds);
       if (e10 !== '') ev.epds10 = e10;
-      await act(() => Store.addEvent(ev), '엄마 상태를 기록했어요');
-      closeSheet();
+      if (await act(() => Store.addEvent(ev), '엄마 상태를 기록했어요')) closeSheet();
     });
   });
 }
 function noteSheet() {
+  const nid = uid();
   openSheet(sheetHead('메모를 남겨요', 'NICU 처방 변경, 의사 말, 아내가 한 말 등') + '<textarea id="txt" rows="4"></textarea><button class="btn" id="save">저장하기</button>', root => {
     root.querySelector('#txt').focus();
     root.querySelector('#save').addEventListener('click', async () => {
       const text = root.querySelector('#txt').value.trim(); if (!text) return closeSheet();
-      await act(() => Store.addEvent({ type: 'note', text, t: Date.now(), by: by() }), '메모를 저장했어요');
-      closeSheet();
+      if (await act(() => Store.addEvent({ id: nid, type: 'note', text, t: Date.now(), by: by() }), '메모를 저장했어요')) closeSheet();
     });
   });
 }
@@ -376,12 +404,11 @@ function bagSheet(b) {
     '<button class="li" data-for="' + (b.for === 'S' ? 'any' : 'S') + '">' + bub('swap', '') + '<span class="tx"><span class="t">' + (b.for === 'S' ? '딸도 먹을 수 있게 바꾸기' : '아들용으로 바꾸기') + '</span></span>' + icon('chev', 'chev') + '</button></div>', root => {
     root.querySelectorAll('[data-to]').forEach(btn => btn.addEventListener('click', async () => {
       const to = btn.dataset.to, now = Date.now();
-      await act(async () => {
+      if (await act(async () => {
         await Store.patchBag(b.id, { state: to, stateAt: now });
         if (to === 'nicu') await Store.addEvent({ type: 'nicu', bagIds: [b.id], ml: b.ml, t: now, by: by() });
         if (to === 'used') await Store.addEvent({ type: 'bottle', baby: 'D', ml: b.ml, milk: 'ebm', bagId: b.id, t: now, by: by() });
-      }, STATE_KO[to] + '(으)로 바꿨어요');
-      closeSheet();
+      }, STATE_KO[to] + '(으)로 바꿨어요')) closeSheet();
     }));
     root.querySelectorAll('[data-for]').forEach(btn => btn.addEventListener('click', async () => { await act(() => Store.patchBag(b.id, { for: btn.dataset.for }), '바꿨어요'); closeSheet(); }));
   });
@@ -390,7 +417,7 @@ function sendSheet() {
   const now = Date.now(), cfg = state.cfg;
   const inv = inventory(state.bags, state.events, cfg, now);
   const list = inv.avail.filter(b => b.state !== 'thawed').sort((a, b) => ((a.for === 'S' ? 0 : 1) - (b.for === 'S' ? 0 : 1)) || ((a.state === 'freezer' ? 0 : 1) - (b.state === 'freezer' ? 0 : 1)) || (a.pumpedAt - b.pumpedAt));
-  const picked = new Set();
+  const picked = new Set(), sendId = uid();
   const draw = root => {
     const sel = list.filter(b => picked.has(b.id));
     const btn = root.querySelector('#send');
@@ -408,8 +435,7 @@ function sendSheet() {
     root.querySelector('#send').addEventListener('click', async () => {
       const sel = list.filter(b => picked.has(b.id)); if (!sel.length) return;
       const t = Date.now(), ml = sel.reduce((s, x) => s + x.ml, 0);
-      await act(async () => { for (const x of sel) await Store.patchBag(x.id, { state: 'nicu', stateAt: t }); await Store.addEvent({ type: 'nicu', bagIds: sel.map(x => x.id), ml, t, by: by() }); }, 'NICU에 ' + ml + 'ml 보낸 걸 기록했어요');
-      closeSheet();
+      if (await act(async () => { for (const x of sel) await Store.patchBag(x.id, { state: 'nicu', stateAt: t }); await Store.addEvent({ id: sendId, type: 'nicu', bagIds: sel.map(x => x.id), ml, t, by: by() }); }, 'NICU에 ' + ml + 'ml 보낸 걸 기록했어요')) closeSheet();
     });
     draw(root);
   });
@@ -420,7 +446,7 @@ function eventSheet(e) {
     '<div>' + (vol ? '<button class="li" id="vol">' + bub('pump', 'violet') + '<span class="tx"><span class="t">유축한 양 ' + (e.processed ? '고치기' : '적기') + '</span></span>' + icon('chev', 'chev') + '</button>' : '') +
     '<button class="li" id="del">' + bub('alert', 'red') + '<span class="tx"><span class="t">이 기록 지우기</span></span>' + icon('chev', 'chev') + '</button></div>', root => {
     const v = root.querySelector('#vol'); if (v) v.addEventListener('click', () => processSheet(e));
-    root.querySelector('#del').addEventListener('click', async () => { await act(() => Store.patchEvent(e, { deleted: true }), '지웠어요'); closeSheet(); });
+    root.querySelector('#del').addEventListener('click', async () => { if (await act(() => Store.patchEvent(e, { deleted: true }))) { closeSheet(); toast('기록을 지웠어요', false, 6000, () => act(() => Store.patchEvent(e, { deleted: false }), '되돌렸어요')); } });
   });
 }
 function describe(e) {
@@ -516,10 +542,11 @@ function syncBanner() {
 }
 function flagsBlock(list) {
   if (!list.length) return '';
-  const now = list.filter(f => f.level === 'now');
-  const rest = list.filter(f => f.level !== 'now');
-  const lv = { today: '당일 연락', visit: '진료 때 상의', plan: '공급 관리' };
-  let h = now.map(f => '<div class="alert now">' + icon('alert') + '<div><b>' + esc(f.text) + '</b><span>' + esc(f.act) + '</span></div></div>').join('');
+  const now = list.filter(f => f.level === 'now' || f.level === 'today');
+  const rest = list.filter(f => f.level !== 'now' && f.level !== 'today');
+  const lv = { now: '지금 연락', today: '오늘 연락', visit: '진료 때 상의', plan: '공급 관리' };
+  let h = now.map(f => '<div class="alert ' + (f.level === 'now' ? 'now' : 'info') + '">' + icon('alert') + '<div><b>' + lv[f.level] + ' · ' + esc(f.text) + '</b><span>' + esc(f.act) + '</span></div></div>').join('');
+  if (now.length && !state.cfg.th.confirmed && !rest.length) h += '<p class="foot">기준값은 소아과 확인 전 기본값이에요.</p>';
   if (rest.length) h += '<details class="fold"><summary>' + icon('alert') + '확인할 것 ' + rest.length + '개' + icon('chev', 'chev') + '</summary><div class="items">' +
     rest.map(f => '<div><b>' + lv[f.level] + ' · ' + esc(f.text) + '</b>' + esc(f.act) + '</div>').join('') +
     (state.cfg.th.confirmed ? '' : '<div class="xs muted">기준값은 소아과 확인 전 기본값이에요.</div>') + '</div></details>';
@@ -529,16 +556,15 @@ function title(h1, p) { return '<div class="title"><h1>' + h1 + '</h1>' + (p ? '
 
 /* ---------- 화면: 역할 고르기 ---------- */
 function viewRole() {
-  return title('이 폰은 누가 쓰나요?', '엄마 폰은 수유 버튼만, 아빠 폰은 할 일 목록이 먼저 보여요. 설정에서 언제든 바꿀 수 있어요.') +
-    '<div class="role"><button class="act" data-role="mom">' + bub('nurse', 'girl') + '<span class="tx"><b>엄마예요</b><span class="d">수유 시작·끝만 누르면 돼요</span></span></button>' +
+  return title('이 폰은 누가 쓰나요?', '엄마 폰은 수유와 기저귀를 빠르게 기록하고, 아빠 폰은 할 일이 먼저 보여요. 설정에서 언제든 바꿀 수 있어요.') +
+    '<div class="role"><button class="act" data-role="mom">' + bub('nurse', 'girl') + '<span class="tx"><b>엄마예요</b><span class="d">수유 시작·끝과 기저귀만 누르면 돼요</span></span></button>' +
     '<button class="act" data-role="dad">' + bub('todo', 'blue') + '<span class="tx"><b>아빠예요</b><span class="d">유축분 처리·NICU 배송·기저귀를 맡아요</span></span></button></div>';
 }
 
 /* ---------- 화면: 엄마 수유 ---------- */
 function viewFeed() {
   const now = Date.now(), r = running(), st = stats24(state.events, now, state.cfg);
-  const lastFeed = lastOf(isRemoval);
-  const pct = Math.min(100, Math.round(st.removals / state.cfg.th.removalsMin * 100));
+  const lastFeed = lastOf(isDFeed);
   let h = '<div class="feed">';
   if (r) {
     h += title(kindDesc(r.kind, r.side) + ' 중이에요', fmtT(r.t) + '에 시작했어요');
@@ -546,17 +572,17 @@ function viewFeed() {
     h += '<div class="card">' + '<div class="li" style="min-height:auto">' + bub(KIND[r.kind].ic, KIND[r.kind].tone) + '<span class="tx"><span class="t">' + KIND[r.kind].label + '</span><span class="d">' + kindDesc(r.kind, r.side) + '</span></span></div>' +
       '<div class="timer" id="clock">00:00</div>' +
       '<button class="btn" data-end="' + r.id + '">끝내기</button>' +
-      '<button class="textbtn" data-cancel="' + r.id + '">잘못 눌렀어요 (취소)</button></div>';
+      '<button class="btn gray" data-cancel="' + r.id + '">잘못 눌렀어요 · 기록 취소</button></div>';
   } else {
     const sug = state.side || suggestSide();
     h += title(SIDE_KO[sug] + '부터 먹일 차례예요');
     h += syncBanner();
-    h += '<div class="card tight"><div class="li">' + bub('clock', st.removals >= state.cfg.th.removalsMin ? 'green' : 'blue') + '<span class="tx"><span class="t">마지막 수유 ' + (lastFeed ? fmtAgo(lastFeed.end || lastFeed.t) : '기록 없음') + '</span><span class="d">24시간 젖 비우기 ' + st.removals + ' / ' + state.cfg.th.removalsMin + '회</span></span></div></div>';
+    h += '<div class="card tight"><div class="li">' + bub('clock', st.removals >= state.cfg.th.removalsMin ? 'green' : 'blue') + '<span class="tx"><span class="t">' + NAME('D') + ' 마지막 수유 ' + (lastFeed ? fmtAgo(lastFeed.end || lastFeed.t) : '기록 없음') + '</span><span class="d">24시간 젖 비우기 ' + st.removals + ' / ' + state.cfg.th.removalsMin + '회</span></span></div></div>';
     h += '<div class="spacer"></div>';
     h += '<div class="card"><p class="lab">직수할 쪽</p><div class="sides">' +
       ['L', 'R'].map(s => '<button class="side" data-side="' + s + '" aria-pressed="' + (sug === s) + '">' + (sug === s ? icon('check') : '') + SIDE_KO[s] + '</button>').join('') + '</div>' +
       '<button class="act" data-start="nurse">' + bub('nurse', 'girl') + '<span class="tx"><b>직수만</b><span class="d">' + kindDesc('nurse', sug) + '</span></span></button>' +
-      '<button class="act main" data-start="nurse+pump">' + bub('both', '') + '<span class="tx"><b>직수 + 유축</b><span class="d">' + kindDesc('nurse+pump', sug) + '</span></span></button>' +
+      '<button class="act" data-start="nurse+pump">' + bub('both', 'blue') + '<span class="tx"><b>직수 + 유축</b><span class="d">' + kindDesc('nurse+pump', sug) + '</span></span></button>' +
       '<button class="act" data-start="pump">' + bub('pump', 'violet') + '<span class="tx"><b>유축만</b><span class="d">양쪽 유축</span></span></button></div>';
   }
   h += '<div class="quick">' + qk('wet', 'pee', 'pee', '소변') + qk('stool', 'poop', 'poop', '대변') + qk('both', 'both', 'diaper', '둘 다') + '</div>';
@@ -571,17 +597,17 @@ function viewTodo() {
   const fl = flags(state.events, state.cfg, now);
   let h = title(tk.length ? '할 일이 ' + tk.length + '개 있어요' : '지금은 할 일이 없어요', tk.length ? '위에서부터 처리하면 돼요' : '엄마가 유축을 끝내면 여기에 처리할 일이 생겨요');
   h += syncBanner();
-  if (r) h += '<div class="alert info">' + icon(KIND[r.kind].ic) + '<div><b>엄마가 ' + kindDesc(r.kind, r.side) + ' 중이에요 · <span id="clock">00:00</span></b><span>물 한 컵 챙겨 주세요.</span></div></div>';
   h += flagsBlock(fl);
+  if (r) h += '<div class="alert info">' + icon(KIND[r.kind].ic) + '<div><b>엄마가 ' + kindDesc(r.kind, r.side) + ' 중이에요 · <span id="clock">00:00</span></b><span>물 한 컵 챙겨 주세요.</span></div></div>';
   if (tk.length) h += '<div class="card tight">' + tk.map(taskRow).join('') + '</div>';
-  const lf = lastOf(e => isNurse(e) || (e.type === 'bottle' && e.baby === 'D'));
+  const lf = lastOf(isDFeed);
   const ld = lastOf(e => e.type === 'diaper');
   const lb = lastOf(e => e.type === 'bottle');
   h += '<div class="card tight"><div class="li">' + bub('clock', '') + '<span class="tx"><span class="t">마지막 기록</span><span class="d">' + NAME('D') + ' 기준</span></span></div>' +
     '<div class="stats3" style="padding-bottom:16px">' +
-    '<div class="stat"><span class="k">수유</span><span class="vv">' + (lf ? fmtAgo(lf.end || lf.t) : '—') + '</span></div>' +
-    '<div class="stat"><span class="k">기저귀</span><span class="vv">' + (ld ? fmtAgo(ld.t) : '—') + '</span></div>' +
-    '<div class="stat"><span class="k">젖병</span><span class="vv">' + (lb ? fmtAgo(lb.t) : '—') + '</span></div></div></div>';
+    '<div class="stat"><span class="k">수유</span><span class="vv">' + (lf ? fmtAgoShort(lf.end || lf.t) : '—') + '</span></div>' +
+    '<div class="stat"><span class="k">기저귀</span><span class="vv">' + (ld ? fmtAgoShort(ld.t) : '—') + '</span></div>' +
+    '<div class="stat"><span class="k">젖병</span><span class="vv">' + (lb ? fmtAgoShort(lb.t) : '—') + '</span></div></div></div>';
   h += '<div class="card tight"><div class="li">' + bub('phone', 'blue') + '<span class="tx"><span class="t">대기 모드</span><span class="d">' + (state.standby ? '화면을 켜 두면 엄마가 시작할 때 소리로 알려요. ' + state.cfg.dadSleep.start + '–' + state.cfg.dadSleep.end + '엔 무음' : '엄마가 수유를 시작하면 소리로 알려요') + '</span></span><button class="switch" id="standby" role="switch" aria-checked="' + state.standby + '" aria-label="대기 모드"></button></div></div>';
   return h;
 }
@@ -589,15 +615,15 @@ function taskRow(t) {
   const now = Date.now();
   const row = (ic, tone, tt, d, btn) => '<div class="li">' + bub(ic, tone) + '<span class="tx"><span class="t">' + tt + '</span><span class="d">' + d + '</span></span>' + (btn || '') + '</div>';
   switch (t.kind) {
-    case 'process': return row('pump', t.overdue ? 'red' : 'violet', '유축한 양 적고 냉동하기', t.overdue ? '실온 ' + state.cfg.roomH + '시간이 지났어요. 상태를 확인해 주세요' : fmtT(t.due) + '까지 · ' + fmtT(t.e.t) + ' 유축분', '<button class="sbtn" data-proc="' + t.e.id + '">적기</button>');
+    case 'process': return row('pump', t.overdue ? 'red' : 'violet', '유축한 양 적고 냉동하기', t.overdue ? '실온 ' + state.cfg.roomH + '시간이 지났어요. 상태를 확인해 주세요' : fmtT(t.due) + '까지 · ' + fmtT(t.e.t) + ' 유축분', '<button class="sbtn" data-proc="' + t.e.id + '">유축량 적기</button>');
     case 'wash': return row('wash', t.urgent ? 'amber' : 'blue', '유축 부품 씻기', '안 씻은 세트 ' + Math.min(t.n, 99) + '개 · 보유 ' + state.cfg.spareSets + '세트', '<button class="sbtn gray" data-wash="' + t.n + '">다 씻었어요</button>');
     case 'expired': return row('alert', 'red', '기한 지난 모유 <span class="code">' + esc(t.bag.code) + '</span>', STATE_KO[t.bag.state] + ' ' + t.bag.ml + 'ml', '<button class="sbtn" data-bag="' + t.bag.id + '">처리</button>');
     case 'expiring': return row('fridge', 'amber', '곧 기한이 끝나요 <span class="code">' + esc(t.bag.code) + '</span>', STATE_KO[t.bag.state] + ' ' + t.bag.ml + 'ml · ' + fmtDur(t.at - now) + ' 남음', '<button class="sbtn" data-bag="' + t.bag.id + '">처리</button>');
-    case 'nicu': return row('cooler', 'boy', 'NICU에 모유 보내기', '아들용 ' + t.n + '팩 · ' + t.ml + 'ml', '<button class="sbtn" data-send="1">고르기</button>');
+    case 'nicu': return row('cooler', 'boy', 'NICU에 모유 보내기', '아들용 ' + t.n + '팩 · ' + t.ml + 'ml', '<button class="sbtn" data-send="1">보낼 팩 고르기</button>');
     case 'deficit': return row('alert', 'red', NAME('S') + ' 몫이 모자라요', '24시간 유축 ' + t.pumped + 'ml < 오늘 처방 ' + t.need + 'ml · IBCLC·NICU와 상의', '');
-    case 'order': return row('clip', 'boy', NAME('S') + ' 오늘 처방 적기', t.last ? '마지막 ' + fmtMD(t.last.t) + ' ' + (t.last.perFeed ? t.last.perFeed + 'ml×' + t.last.times : t.last.ml + 'ml') : 'NICU에서 들은 양을 적어요', '<button class="sbtn" data-q="order">적기</button>');
-    case 'weigh': return row('scale', 'girl', NAME('D') + ' 체중 재기', t.last ? '마지막 ' + fmtMD(t.last.t) + ' ' + n0(t.last.g) + 'g' : '집에서 잰 기록이 없어요', '<button class="sbtn" data-q="weightD">적기</button>');
-    case 'epds': return row('heart', 'red', '엄마 주간 마음 체크', 'K-EPDS 점수만 적으면 돼요', '<button class="sbtn" data-q="mom">적기</button>');
+    case 'order': return row('clip', 'boy', NAME('S') + ' 오늘 처방 적기', t.last ? '마지막 ' + fmtMD(t.last.t) + ' ' + (t.last.perFeed ? t.last.perFeed + 'ml×' + t.last.times : t.last.ml + 'ml') : 'NICU에서 들은 양을 적어요', '<button class="sbtn" data-q="order">처방 적기</button>');
+    case 'weigh': return row('scale', 'girl', NAME('D') + ' 체중 재기', t.last ? '마지막 ' + fmtMD(t.last.t) + ' ' + n0(t.last.g) + 'g' : '집에서 잰 기록이 없어요', '<button class="sbtn" data-q="weightD">체중 적기</button>');
+    case 'epds': return row('heart', 'red', '엄마 주간 마음 체크', 'K-EPDS 점수만 적으면 돼요', '<button class="sbtn" data-q="mom">점수 적기</button>');
     default: return '';
   }
 }
@@ -682,13 +708,6 @@ function viewMilk() {
   const resPct = inv.reserve ? Math.min(100, Math.round(Math.min(inv.total, inv.reserve) / inv.reserve * 100)) : 0;
   let h = title('모유 ' + n0(inv.total) + 'ml를 보관 중이에요', inv.total ? '냉동 ' + n0(inv.byState('freezer')) + 'ml · 냉장 ' + n0(inv.byState('fridge')) + 'ml' : '유축한 양을 적으면 여기에 쌓여요');
   h += syncBanner();
-  h += '<div class="card"><div class="card-head"><h2>' + bub('pump', 'violet') + '24시간 유축</h2></div>' +
-    '<div class="big">' + n0(st.pumped) + '<small>/ ' + n0(st.pumpTarget) + 'ml</small></div><div class="bar"><i style="width:' + pPct + '%"></i></div>' +
-    '<p class="xs muted">목표는 아들 완전수유(' + st.sFull.ml + 'ml) × ' + cfg.pumpBuffer + '예요. 오늘 처방이 적어도 공급은 지금 맞춰 둬요.' + (st.unmeasured ? ' 아직 안 적은 유축 ' + st.unmeasured + '회.' : '') + '</p></div>';
-  h += '<div class="card tight">' +
-    '<div class="li">' + bub('milk', 'boy') + '<span class="tx"><span class="t">' + NAME('S') + ' 예비분</span><div class="bar" style="margin-top:6px"><i style="width:' + resPct + '%;background:var(--boy)"></i></div></span><span class="v">' + resPct + '%<small>' + n0(Math.min(inv.total, inv.reserve)) + '/' + n0(inv.reserve) + 'ml</small></span></div>' +
-    '<button class="li" data-q="bottle">' + bub(a.milk === 'ebm' ? 'milk' : 'bottle', a.milk === 'ebm' ? 'green' : 'amber') + '<span class="tx"><span class="t">' + NAME('D') + ' 다음 젖병</span><span class="d">' + esc(a.milk === 'ebm' ? '여유분 ' + n0(inv.surplus) + 'ml' : a.reason.split('.')[0]) + '</span></span><span class="v">' + (a.milk === 'ebm' ? '모유' : '분유') + '</span>' + icon('chev', 'chev') + '</button>' +
-    '</div>';
   const groups = [['freezer', '냉동', 'snow', 'blue'], ['fridge', '냉장', 'fridge', 'blue'], ['thawed', '해동 중', 'fridge', 'amber']];
   const list = inv.avail.concat(inv.expired);
   h += '<div class="card tight">' + groups.map(([s, label, ic, tone]) => {
@@ -699,6 +718,13 @@ function viewMilk() {
       '</div></details>';
   }).join('') + '</div>';
   h += '<button class="btn" data-send="1">' + icon('cooler') + 'NICU에 보낼 모유 고르기</button>';
+  h += '<div class="card"><div class="card-head"><h2>' + bub('pump', 'violet') + '24시간 유축</h2></div>' +
+    '<div class="big">' + n0(st.pumped) + '<small>/ ' + n0(st.pumpTarget) + 'ml</small></div><div class="bar"><i style="width:' + pPct + '%"></i></div>' +
+    '<p class="xs muted">목표는 아들 완전수유(' + st.sFull.ml + 'ml) × ' + cfg.pumpBuffer + '예요. 오늘 처방이 적어도 공급은 지금 맞춰 둬요.' + (st.unmeasured ? ' 아직 안 적은 유축 ' + st.unmeasured + '회.' : '') + '</p></div>';
+  h += '<div class="card tight">' +
+    '<div class="li">' + bub('milk', 'boy') + '<span class="tx"><span class="t">' + NAME('S') + ' 예비분</span><div class="bar" style="margin-top:6px"><i style="width:' + resPct + '%;background:var(--boy)"></i></div></span><span class="v">' + resPct + '%<small>' + n0(Math.min(inv.total, inv.reserve)) + '/' + n0(inv.reserve) + 'ml</small></span></div>' +
+    '<button class="li" data-q="bottle">' + bub(a.milk === 'ebm' ? 'milk' : 'bottle', a.milk === 'ebm' ? 'green' : 'amber') + '<span class="tx"><span class="t">' + NAME('D') + ' 다음 젖병</span><span class="d">' + esc(a.milk === 'ebm' ? '여유분 ' + n0(inv.surplus) + 'ml' : a.reason.split('.')[0]) + '</span></span><span class="v">' + (a.milk === 'ebm' ? '모유' : '분유') + '</span>' + icon('chev', 'chev') + '</button>' +
+    '</div>';
   const ser = dailySeries(state.events, cfg, now, 14);
   h += '<div class="card"><h2>' + bub('report', '') + '하루 유축량 · 14일</h2>' + pumpChart(ser, st.pumpTarget, st.sFull.ml) +
     '<div class="legend"><span><i style="background:var(--primary)"></i>유축량</span><span><i style="background:var(--ink)"></i>목표</span><span><i style="background:var(--boy)"></i>아들 완전수유</span><span><i style="background:var(--boy);opacity:.45"></i>아들 처방</span></div></div>';
@@ -730,8 +756,8 @@ function pumpChart(ser, target, needMl) {
 
 /* ---------- 화면: 기록 ---------- */
 function viewLog() {
-  const now = Date.now(), lastFeed = lastOf(isRemoval);
-  let h = title(lastFeed ? '마지막 수유는 ' + fmtAgo(lastFeed.end || lastFeed.t) + '예요' : '아직 기록이 없어요', lastFeed ? fmtT(lastFeed.t) + ' · ' + kindDesc(lastFeed.kind, lastFeed.side) : '');
+  const now = Date.now(), lastFeed = lastOf(isDFeed);
+  let h = lastFeed ? '<div class="title"><p>' + NAME('D') + ' 마지막 수유</p><h1>' + fmtAgo(lastFeed.end || lastFeed.t) + '</h1><p>' + fmtT(lastFeed.t) + ' · ' + feedDesc(lastFeed) + '</p></div>' : title('아직 기록이 없어요');
   h += syncBanner();
   h += '<div class="seg" role="group" aria-label="보기"><button data-logview="list" aria-pressed="' + (state.logView === 'list') + '">시간순 기록</button><button data-logview="report" aria-pressed="' + (state.logView === 'report') + '">진료용 7일</button></div>';
   if (state.logView === 'report') return h + viewReport();
