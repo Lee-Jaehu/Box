@@ -631,7 +631,7 @@ const Store = {
     }, fail);
     this.db.collection('bags').onSnapshot(snap => {
       const b = {}; for (const d of snap.docs) { const v = d.data(); if (v && !v.deleted) b[d.id] = Object.assign({ id: d.id }, v); }
-      ok(snap); state.bags = b; render();
+      ok(snap); state.bags = b; render(); reconcileBottles();
     }, fail);
     this.db.doc('config/main').onSnapshot(snap => { ok(snap); state.cfgRaw = snap.exists ? snap.data() : null; state.cfg = mergeConfig(state.cfgRaw); render(); }, fail);
   },
@@ -693,6 +693,7 @@ function setEvents(evs) {
     if (prevBooted && state.me === 'dad' && e.by !== 'dad' && state.standby && !inWindow(Date.now(), state.cfg.dadSleep)) alertDad(e);
   }
   state.events = evs; state.booted = true; render();
+  if (Object.keys(state.bags).length) reconcileBottles();
 }
 
 /* ---------- 아빠 대기 모드 ---------- */
@@ -835,6 +836,9 @@ function bottleSheet() {
     v.innerHTML = bub(a.milk === 'ebm' ? 'milk' : 'bottle', a.milk === 'ebm' ? 'green' : 'amber') + '<div><b>' + (a.milk === 'ebm' ? '모유를 줘도 돼요' : '분유를 권해요') + (ml ? ' (' + ml + 'ml)' : '') + '</b><span>' + (a.milk === 'ebm' ? STATE_KO[a.bag.state] + ' <span class="code">' + esc(a.bag.code) + '</span> ' + a.bag.ml + 'ml부터' : '아들 몫을 먼저 채우는 중이에요') + '</span></div>';
     root.querySelector('#why').textContent = a.reason;
     root.querySelector('#warn').hidden = !(milk === 'ebm' && a.milk !== 'ebm');
+    const sh = milk === 'ebm' && ml > 0 ? bottlePlan(a, ml).short : 0;
+    root.querySelector('#short').hidden = !sh;
+    if (sh) root.querySelector('#short b').textContent = '보관분이 ' + sh + 'ml 모자라요';
     const btn = root.querySelector('#save');
     btn.disabled = !(ml > 0 && milk);
     btn.textContent = ml > 0 && milk ? (milk === 'ebm' ? '모유 ' : '분유 ') + ml + 'ml 기록하기' : !ml ? '준 양을 골라 주세요' : '준 것을 골라 주세요';
@@ -846,6 +850,7 @@ function bottleSheet() {
     '<p class="lab">실제로 준 양 (ml)</p>' + chips('ml', [30, 40, 50, 60, 70, 80, 90, 100, 120].map(v => [v, v]), '') +
     '<label class="f">목록에 없으면 직접 적기<input id="mlx" inputmode="numeric" pattern="[0-9]*" placeholder="예: 75"></label>' +
     '<div class="alert info" id="warn" hidden>' + icon('alert') + '<div><b>아들 예비분에서 꺼내게 돼요</b><span>정말 모유를 줬을 때만 고르세요.</span></div></div>' +
+    '<div class="alert info" id="short" hidden>' + icon('alert') + '<div><b></b><span>막 짠 모유를 바로 줬다면 그대로 기록하세요. 보관분에서는 있는 만큼만 빼요.</span></div></div>' +
     '<button class="btn" id="save" disabled>준 양을 골라 주세요</button>';
   openSheet(html, root => {
     draw(root);
@@ -862,9 +867,12 @@ function bottleSheet() {
       if (!plan || plan.ml !== ml || plan.milk !== milk) plan = { ml, milk, t: Date.now(), patches: milk === 'ebm' ? bottlePlan(draw(root), ml) : [] };
       busy = true; const btn = root.querySelector('#save'); btn.disabled = true;
       const ok = await act(async () => {
-        await Store.addEvent({ id: evId, type: 'bottle', baby: 'D', ml, milk, bagId: plan.patches[0] ? plan.patches[0].id : null, bagIds: plan.patches.map(p => p.id), t: plan.t, by: by() });
-        for (const p of plan.patches) await Store.patchBag(p.id, p.patch);
-      }, NAME('D') + ' ' + (milk === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요');
+        const ev = { id: evId, type: 'bottle', baby: 'D', ml, milk, bagId: plan.patches[0] ? plan.patches[0].id : null, bagIds: plan.patches.map(p => p.id), t: plan.t, by: by() };
+        if (plan.patches.length) { ev.plan = plan.patches.map(p => ({ id: p.id, patch: p.patch })); ev.applied = false; }
+        reconciled.add(evId);   // 지금 이 시트가 직접 반영하는 중: 자동 반영과 겹치지 않게
+        await Store.addEvent(ev);
+        await applyBottlePlan(ev);
+      }, NAME('D') + ' ' + (milk === 'ebm' ? '모유' : '분유') + ' ' + ml + 'ml를 기록했어요' + (plan.patches.short ? ' (보관분에서 ' + (ml - plan.patches.short) + 'ml만 뺐어요)' : ''));
       busy = false;
       if (ok) closeSheet(); else draw(root);
     });
@@ -874,7 +882,8 @@ function bottleSheet() {
 function bottlePlan(a, ml) {
   const now = Date.now();
   const inv = inventory(state.bags, state.events, state.cfg, now);
-  const order = inv.avail.slice().sort((x, y) => y.pumpedAt - x.pumpedAt);
+  const earlyEnd = birthTime(state.cfg) + state.cfg.earlyDays * DAY;   // 초기 모유는 아들 전용: 딸 젖병에서 절대 빼지 않음
+  const order = inv.avail.filter(b => b.pumpedAt >= earlyEnd || b.for === 'any').sort((x, y) => y.pumpedAt - x.pumpedAt);
   if (a.bag) order.sort((x, y) => (y.id === a.bag.id) - (x.id === a.bag.id));
   const out = []; let rest = ml;
   for (const b of order) {
@@ -882,7 +891,20 @@ function bottlePlan(a, ml) {
     const have = Number(b.ml) || 0, use = Math.min(have, rest); rest -= use;
     out.push({ id: b.id, patch: have - use > 0 ? { ml: have - use, state: b.state === 'freezer' ? 'thawed' : b.state, stateAt: b.state === 'freezer' ? now : (b.stateAt || now) } : { state: 'used', stateAt: now, usedFor: 'D' } });
   }
+  out.short = Math.max(0, rest);   // 보관분에서 못 뺀 양 (막 짠 모유를 바로 준 경우 등)
   return out;
+}
+async function applyBottlePlan(ev) {
+  if (!ev.plan || ev.applied) return;
+  for (const p of ev.plan) if (state.bags[p.id]) await Store.patchBag(p.id, p.patch);
+  await Store.patchEvent(ev, { applied: true });
+}
+const reconciled = new Set();
+function reconcileBottles() {
+  // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(24시간 이내)을 다시 반영. 값이 절대값이라 여러 번 해도 같음
+  for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < DAY && !reconciled.has(e.id)) {
+    reconciled.add(e.id); applyBottlePlan(e).catch(() => reconciled.delete(e.id));
+  }
 }
 function allocBagAny() {
   const inv = inventory(state.bags, state.events, state.cfg, Date.now());
