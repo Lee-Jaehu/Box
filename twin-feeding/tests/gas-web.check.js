@@ -51,14 +51,17 @@ const root = path.join(__dirname, '..');
   res.syncOk = await p.$eval('#sync', x => x.className);
   // 단축어로 직수 시작 → 화면(8초 주기 대신 다시 불러오기)에 진행 중 표시
   res.siriStart = await p.evaluate(() => window.shortcut({ a: 'start', kind: '직수', side: '왼' }));
-  await p.waitForTimeout(9000);   // 페이지가 8초마다 바뀐 게 있는지 확인
+  // 페이지는 8초마다 바뀐 게 있는지 확인: 진행 중 표시가 뜰 때까지 최대 20초
+  await p.waitForFunction(() => /직수 중/.test((document.querySelector('.title h1') || {}).textContent || ''), null, { timeout: 20000 }).catch(() => {});
   res.momTitle = await p.textContent('.title h1');
   res.siriEnd = await p.evaluate(() => window.shortcut({ a: 'end' }));
   // 아빠가 팩을 하나 저장해 두고, 엄마가 단축어로 모유 젖병 60ml → 아빠 화면이 열리면 차감
   await p.evaluate(() => { api_setBag(window.TF_TOKEN, { id: 'bagA', code: '1122-0800', ml: 100, state: 'fridge', for: 'any', pumpedAt: Date.now() - 3600e3, stateAt: Date.now() }); });
   res.siriBottle = await p.evaluate(() => window.shortcut({ a: 'bottle', ml: '60', milk: '모유' }));
   res.siriCry = await p.evaluate(() => window.shortcut({ a: 'cry' }));
-  await p.evaluate(() => localStorage.setItem('tf.me', '"dad"')); await p.reload(); await p.waitForTimeout(2500);
+  await p.evaluate(() => localStorage.setItem('tf.me', '"dad"')); await p.reload();
+  // 아빠 화면이 열리면 팩 차감이 끝날 때까지 최대 10초 기다림
+  await p.waitForFunction(() => { const g = api_getBag(window.TF_TOKEN, 'bagA'); return g && g.bag.ml !== 100 && readEvents_().some(e => e.type === 'bottle' && e.applied === true); }, null, { timeout: 10000 }).catch(() => {});
   res.bagAfter = await p.evaluate(() => { const g = api_getBag(window.TF_TOKEN, 'bagA'); return g.bag.ml + ':' + g.bag.state + ':' + JSON.stringify(g.bag.used); });
   res.bottleApplied = await p.evaluate(() => readEvents_().filter(e => e.type === 'bottle').map(e => e.applied));
   await p.click('nav.tabs [data-tab="log"]'); await p.waitForTimeout(200);
