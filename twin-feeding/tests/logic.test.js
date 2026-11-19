@@ -10,7 +10,7 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'app', 'index.html'), 'u
 const src = html.split('/* LOGIC START')[1].split('/* LOGIC END */')[0].replace(/^[^\n]*\n/, '');
 const ctx = {};
 vm.createContext(ctx);
-vm.runInContext(src + '\n;Object.assign(this, {HOUR, DAY, DEFAULT_CONFIG, mergeConfig, sonNow, latestOrder, dayKey, dayOfLife, inWindow, stats24, nightGap, dailySeries, weightSlope, need, bagExpiry, inventory, allocate, tasks, flags});', ctx);
+vm.runInContext(src + '\n;Object.assign(this, {wfaAt, pctLabel, feedGuide, bookRow, feedPattern, HOUR, DAY, DEFAULT_CONFIG, mergeConfig, sonNow, latestOrder, dayKey, dayOfLife, inWindow, stats24, nightGap, dailySeries, weightSlope, need, bagExpiry, inventory, allocate, tasks, flags});', ctx);
 const L = ctx;
 const H = L.HOUR, D = L.DAY;
 
@@ -178,6 +178,36 @@ test('nurse-only session: counts as removal and daughter feed, not pumped, no pr
   assert.strictEqual(st.pumped, 0);
   const tk = L.tasks(ev, {}, cfg, NOW);
   assert.ok(!tk.some(t => t.kind === 'process' || t.kind === 'wash'));
+});
+
+test('growth percentiles: book/WHO values at birth, interpolation, labels for our twins', () => {
+  assert.strictEqual(L.wfaAt('D', 0).p50, 3200);
+  assert.strictEqual(L.wfaAt('S', 0).p99, 4600);
+  const m1 = L.wfaAt('D', 30.4375); assert.strictEqual(m1.p50, 4200);
+  assert.strictEqual(L.pctLabel('D', 0, 2630), '1~25백분위');      // 출생: 2.3 < 2.63 < 2.9
+  assert.strictEqual(L.pctLabel('D', 11, 2800), '1~25백분위');
+  assert.strictEqual(L.pctLabel('S', 11, 2730), '1~25백분위');
+});
+test('weight-based feeding guide (몸무게 × 120~150ml, 1회 = ÷ 8~12회, 1,000ml 상한)', () => {
+  assert.strictEqual(JSON.stringify(L.feedGuide(2800)), JSON.stringify({ dayMin: 336, dayMax: 420, perMin: 28, perMax: 53 }));
+  assert.strictEqual(L.feedGuide(8000).dayMax, 1000);
+  assert.strictEqual(L.bookRow(13).label, '2주');
+  assert.strictEqual(L.bookRow(40).label, '6주');
+});
+test('feed pattern: start-to-start median, clusters under 30 min, per-side minutes, test weighing', () => {
+  const T = (h, m) => at('2026-11-19T' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'));
+  const ev = [
+    { type: 'session', kind: 'nurse', side: 'L', t: T(3, 45), end: T(3, 53) },
+    { type: 'session', kind: 'nurse', side: 'L', t: T(3, 59), end: T(4, 7), preG: 2800, postG: 2834 },
+    { type: 'session', kind: 'nurse', side: 'L', t: T(6, 13), end: T(6, 21) },
+    { type: 'session', kind: 'nurse', side: 'L', segs: [{ side: 'L', t: T(7, 10) }, { side: 'R', t: T(7, 15) }], t: T(7, 10), end: T(7, 17) },
+  ];
+  const p = L.feedPattern(ev, T(8, 0));
+  assert.strictEqual(p.count, 4);
+  assert.strictEqual(p.clusters, 1);                       // 03:45 → 03:59 (14분)
+  assert.strictEqual(Math.round(p.median / 60000), 57);     // 14, 134, 57분 → 중앙값 57
+  assert.strictEqual(p.sideAvgMin.toFixed(1), '6.2');       // 8, 8, 8, 5, 2 → 31/5
+  assert.strictEqual(JSON.stringify(p.weighed), '[34]');
 });
 
 console.log('\n' + n + ' tests passed');

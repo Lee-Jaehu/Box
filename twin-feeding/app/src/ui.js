@@ -373,6 +373,7 @@ function bottleSheet() {
   };
   const html = sheetHead(NAME('D') + '에게 젖병을 줘요', '세워 안고, 젖병은 수평에 가깝게, 중간중간 쉬어 가며 (페이스드 피딩)') +
     '<div id="verdict" class="verdict"></div><details class="why"><summary>판정 근거</summary><p id="why"></p></details>' +
+    (() => { const w = latestWeight(state.events, 'D'), fg = feedGuide(w ? w.g : state.cfg.birthG.D); return '<p class="xs muted">' + NAME('D') + ' 체중 기준 1회 참고량 ' + fg.perMin + '~' + fg.perMax + 'ml (하루 ' + fg.dayMin + '~' + fg.dayMax + 'ml ÷ 8~12회). 배부름 신호(입을 떼고 손이 풀림)가 보이면 멈춰요.</p>'; })() +
     '<p class="lab">실제로 준 것</p>' + chips('milk', [['ebm', '모유'], ['formula', '분유']], '') +
     '<p class="lab">실제로 준 양 (ml)</p>' + chips('ml', [30, 40, 50, 60, 70, 80, 90, 100, 120].map(v => [v, v]), '') +
     '<label class="f">목록에 없으면 직접 적기<input id="mlx" inputmode="numeric" pattern="[0-9]*" placeholder="예: 75"></label>' +
@@ -629,10 +630,27 @@ function sendSheet() {
 function eventSheet(e) {
   const vol = e.type === 'session' && e.end && e.kind !== 'nurse';
   openSheet(sheetHead(esc(describe(e)), fmtMD(e.t) + ' ' + fmtT(e.t) + ' · ' + (e.by === 'mom' ? '엄마' : e.by === 'dad' ? '아빠' : esc(e.by)) + '가 기록') +
-    '<div>' + (vol ? '<button class="li" id="vol">' + bub('pump', 'violet') + '<span class="tx"><span class="t">유축한 양 ' + (e.processed ? '고치기' : '적기') + '</span></span>' + icon('chev', 'chev') + '</button>' : '') +
+    '<div>' + (e.type === 'session' && e.kind !== 'pump' && e.end ? '<button class="li" id="tw">' + bub('scale', 'girl') + '<span class="tx"><span class="t">수유 전후 체중 ' + (e.preG ? '고치기 (약 ' + (e.postG - e.preG) + 'ml)' : '적기') + '</span><span class="d">신생아 체중계로 잰 값. 1g ≈ 1ml</span></span>' + icon('chev', 'chev') + '</button>' : '') +
+    (vol ? '<button class="li" id="vol">' + bub('pump', 'violet') + '<span class="tx"><span class="t">유축한 양 ' + (e.processed ? '고치기' : '적기') + '</span></span>' + icon('chev', 'chev') + '</button>' : '') +
     '<button class="li" id="del">' + bub('alert', 'red') + '<span class="tx"><span class="t">이 기록 지우기</span></span>' + icon('chev', 'chev') + '</button></div>', root => {
     const v = root.querySelector('#vol'); if (v) v.addEventListener('click', () => processSheet(e));
+    const tw = root.querySelector('#tw'); if (tw) tw.addEventListener('click', () => testWeighSheet(e));
     root.querySelector('#del').addEventListener('click', async () => { if (await act(() => Store.patchEvent(e, { deleted: true }))) { closeSheet(); offerUndo('기록을 지웠어요', () => Store.patchEvent(e, { deleted: false })); } });
+  });
+}
+function testWeighSheet(e) {
+  openSheet(sheetHead('수유 전후 체중', fmtT(e.t) + ' ' + feedDesc(e) + ' · 같은 체중계로, 같은 옷·기저귀 그대로 재요') +
+    '<div class="grid2"><label class="f">수유 전 (g)<input id="pre" inputmode="numeric" value="' + (e.preG || '') + '" placeholder="2800"></label><label class="f">수유 후 (g)<input id="post" inputmode="numeric" value="' + (e.postG || '') + '" placeholder="2836"></label></div>' +
+    '<p id="tws" class="small"></p>' +
+    '<p class="xs muted">아기를 안고 어른 체중계로 재는 방법은 오차가 커서(보통 100g 단위) 신생아에게는 맞지 않아요. 2~10g 단위 신생아 체중계를 쓰세요.</p>' +
+    '<button class="btn" id="save">저장하기</button>', root => {
+    const upd = () => { const a = Number(root.querySelector('#pre').value), b = Number(root.querySelector('#post').value); root.querySelector('#tws').textContent = a > 1000 && b > 1000 ? '먹은 양 약 ' + (b - a) + 'ml' : ''; };
+    root.querySelectorAll('input').forEach(i => i.addEventListener('input', upd)); upd();
+    root.querySelector('#save').addEventListener('click', async () => {
+      const a = Number(root.querySelector('#pre').value), b = Number(root.querySelector('#post').value);
+      if (!(a > 1000 && b > 1000 && b - a > -50 && b - a < 300)) { toast('그램 단위로 두 값을 적어 주세요', true); return; }
+      if (await act(() => Store.patchEvent(e, { preG: a, postG: b }), '먹은 양 약 ' + (b - a) + 'ml를 기록했어요')) closeSheet();
+    });
   });
 }
 function describe(e) {
@@ -850,11 +868,58 @@ function viewKids() {
     '<p class="xs muted" style="margin-top:4px">' + (sNow ? (sNow.perFeed ? sNow.perFeed + 'ml × ' + sNow.times + '번 · ' : '') + '완전수유(' + full.ml + 'ml)의 ' + pct + '%' : 'NICU에서 들은 처방을 적어 주세요') + '</p>' +
     '<div class="bar" style="margin-top:10px"><i style="width:' + Math.min(100, pct) + '%;background:var(--boy)"></i></div></div>' +
     orderChart(now) +
-    '<div class="li" style="border-top:1px solid var(--line)">' + bub('scale', 'boy') + '<span class="tx"><span class="t">체중</span><span class="d">' + (wS ? fmtMD(wS.t) + ' · ' + (wS.src === 'nicu' ? 'NICU' : wS.src === 'clinic' ? '소아과' : '집') : '출생') + '</span></span><span class="v">' + n0(gS) + 'g<small>' + (gS - cfg.birthG.S >= 0 ? '+' : '') + n0(gS - cfg.birthG.S) + 'g</small></span><button class="sbtn gray" data-q="weightS">적기</button></div>' +
+    '<div class="li" style="border-top:1px solid var(--line)">' + bub('scale', 'boy') + '<span class="tx"><span class="t">체중</span><span class="d">' + (wS ? fmtMD(wS.t) + ' · ' + (wS.src === 'nicu' ? 'NICU' : wS.src === 'clinic' ? '소아과' : '집') : '출생') + ' · ' + pctLabel('S', dayOfLife(now, cfg), gS) + '</span></span><span class="v">' + n0(gS) + 'g<small>' + (gS - cfg.birthG.S >= 0 ? '+' : '') + n0(gS - cfg.birthG.S) + 'g</small></span><button class="sbtn gray" data-q="weightS">적기</button></div>' +
     '</div>';
-  h += '<div class="card"><h2>' + bub('scale', '') + '체중 변화</h2>' + weightChart(now) +
-    '<div class="legend"><span><i style="background:var(--girl)"></i>' + NAME('D') + '</span><span><i style="background:var(--boy)"></i>' + NAME('S') + '</span><span>점선은 출생체중</span></div></div>';
+  h += guideCard(now, gD, sD);
+  h += '<div class="card"><h2>' + bub('scale', 'girl') + NAME('D') + ' 성장</h2><p class="small">' + pctLabel('D', dayOfLife(now, cfg), gD) + ' · 출생 때 ' + pctLabel('D', 0, cfg.birthG.D) + '</p>' + growthChart('D', now) + growthLegend() + '</div>';
+  h += '<div class="card"><h2>' + bub('scale', 'boy') + NAME('S') + ' 성장</h2><p class="small">' + pctLabel('S', dayOfLife(now, cfg), gS) + ' · 출생 때 ' + pctLabel('S', 0, cfg.birthG.S) + '</p>' + growthChart('S', now) + growthLegend() + '</div>';
+  h += '<p class="foot">백분위 띠는 질병관리청 2017 소아청소년 성장도표(36개월 미만은 WHO 성장기준)의 개월별 값을 날짜 사이로 이어 그린 근사치예요. 한 번의 숫자보다 자기 선을 따라 꾸준히 크는지가 중요해요.</p>';
   return h;
+}
+function guideCard(now, gD, sD) {
+  const cfg = state.cfg, age = dayOfLife(now, cfg), fg = feedGuide(gD), br = bookRow(age), fp = feedPattern(state.events, now);
+  const row = (ic, tone, t, v, d) => '<div class="li">' + bub(ic, tone) + '<span class="tx"><span class="t">' + t + '</span><span class="d">' + d + '</span></span><span class="v">' + v + '</span></div>';
+  const wAvg = fp.weighed.length ? Math.round(fp.weighed.reduce((a, b) => a + b, 0) / fp.weighed.length) : null;
+  return '<div class="card tight"><div class="li">' + bub('nurse', 'girl') + '<span class="tx"><span class="t" style="font-weight:700">' + NAME('D') + ' 수유 가이드</span><span class="d">책 기준과 우리 아기 실제 값 · 생후 ' + age + '일 · ' + (gD / 1000).toFixed(2) + 'kg</span></span></div>' +
+    row('milk', 'blue', '하루 먹는 양 기준', fg.dayMin + '~' + fg.dayMax + '<small>ml</small>', '몸무게 × 120~150ml (책). 직수는 양이 안 보여서 기저귀·체중으로 확인해요') +
+    row('bottle', 'girl', '젖병 1회 참고량', fg.perMin + '~' + fg.perMax + '<small>ml</small>', '하루 양 ÷ 8~12회. 책의 ' + br.label + ' 표(~' + br.perFeed + 'ml)는 평균 ' + br.avgKg.D + 'kg 아기 기준이라 그대로 쓰면 많아요') +
+    row('clock', 'blue', '수유텀 (시작→시작)', fp.median ? fmtDur(fp.median) : '—', '책: ' + br.gap + ' · 하루 ' + br.times + '. 최근 24시간 ' + fp.count + '회' + (fp.clusters ? ', 30분 안에 이어진 수유 ' + fp.clusters + '번' : '')) +
+    row('swap', 'girl', '한쪽 평균 수유 시간', fp.sideAvgMin ? Math.round(fp.sideAvgMin) + '<small>분</small>' : '—', '책: 보통 한쪽 10~15분 (아기마다 달라요)' + (fp.sideAvgMin && fp.sideAvgMin < 8 ? '. 짧게 자주 먹는 편이라면 IBCLC에 직수 효율을 물어보세요' : '')) +
+    row('scale', 'girl', '직수로 먹은 양 (수유 전후 체중)', wAvg !== null ? '약 ' + wAvg + '<small>ml</small>' : '—', wAvg !== null ? '최근 24시간 ' + fp.weighed.length + '회 평균' : '신생아 체중계로 수유 전후를 재면 기록 탭에서 적을 수 있어요 (1g ≈ 1ml)') +
+    row('report', 'green', '체중 증가', sD !== null ? (sD >= 0 ? '+' : '') + Math.round(sD) + '<small>g/일</small>' : '—', '책: 하루 20~30g (한 달 600~900g). 기준은 소아과와 정해요') +
+    '<details class="grp" style="padding:0 0 4px"><summary>' + bub('babies', '') + '쌍둥이라 책과 다르게 한 점' + icon('chev', 'chev') + '</summary><div class="body small">' +
+    '<p>· 두 아이 모두 책의 평균 아기보다 작게 태어나서 (2.63·2.64kg), 월령표 대신 <b>지금 체중</b>으로 양을 계산해요.</p>' +
+    '<p>· 엄마 모유는 <b>두 아이 몫</b>이에요. 딸 기준량에 아들 완전수유량을 더한 게 엄마 공급 목표예요 (모유 탭).</p>' +
+    '<p>· 아들은 NICU 처방이 기준이라 이 가이드를 쓰지 않아요.</p>' +
+    '<p>· 37주에 태어나 성장도표는 실제 나이로 봐요. 교정 나이는 보통 37주 전에 태어난 아기에게 써요 (소아과 확인).</p>' +
+    '<p>· 책의 \'밤수 때 젖병 한 번 연습\'은 아빠 밤 교대 젖병으로 이미 하고 있어요. 아들이 퇴원하면 한 명은 엄마 직수, 한 명은 아빠 젖병으로 함께 먹일 수 있어요.</p>' +
+    '<p>· 원더윅스 표는 넣지 않았어요. 근거가 약하고, 정한다면 출산예정일 기준으로 세야 해서 실제 판단에 쓰기 어려워요.</p>' +
+    '</div></details></div>';
+}
+function growthLegend() { return '<div class="legend"><span><i style="background:var(--primary-weak);height:8px"></i>25~75백분위</span><span><i style="background:var(--fill);height:8px;border:1px solid var(--line)"></i>1~25 · 75~99</span><span><i style="background:var(--muted)"></i>50백분위</span></div>'; }
+function growthChart(baby, now) {
+  const cfg = state.cfg, pts = weightPoints(state.events, baby, cfg);
+  const W = 340, Hh = 180, L = 40, B = 22, T = 10, R = 26;
+  const dolNow = dayOfLife(now, cfg), xmax = Math.max(42, Math.ceil((dolNow + 10) / 7) * 7);
+  const days = []; for (let d = 0; d <= xmax; d += 3) days.push(d); if (days[days.length - 1] !== xmax) days.push(xmax);
+  const bands = days.map(d => wfaAt(baby, d));
+  const ws = pts.map(p => p.g);
+  const lo = Math.floor((Math.min(bands[0].p1, ...ws) - 100) / 250) * 250, hi = Math.ceil((Math.max(bands[bands.length - 1].p75, ...ws) + 100) / 250) * 250;
+  const x = d => L + (W - L - R) * d / xmax;
+  const y = g => T + (Hh - T - B) * (1 - (Math.max(lo, Math.min(hi, g)) - lo) / (hi - lo));
+  const line = k => days.map((d, i) => x(d).toFixed(1) + ',' + y(bands[i][k]).toFixed(1)).join(' ');
+  const area = (a, b) => line(a) + ' ' + days.slice().reverse().map((d, i) => x(d).toFixed(1) + ',' + y(bands[days.length - 1 - i][b]).toFixed(1)).join(' ');
+  let s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="' + NAME(baby) + ' 체중과 성장도표 백분위">';
+  for (let g = lo; g <= hi; g += 250) if (g % 500 === 0) s += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '"/><text x="' + (L - 4) + '" y="' + (y(g) + 3) + '" text-anchor="end">' + (g / 1000).toFixed(1) + 'kg</text>';
+  s += '<polygon class="band1" points="' + area('p1', 'p25') + '"/><polygon class="band2" points="' + area('p25', 'p75') + '"/><polygon class="band1" points="' + area('p75', 'p99') + '"/>';
+  s += '<polyline class="p50" points="' + line('p50') + '"/>';
+  for (const k of ['p1', 'p25', 'p50', 'p75']) { const v = bands[bands.length - 1][k]; if (v >= lo && v <= hi) s += '<text x="' + (W - R + 3) + '" y="' + (y(v) + 3) + '">' + k.slice(1) + '</text>'; }
+  for (let d = 0; d <= xmax; d += 14) s += '<text x="' + x(d) + '" y="' + (Hh - 6) + '" text-anchor="middle">' + (d ? d + '일' : '출생') + '</text>';
+  const c = baby;
+  s += '<polyline class="l' + c + '" points="' + pts.map(p => x((p.t - birthTime(cfg)) / DAY).toFixed(1) + ',' + y(p.g).toFixed(1)).join(' ') + '"/>';
+  pts.forEach((p, i) => { s += '<circle class="p' + c + '" cx="' + x((p.t - birthTime(cfg)) / DAY).toFixed(1) + '" cy="' + y(p.g).toFixed(1) + '" r="' + (i === pts.length - 1 ? 4.5 : 3) + '"/>'; });
+  s += '<line class="grid" x1="' + x(dolNow) + '" x2="' + x(dolNow) + '" y1="' + T + '" y2="' + (Hh - B) + '" stroke-dasharray="2 3"/>';
+  return s + '</svg>';
 }
 function orderChart(now) {
   const os = state.events.filter(e => e.type === 'order').sort((a, b) => a.t - b.t);
@@ -967,7 +1032,7 @@ function tlItem(e) {
       const sp = splitText(e);
       if (e.kind === 'pump') return { tone: 'violet', t: '유축', d: dur + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '') };
       const name = sp ? '양쪽 직수' : SIDE_KO[curSide(e)] + ' 직수';
-      return { tone: e.kind === 'nurse' ? 'girl' : 'blue', t: name + (e.kind === 'nurse+pump' ? ' + 유축' : ''), d: dur + (sp ? ' (' + sp + ')' : '') + (e.processed ? ' · 유축 ' + sessionMl(e) + 'ml' : '') };
+      return { tone: e.kind === 'nurse' ? 'girl' : 'blue', t: name + (e.kind === 'nurse+pump' ? ' + 유축' : ''), d: dur + (sp ? ' (' + sp + ')' : '') + (e.preG && e.postG ? ' · 먹은 양 약 ' + (e.postG - e.preG) + 'ml' : '') + (e.processed ? ' · 유축 ' + sessionMl(e) + 'ml' : '') };
     }
     case 'bottle': return { tone: 'girl', t: '젖병 ' + (e.milk === 'ebm' ? '모유' : '분유'), d: e.ml + 'ml' };
     case 'sleep': return { tone: 'violet', t: e.end ? '잠' : '자는 중', d: e.end ? fmtDur(e.end - e.t) : fmtDur(Date.now() - e.t) + '째' };

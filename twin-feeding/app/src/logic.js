@@ -260,4 +260,60 @@ function flags(events, cfg, now) {
   const order = { now: 0, today: 1, visit: 2, plan: 3 };
   return out.sort((a, b) => order[a.level] - order[b.level]);
 }
+
+/* ---------- 성장·수유 가이드 (책 + 질병관리청 2017 성장도표 = 36개월 미만은 WHO 성장기준) ---------- */
+// 연령(개월)별 몸무게 백분위 1·25·50·75·99 (kg). 책 66–67쪽 표 = WHO 성장기준 값과 같음
+const WFA = {
+  S: { p1: [2.3, 3.2, 4.1, 4.8, 5.4, 5.8, 6.1, 6.4, 6.7, 6.9, 7.1, 7.3], p25: [3.0, 4.1, 5.1, 5.9, 6.5, 7.0, 7.4, 7.7, 8.0, 8.3, 8.5, 8.7],
+       p50: [3.3, 4.5, 5.6, 6.4, 7.0, 7.5, 7.9, 8.3, 8.6, 8.9, 9.2, 9.4], p75: [3.7, 4.9, 6.0, 6.9, 7.6, 8.1, 8.5, 8.9, 9.3, 9.6, 9.9, 10.1], p99: [4.6, 6.0, 7.4, 8.3, 9.1, 9.7, 10.2, 10.7, 11.1, 11.4, 11.8, 12.1] },
+  D: { p1: [2.3, 3.0, 3.8, 4.4, 4.8, 5.2, 5.5, 5.8, 6.0, 6.2, 6.4, 6.6], p25: [2.9, 3.8, 4.7, 5.4, 5.9, 6.4, 6.7, 7.0, 7.3, 7.6, 7.8, 8.0],
+       p50: [3.2, 4.2, 5.1, 5.8, 6.4, 6.9, 7.3, 7.6, 7.9, 8.2, 8.5, 8.7], p75: [3.6, 4.6, 5.6, 6.4, 7.0, 7.5, 7.9, 8.3, 8.6, 8.9, 9.2, 9.5], p99: [4.4, 5.7, 6.9, 7.8, 8.6, 9.2, 9.7, 10.2, 10.6, 11.0, 11.3, 11.7] },
+};
+const PCTS = ['p1', 'p25', 'p50', 'p75', 'p99'];
+// 생후 일수 → 각 백분위의 g (개월 사이는 직선으로 보간: 근사값)
+function wfaAt(baby, ageDays) {
+  const m = Math.max(0, Math.min(11, ageDays / 30.4375)), i = Math.min(10, Math.floor(m)), f = m - i;
+  const out = {};
+  for (const k of PCTS) out[k] = Math.round((WFA[baby][k][i] * (1 - f) + WFA[baby][k][i + 1] * f) * 1000);
+  return out;
+}
+function pctLabel(baby, ageDays, g) {
+  const b = wfaAt(baby, ageDays);
+  if (g < b.p1) return '1백분위 미만';
+  if (g < b.p25) return '1~25백분위';
+  if (g < b.p50) return '25~50백분위';
+  if (g < b.p75) return '50~75백분위';
+  if (g < b.p99) return '75~99백분위';
+  return '99백분위 이상';
+}
+// 체중 기반 수유량 (책 63쪽: 몸무게 × 120~150ml/일, 1회 = 하루량 ÷ 횟수(8~12회), 하루 1,000ml 넘지 않게)
+function feedGuide(g) {
+  const kg = g / 1000;
+  const dayMin = Math.round(kg * 120), dayMax = Math.min(1000, Math.round(kg * 150));
+  return { dayMin, dayMax, perMin: Math.round(dayMin / 12), perMax: Math.round(dayMax / 8) };
+}
+// 책 65쪽 월령표 (단태아 평균 체중 기준) — 비교용
+const BOOK_AGE = [
+  { upto: 28, label: '2주', avgKg: { S: 3.8, D: 3.6 }, perFeed: 80, gap: '2시간~2시간 30분', times: '8~12회' },
+  { upto: 56, label: '6주', avgKg: { S: 4.9, D: 4.6 }, perFeed: 120, gap: '2시간 30분', times: '7~9회' },
+  { upto: 75, label: '2개월', avgKg: { S: 5.6, D: 5.1 }, perFeed: 160, gap: '2시간 30분~3시간', times: '6~8회' },
+  { upto: 120, label: '3개월', avgKg: { S: 6.2, D: 5.7 }, perFeed: 180, gap: '3~4시간', times: '5~7회' },
+  { upto: 9999, label: '5개월', avgKg: { S: 7.5, D: 6.9 }, perFeed: 200, gap: '4시간', times: '4~6회' },
+];
+function bookRow(ageDays) { return BOOK_AGE.find(r => ageDays <= r.upto) || BOOK_AGE[BOOK_AGE.length - 1]; }
+// 딸 최근 24시간 직수 패턴: 수유텀(시작→시작) 중앙값, 쪽별 평균 분, 30분 안에 이어진 수유(묶음) 수
+function feedPattern(events, now) {
+  const feeds = events.filter(e => (e.type === 'session' && e.kind !== 'pump') || (e.type === 'bottle' && e.baby === 'D')).filter(e => e.t > now - DAY && e.t <= now).sort((a, b) => a.t - b.t);
+  const gaps = []; for (let i = 1; i < feeds.length; i++) gaps.push(feeds[i].t - feeds[i - 1].t);
+  const sorted = gaps.slice().sort((a, b) => a - b);
+  const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : null;
+  const clusters = gaps.filter(g => g < 30 * 60e3).length;
+  let sideMs = 0, sideN = 0;
+  for (const e of feeds) if (e.type === 'session' && e.end) {
+    const segs = e.segs && e.segs.length ? e.segs : [{ side: e.side, t: e.t }];
+    segs.forEach((s, i) => { const ms = (i + 1 < segs.length ? segs[i + 1].t : e.end) - s.t; if (ms >= 60e3) { sideMs += ms; sideN++; } });
+  }
+  const weighed = feeds.filter(e => e.preG > 0 && e.postG > 0).map(e => e.postG - e.preG);
+  return { count: feeds.length, median, clusters, sideAvgMin: sideN ? sideMs / sideN / 60000 : null, weighed };
+}
 /* LOGIC END */
