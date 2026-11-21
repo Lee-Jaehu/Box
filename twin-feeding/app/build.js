@@ -13,7 +13,7 @@ const gasHtml = body('\n<script>window.TF_BACKEND = \'gas\'; window.TF_TOKEN = \
 if (gasHtml.includes('<?')) throw new Error('Index.html에 <? 가 있으면 HtmlService가 깨질 수 있어요');
 fs.writeFileSync(path.join(gasDir, 'Index.html'), gasHtml);
 const manifest = { timeZone: 'Asia/Seoul', exceptionLogging: 'STACKDRIVER', runtimeVersion: 'V8',
-  oauthScopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  oauthScopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/script.external_request', 'https://www.googleapis.com/auth/script.scriptapp'],
   webapp: { executeAs: 'USER_DEPLOYING', access: 'ANYONE_ANONYMOUS' } };
 fs.writeFileSync(path.join(gasDir, 'appsscript.json'), JSON.stringify(manifest, null, 2) + '\n');
 console.log('index.html', (art.length / 1024).toFixed(1) + 'KB · gas Index.html', (gasHtml.length / 1024).toFixed(1) + 'KB');

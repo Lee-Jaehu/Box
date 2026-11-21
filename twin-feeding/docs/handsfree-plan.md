@@ -42,6 +42,8 @@
 
 라이브 액티비티(잠금화면 타이머)는 네이티브 앱만 만들 수 있어서 이번 조건에서는 제외했습니다. 대신 "수유 상황"을 물으면 진행 시간을 말해 줍니다.
 
+**대체안 (추가)**: Scriptable 잠금화면 위젯이 진행 중 수유를 타이머로 보여 주고(숫자는 폰이 직접 셈, 상황 변화는 iOS 갱신 주기 5~15분), 상대 폰에는 ntfy 앱으로 알림이 갑니다. 밤 직수 30분 넘음은 서버가 5분마다 직접 확인해 알립니다. 설치·알림 표는 `stage1/README.md` 7장.
+
 **근거 (애플 문서)**
 - [Run shortcuts with the Action button](https://support.apple.com/guide/shortcuts/run-shortcuts-with-the-action-button-apdfea15680b/ios): 설정 > 액션 버튼 > 단축어. 지원 기종은 iPhone 15 Pro 이후.
 - [Run shortcuts by tapping the back of your iPhone](https://support.apple.com/guide/shortcuts/run-shortcuts-tapping-iphone-apd897693606/ios), [Use Back Tap](https://support.apple.com/en-us/111772): 설정 > 손쉬운 사용 > 터치 > 뒷면 탭, iPhone 8 이후.

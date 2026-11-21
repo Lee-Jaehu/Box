@@ -6,6 +6,7 @@ process.env.TZ = 'Asia/Seoul';
 function makeEnv() {
   const sheets = {};
   const props = {};
+  const sent = [], triggers = [];
   const mkSheet = name => {
     const sh = { name, rows: [] };
     const range = (r, c, nr, nc) => ({
@@ -28,16 +29,18 @@ function makeEnv() {
     SpreadsheetApp: { openById: () => ss },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] ?? null, setProperty: (k, v) => { props[k] = String(v); } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
-    Utilities: { getUuid: () => 'abcd1234-ef56-7890-abcd-1234567890ab', formatDate: (d, tz, f) => f === 'H' ? String(d.getHours()) : d.toISOString().slice(0, 16).replace('T', ' ') },
-    ContentService: { createTextOutput: s => ({ text: s }) },
+    Utilities: { getUuid: () => 'abcd1234-ef56-7890-abcd-1234567890ab', formatDate: (d, tz, f) => f === 'H' ? String(d.getHours()) : f === 'HH:mm' ? String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') : d.toISOString().slice(0, 16).replace('T', ' ') },
+    UrlFetchApp: { fetch: (url, o) => { sent.push(Object.assign({ url }, JSON.parse(o.payload))); return { getResponseCode: () => 200 }; } },
+    ContentService: { createTextOutput: s => ({ text: s, setMimeType(m) { this.mime = m; return this; } }), MimeType: { JSON: 'json' } },
     HtmlService: { createHtmlOutputFromFile: () => ({ getContent: () => '<p>__TOKEN__</p>' }), createHtmlOutput: h => ({ html: h, setTitle() { return this; }, addMetaTag() { return this; } }) },
-    ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }) },
+    ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }), getProjectTriggers: () => triggers,
+      newTrigger: h => ({ timeBased() { return this; }, everyMinutes(m) { this.m = m; return this; }, create() { triggers.push({ getHandlerFunction: () => h, m: this.m }); } }) },
     Logger: { log() {} },
     console,
   };
   const ctx = vm.createContext(g);
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'stage1', 'gas', 'Code.gs'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '..', 'stage1', 'gas', 'Migrate.gs'), 'utf8') + '\n;this.__x = { migrate, setup, doGet, act_, api_getAll, api_setBag, api_updateBag, api_getBag, api_addEvent, api_patchEvent, readEvents_, cryRank_ };', ctx);
-  return { x: ctx.__x, sheets, props };
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'stage1', 'gas', 'Code.gs'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '..', 'stage1', 'gas', 'Migrate.gs'), 'utf8') + '\n;this.__x = { migrate, setup, doGet, act_, api_getAll, api_setBag, api_updateBag, api_getBag, api_addEvent, api_patchEvent, readEvents_, cryRank_, checkAlerts, widget_, flush_, outbox: OUTBOX_ };', ctx);
+  return { x: ctx.__x, sheets, props, sent, triggers, ctx };
 }
 
 let n = 0;
@@ -175,5 +178,76 @@ test('care schedule by voice lists what is due within a week', () => {
   const r = act({ a: 'care' }, at('2026-11-21T10:00'));
   assert.ok(/영유아건강검진 1차 12월 11일까지/.test(r) && /BCG/.test(r), r);
 });
+
+
+/* ---------- 잠금화면 알림(ntfy)·위젯 ---------- */
+{
+  const E = makeEnv(), Y = E.x; Y.setup(); Y.setup();
+  const go = (q, t) => { Y.outbox.length = 0; const r = Y.act_(Object.assign({ by: 'mom', src: 'siri' }, q), t); Y.flush_(t); return r; };
+  const last = () => E.sent[E.sent.length - 1];
+  const base = E.props.NTFY;
+  test('setup makes one alert channel and one 5-minute check, even when run twice', () => {
+    assert.ok(/^tf-[0-9a-f]{16}$/.test(base), base);
+    assert.strictEqual(E.triggers.length, 1); assert.strictEqual(E.triggers[0].m, 5);
+    assert.strictEqual(JSON.stringify(Y.api_getAll(E.props.TOKEN).ntfy), JSON.stringify({ server: 'https://ntfy.sh', mom: base + '-mom', dad: base + '-dad' }));
+  });
+  test('mom starts a feed in the daytime → only dad\'s phone is told, without names', () => {
+    const D = at('2026-11-21T14:00');
+    go({ a: 'start', kind: 'nurse', side: 'L' }, D);
+    assert.strictEqual(E.sent.length, 1);
+    assert.strictEqual(last().topic, base + '-dad'); assert.strictEqual(last().title, '수유 시작');
+    assert.ok(/왼쪽 직수 · 14:00/.test(last().message), last().message);
+    go({ a: 'end' }, D + 15 * 60e3);
+    assert.strictEqual(E.sent.length, 1, 'plain nursing end sends nothing');
+  });
+  test('while dad sleeps (02:30–09:00) routine alerts are held, but 도와줘요 still goes through', () => {
+    const N = at('2026-11-22T04:00'), k = E.sent.length;
+    go({ a: 'start', kind: 'pump' }, N); go({ a: 'end' }, N + 20 * 60e3);
+    assert.strictEqual(E.sent.length, k);
+    assert.strictEqual(go({ a: 'help' }, N + 21 * 60e3), '아빠에게 알렸어요.');
+    assert.strictEqual(last().topic, base + '-dad'); assert.strictEqual(last().priority, 5);
+  });
+  test('dad asks for help → mom\'s phone; pump end in the evening → dad gets the freeze reminder', () => {
+    go({ a: 'help', by: 'dad' }, at('2026-11-22T10:00'));
+    assert.strictEqual(last().topic, base + '-mom');
+    const P = at('2026-11-22T19:00');
+    go({ a: 'start', kind: 'pump' }, P); go({ a: 'end' }, P + 20 * 60e3);
+    assert.strictEqual(last().title, '유축 끝'); assert.strictEqual(last().topic, base + '-dad');
+  });
+  test('5-minute check: a night nursing past 30 minutes alerts mom (urgent) and awake dad, once', () => {
+    const L = at('2026-11-22T23:00');
+    go({ a: 'start', kind: 'nurse', side: 'R' }, L);
+    const k = E.sent.length;
+    Y.checkAlerts({}, L + 25 * 60e3); assert.strictEqual(E.sent.length, k, 'not yet at 25 min');
+    Y.checkAlerts({}, L + 31 * 60e3);
+    const got = E.sent.slice(k);
+    assert.strictEqual(got.map(m => m.topic).join(), [base + '-mom', base + '-dad'].join());
+    assert.strictEqual(got[0].priority, 5);
+    Y.checkAlerts({}, L + 36 * 60e3); assert.strictEqual(E.sent.length, k + 2, 'no repeat');
+    const w = JSON.parse(Y.doGet({ parameter: { k: E.props.TOKEN, a: 'widget' } }).text);
+    assert.ok(w && 'running' in w && 'nextSide' in w);
+    const w2 = Y.widget_(L + 32 * 60e3);
+    assert.strictEqual(w2.running.label, '오른쪽 직수'); assert.strictEqual(w2.running.t, L); assert.strictEqual(w2.running.long, true);
+    go({ a: 'end' }, L + 40 * 60e3);
+    const w3 = Y.widget_(L + 41 * 60e3);
+    assert.strictEqual(w3.running, null); assert.strictEqual(w3.lastFeed.label, '오른쪽에서 끝'); assert.strictEqual(w3.nextSide, '왼쪽');
+    assert.strictEqual(Y.doGet({ parameter: { k: E.props.TOKEN, a: 'widget' } }).mime, 'json');
+    assert.strictEqual(Y.doGet({ parameter: { k: 'bad', a: 'widget' } }).text, '주소가 올바르지 않아요.');
+  });
+  test('crying 20+ minutes tells the other parent once (held if they are asleep)', () => {
+    const C = at('2026-11-23T20:00'), k = E.sent.length;
+    go({ a: 'cry', by: 'dad' }, C); go({ a: 'cry', by: 'dad' }, C + 10 * 60e3);
+    go({ a: 'cry', by: 'dad' }, C + 21 * 60e3); go({ a: 'cry', by: 'dad' }, C + 27 * 60e3);
+    const got = E.sent.slice(k).filter(m => /울어요/.test(m.title));
+    assert.strictEqual(got.length, 1); assert.strictEqual(got[0].topic, base + '-mom');
+    assert.strictEqual(Y.widget_(C + 28 * 60e3).crying.minutes, 28);
+  });
+  test('a failing ntfy server never breaks the record', () => {
+    const F = makeEnv(); F.x.setup();
+    F.ctx.UrlFetchApp.fetch = () => { throw new Error('down'); };
+    assert.strictEqual(F.x.doGet({ parameter: { k: F.props.TOKEN, a: 'start', kind: 'nurse', side: 'L', by: 'mom' } }).text, '왼쪽 직수 시작했어요.');
+    assert.strictEqual(F.x.readEvents_().filter(e => e.type === 'session').length, 1);
+  });
+}
 
 console.log('\n' + n + ' tests passed');

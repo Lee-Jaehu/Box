@@ -23,7 +23,10 @@ function setup() {
   const p = PropertiesService.getScriptProperties();
   if (!p.getProperty('TOKEN')) p.setProperty('TOKEN', Utilities.getUuid().replace(/-/g, '').slice(0, 24));
   sheet_('events', EV_HEAD); sheet_('bags', BAG_HEAD); sheet_('config', ['key', 'json']);
+  if (!p.getProperty('NTFY')) p.setProperty('NTFY', 'tf-' + Utilities.getUuid().replace(/-/g, '').slice(0, 16));
+  if (!ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'checkAlerts')) ScriptApp.newTrigger('checkAlerts').timeBased().everyMinutes(5).create();
   Logger.log('토큰: ' + p.getProperty('TOKEN'));
+  Logger.log('ntfy 알림 채널 — 엄마 폰: ' + p.getProperty('NTFY') + '-mom / 아빠 폰: ' + p.getProperty('NTFY') + '-dad');
   Logger.log('배포한 웹 앱 주소 뒤에 ?k=' + p.getProperty('TOKEN') + ' 를 붙여서 여세요.');
 }
 function token_() { return PropertiesService.getScriptProperties().getProperty('TOKEN'); }
@@ -129,7 +132,9 @@ function api_getAll(k) {
   auth_(k);
   const cfg = ss_().getSheetByName('config');
   const raw = cfg && cfg.getLastRow() > 1 ? parse_(cfg.getRange(2, 2).getValue()) : null;
-  return { events: readEvents_(), bags: readBags_(), config: raw, rev: rev_(), sheetUrl: ss_().getUrl(), execUrl: ScriptApp.getService().getUrl() };
+  const nt = PropertiesService.getScriptProperties().getProperty('NTFY');
+  return { events: readEvents_(), bags: readBags_(), config: raw, rev: rev_(), sheetUrl: ss_().getUrl(), execUrl: ScriptApp.getService().getUrl(),
+    ntfy: nt ? { server: ntfyServer_(), mom: nt + '-mom', dad: nt + '-dad' } : null };
 }
 function api_rev(k) { auth_(k); return rev_(); }
 function api_addEvent(k, ev) {
@@ -171,9 +176,12 @@ function doGet(e) {
     return HtmlService.createHtmlOutput(html).setTitle('쌍둥이 수유 보드')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
   }
+  if (p.a === 'widget') return ContentService.createTextOutput(JSON.stringify(widget_(Date.now()))).setMimeType(ContentService.MimeType.JSON);
   let msg;
+  OUTBOX_.length = 0;
   try { msg = locked_(() => { const m = act_(p, Date.now()); bump_(); return m; }); }
-  catch (err) { msg = '기록하지 못했어요. 다시 말해 주세요.'; }
+  catch (err) { msg = '기록하지 못했어요. 다시 말해 주세요.'; OUTBOX_.length = 0; }
+  flush_(Date.now());
   return ContentService.createTextOutput(msg);
 }
 function doPost(e) { return doGet(e); }
@@ -189,7 +197,7 @@ function act_(p, now) {
   const side = sideParam_(p.side) || suggestSide_(recent, now);
   switch (p.a) {
     case 'feed': {                                            // 액션 버튼: 진행 중이면 끝, 아니면 시작
-      if (open) return endSession_(open, by, now);
+      if (open) { pumpDone_(open, now); return endSession_(open, by, now); }
       // 종류를 말하지 않으면 최근 24시간에 가장 많이 한 종류 (없으면 직수+유축)
       const cnt = {}; recent.filter(e => e.type === 'session' && e.t > now - DAY).forEach(e => { cnt[e.kind] = (cnt[e.kind] || 0) + 1; });
       const top = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
@@ -199,10 +207,15 @@ function act_(p, now) {
     case 'start': {
       const kind = kindParam_(p.kind) || 'nurse+pump';
       let pre = '';
-      if (open) { endSession_(open, by, now); pre = '앞 기록을 끝내고 '; }
+      if (open) { pumpDone_(open, now); endSession_(open, by, now); pre = '앞 기록을 끝내고 '; }
       return pre + startSession_(add, kind, side);
     }
-    case 'end': return open ? endSession_(open, by, now) : '진행 중인 수유가 없어요.';
+    case 'end': if (open) pumpDone_(open, now); return open ? endSession_(open, by, now) : '진행 중인 수유가 없어요.';
+    case 'help': {
+      const ep = cryEpisode_(recent, now);
+      queue_(other_(by), '도와줘요', (by === 'mom' ? '엄마' : '아빠') + '가 도움을 요청했어요' + (ep ? ' · ' + ep.minutes + '분째 울음' : ''), 5, false);
+      return (by === 'mom' ? '아빠' : '엄마') + '에게 알렸어요.';
+    }
     case 'switch': {
       if (!open || open.kind === 'pump') return '바꿀 직수가 없어요.';
       const to = curSide_(open) === 'L' ? 'R' : 'L';
@@ -228,6 +241,7 @@ function act_(p, now) {
       const prev = recent.filter(e => e.type === 'cry' && e.t > now - 5 * 60e3)[0];
       if (!prev) add({ type: 'cry', baby: 'D', rank });
       const ep = cryEpisode_(readEvents_().filter(e => !e.deleted && e.t > now - 3 * HOUR), now);
+      if (ep && ep.minutes >= 20 && !alerted_('cry' + ep.start)) queue_(other_(by), ep.minutes + '분째 울어요', '혼자 달래는 중이에요. 도와줄 수 있으면 가 주세요.', 4, true);
       if (ep && ep.minutes >= 20) return ep.minutes + '분째 울고 있어요. 먹이기, 기저귀, 체온, 트림을 봤는데도 안 그치면 아기를 등 대고 침대에 눕히고 5분에서 10분 쉬어도 괜찮아요. 흔들지는 마세요. 38도 이상이거나 축 처지면 바로 응급실이에요.';
       return rank.length ? rank.slice(0, 2).map((r, i) => (i ? '다음은 ' : '') + r.say).join('. ') + '.' : '기록했어요.';
     }
@@ -260,6 +274,7 @@ function act_(p, now) {
 }
 function startSession_(add, kind, side) {
   const s = add({ type: 'session', kind, baby: kind === 'pump' ? null : 'D', side: kind === 'pump' ? 'B' : side, end: null });
+  queue_(other_(s.by), '수유 시작', (kind === 'pump' ? '양쪽 유축' : SIDE_KO[s.side] + ' ' + KIND_KO[kind]) + ' · ' + hm_(s.t), 3, true);
   return (kind === 'pump' ? '양쪽 유축' : SIDE_KO[s.side] + ' ' + KIND_KO[kind]) + ' 시작했어요.';
 }
 function endSession_(s, by, now) {
@@ -308,6 +323,74 @@ function status_(evs, now, side) {
   return (open ? (open.kind === 'pump' ? '유축' : SIDE_KO[curSide_(open)] + ' ' + KIND_KO[open.kind]) + ' ' + mins_(now - open.t) + '째예요. ' : '') +
     '마지막 수유 ' + (lf ? mins_(now - lf) + ' 전' : '기록 없음') + ', 다음은 ' + SIDE_KO[side] + '. ' +
     '기저귀 ' + (ld ? mins_(now - ld) + ' 전' : '기록 없음') + '.';
+}
+
+/* ---------- 잠금화면 알림 (ntfy) ----------
+ * 엄마 폰은 '채널-mom', 아빠 폰은 '채널-dad'를 ntfy 앱에서 구독. 내가 한 기록은 상대 폰으로만 간다.
+ * 상대가 자는 시간(설정의 엄마 보호 수면·아빠 수면)엔 급하지 않은 알림을 보내지 않는다.
+ * 내용은 짧게: 아기 이름·체중 같은 정보는 넣지 않음. */
+const OUTBOX_ = [];
+function ntfyServer_() { return PropertiesService.getScriptProperties().getProperty('NTFY_SERVER') || 'https://ntfy.sh'; }
+function other_(by) { return by === 'dad' ? 'mom' : 'dad'; }
+function hm_(t) { return Utilities.formatDate(new Date(t), TZ, 'HH:mm'); }
+function cfg_() {
+  const sh = ss_().getSheetByName('config');
+  const c = sh && sh.getLastRow() > 1 ? parse_(sh.getRange(2, 2).getValue()) : null;
+  return Object.assign({ momSleep: { start: '21:45', end: '02:30' }, dadSleep: { start: '02:30', end: '09:00' } }, c || {});
+}
+function inWin_(t, w) {
+  const [h, m] = hm_(t).split(':').map(Number), x = h * 60 + m;
+  const a = w.start.split(':').map(Number), b = w.end.split(':').map(Number), A = a[0] * 60 + a[1], B = b[0] * 60 + b[1];
+  return A <= B ? x >= A && x < B : x >= A || x < B;
+}
+function asleep_(who, now) { const c = cfg_(); return inWin_(now, who === 'mom' ? c.momSleep : c.dadSleep); }
+function queue_(to, title, msg, prio, quietWhenAsleep) { OUTBOX_.push({ to, title, msg, prio, quiet: quietWhenAsleep }); }
+function alerted_(key) {
+  const p = PropertiesService.getScriptProperties(), m = parse_(p.getProperty('ALERTED') || '{}') || {}, now = Date.now();
+  for (const k in m) if (now - m[k] > 2 * DAY) delete m[k];
+  if (m[key]) return true;
+  m[key] = now; p.setProperty('ALERTED', JSON.stringify(m)); return false;
+}
+function flush_(now) {
+  const base = PropertiesService.getScriptProperties().getProperty('NTFY');
+  now = now || Date.now();
+  while (OUTBOX_.length) {
+    const n = OUTBOX_.shift();
+    if (!base || (n.quiet && asleep_(n.to, now))) continue;
+    try {
+      UrlFetchApp.fetch(ntfyServer_(), { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+        payload: JSON.stringify({ topic: base + '-' + n.to, title: n.title, message: n.msg, priority: n.prio }) });
+    } catch (e) { /* 알림이 실패해도 기록은 이미 저장됨 */ }
+  }
+}
+function pumpDone_(open, now) {
+  if (open.kind !== 'nurse') queue_('dad', '유축 끝', '양 적고 4시간 안에 냉동해 주세요 · ' + hm_(now), 3, true);
+}
+// 5분마다: 밤에 직수가 30분을 넘으면 엄마 폰(졸고 있을 수 있음)과 깨어 있는 아빠 폰에 한 번 알림
+function checkAlerts(e, at) {                            // 트리거가 e를 넘김. at은 시험용
+  const now = at || Date.now();
+  const open = readEvents_().filter(e => !e.deleted && e.type === 'session' && !e.end && e.kind !== 'pump' && e.t > now - 4 * HOUR).sort((a, b) => b.t - a.t)[0];
+  if (open && isNight_(now) && now - open.t > 30 * 60e3 && !alerted_('long' + open.id)) {
+    queue_('mom', '아기 안고 잠들지 않았나요?', '수유 ' + mins_(now - open.t) + '째예요. 졸리면 아기를 먼저 아기 침대에.', 5, false);
+    queue_('dad', '엄마 수유 30분 넘음', '아기를 안고 잠들지 않았는지 봐 주세요.', 4, true);
+  }
+  flush_(now);
+}
+// 잠금화면 위젯이 읽는 현재 상황 (이름·체중 없이)
+function widget_(now) {
+  const evs = readEvents_().filter(e => !e.deleted && e.t > now - 3 * DAY);
+  const open = evs.filter(e => e.type === 'session' && !e.end && e.t > now - 4 * HOUR).sort((a, b) => b.t - a.t)[0];
+  const lf = evs.filter(e => (e.type === 'session' && e.kind !== 'pump' && e.end) || (e.type === 'bottle' && e.baby === 'D')).sort((a, b) => b.t - a.t)[0];
+  const ld = evs.filter(e => e.type === 'diaper').reduce((m, e) => Math.max(m, e.t), 0);
+  const ep = cryEpisode_(evs, now);
+  return {
+    now,
+    running: open ? { t: open.t, label: open.kind === 'pump' ? '유축' : SIDE_KO[curSide_(open)] + ' ' + KIND_KO[open.kind], long: isNight_(now) && open.kind !== 'pump' && now - open.t > 30 * 60e3 } : null,
+    lastFeed: lf ? { t: lf.end || lf.t, label: lf.type === 'bottle' ? '젖병' : SIDE_KO[curSide_(lf)] + '에서 끝' } : null,
+    nextSide: SIDE_KO[suggestSide_(evs, now)],
+    lastDiaper: ld || null,
+    crying: ep ? { start: ep.start, minutes: ep.minutes } : null,
+  };
 }
 
 /* ---------- 울음 묶음 (앱 logic.js의 cryEpisode와 같은 규칙) ---------- */
