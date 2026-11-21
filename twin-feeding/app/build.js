@@ -1,7 +1,7 @@
 // node twin-feeding/app/build.js
 //  → app/index.html            : Claude 아티팩트용 (공유 DB)
 //  → stage1/gas/Index.html     : 구글 Apps Script 웹 페이지용 (아내도 Claude 계정 없이)
-//  → stage1/gas/project.json   : Apps Script 프로젝트 가져오기용 (Code.gs + Index.html + 매니페스트)
+//  → stage1/gas/appsscript.json : Apps Script 매니페스트 (시간대·권한·웹 앱 설정)
 const fs = require('fs'), path = require('path');
 const src = f => fs.readFileSync(path.join(__dirname, 'src', f), 'utf8');
 const body = (pre) => src('shell.html').replace('<!--ICONS-->', src('icons.svg.html').trim())

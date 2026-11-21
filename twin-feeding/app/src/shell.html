@@ -108,7 +108,6 @@ button.li:active { opacity: .7; }
 .btn { min-height: 56px; border-radius: 16px; background: var(--primary); color: var(--primary-ink); font-weight: 700; font-size: 17px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn.weak { background: var(--primary-weak); color: var(--primary); }
 .btn.gray { background: var(--fill); color: var(--ink); }
-.btn.danger { background: var(--crit-weak); color: var(--crit); }
 .btn:disabled { opacity: .4; cursor: default; }
 .sbtn { min-height: 44px; padding: 0 14px; border-radius: 10px; background: var(--primary-weak); color: var(--primary); font-weight: 700; font-size: 14px; white-space: nowrap; flex: none; }
 .sbtn.gray { background: var(--fill); color: var(--sub); }
@@ -133,7 +132,6 @@ button.li:active { opacity: .7; }
 .act.main span.d { color: inherit; opacity: .85; }
 .act.main .bub { background: rgba(255,255,255,.2); color: inherit; }
 .timer { font-size: 64px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; text-align: center; padding-block: 8px; }
-.textbtn { color: var(--muted); font-size: 14px; text-decoration: underline; align-self: center; padding: 8px; }
 
 /* 빠른 기록 (기저귀) */
 .quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -188,8 +186,6 @@ details.fold .items b { display: block; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--fill); border-radius: 12px; padding: 4px; }
 .seg button { min-height: 40px; border-radius: 9px; font-weight: 700; font-size: 15px; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-.day { font-size: 14px; font-weight: 700; color: var(--sub); padding: 8px 4px 0; }
-.tl .time { font-size: 13px; color: var(--muted); width: 44px; flex: none; }
 
 /* 타임라인: 왼쪽 간격 알약 | 시각 | 세로선·점 | 제목·설명 */
 .tlbar { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
@@ -231,7 +227,6 @@ svg.chart .need { stroke: var(--boy); stroke-width: 1.5; fill: none; }
 svg.chart .ord { stroke: var(--boy); stroke-width: 3; fill: none; opacity: .45; }
 svg.chart .lD { stroke: var(--girl); stroke-width: 2.5; fill: none; } svg.chart .pD { fill: var(--girl); }
 svg.chart .lS { stroke: var(--boy); stroke-width: 2.5; fill: none; } svg.chart .pS { fill: var(--boy); }
-svg.chart .birthD { stroke: var(--girl); stroke-dasharray: 3 4; opacity: .6; } svg.chart .birthS { stroke: var(--boy); stroke-dasharray: 3 4; opacity: .6; }
 svg.chart .step { stroke: var(--boy); stroke-width: 2.5; fill: none; }
 svg.chart .band1 { fill: var(--fill); } svg.chart .band2 { fill: var(--primary-weak); } svg.chart .p50 { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; } svg.chart .stepfill { fill: var(--boy-weak); }
 .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }

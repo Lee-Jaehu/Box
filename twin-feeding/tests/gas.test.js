@@ -124,11 +124,11 @@ test('page API refuses a wrong token', () => {
   assert.ok(all.events.length > 5 && all.bags.b1 && all.execUrl);
 });
 
-test('migrate brings the 13 artifact records once; deleted ones stay hidden', () => {
+test('migrate brings the 16 artifact records once; deleted ones stay hidden', () => {
   const e2 = makeEnv(); e2.x.setup(); e2.x.migrate(); e2.x.migrate();
   const all = e2.x.readEvents_();
-  assert.strictEqual(all.length, 13);
-  assert.strictEqual(all.filter(e => !e.deleted).length, 7);
+  assert.strictEqual(all.length, 16);
+  assert.strictEqual(all.filter(e => !e.deleted).length, 9);
   const tok = e2.props.TOKEN;
   assert.strictEqual(JSON.parse(JSON.stringify(e2.x.api_getAll(tok).config)).birthG.D, 2630);
 });
@@ -174,9 +174,22 @@ test('crying 20+ minutes: the reply switches to the check-order and safe-break p
   act({ a: 'calm', how: 'feed' }, C + 30 * 60e3);
   assert.ok(!/분째 울고/.test(act({ a: 'cry' }, C + 40 * 60e3)));  // 그친 뒤 새 울음은 처음부터
 });
-test('care schedule by voice lists what is due within a week', () => {
+test('care schedule by voice lists what is due within a week; hospital items are one "check" line, like the app', () => {
   const r = act({ a: 'care' }, at('2026-11-21T10:00'));
   assert.ok(/영유아건강검진 1차 12월 11일까지/.test(r) && /BCG/.test(r), r);
+  assert.ok(!/청각선별검사 12월/.test(r) && /출산 병원에서 하는 검사·접종 3개는 퇴원요약지로 확인/.test(r), r);
+});
+test('undo speaks Korean names for every record type (no raw "break")', () => {
+  act({ a: 'break' }, at('2026-11-24T15:00'));
+  assert.strictEqual(act({ a: 'undo' }, at('2026-11-24T15:01')), '방금 울음 중 잠시 쉬기 기록을 취소했어요.');
+});
+test('a cry episode never reaches back more than 3 hours (same rule as the app)', () => {
+  const C = at('2026-11-25T10:00');
+  for (let i = 0; i <= 8; i++) act({ a: 'cry' }, C + i * 25 * 60e3);   // 25분마다 울음 3시간 20분
+  const r = act({ a: 'cry' }, C + 200 * 60e3 + 60e3);
+  const m = Number((r.match(/^(\d+)분째/) || [])[1]);
+  assert.ok(m > 0 && m <= 180, r);
+  act({ a: 'calm', how: 'feed' }, C + 202 * 60e3);
 });
 
 
@@ -241,6 +254,14 @@ test('care schedule by voice lists what is due within a week', () => {
     const got = E.sent.slice(k).filter(m => /울어요/.test(m.title));
     assert.strictEqual(got.length, 1); assert.strictEqual(got[0].topic, base + '-mom');
     assert.strictEqual(Y.widget_(C + 28 * 60e3).crying.minutes, 28);
+  });
+  test('dad ending a pump himself gets no "pump done" alert; the 5-minute check skips daytime', () => {
+    const P = at('2026-11-24T19:00'), k = E.sent.length;
+    go({ a: 'start', kind: 'pump', by: 'dad' }, P); go({ a: 'end', by: 'dad' }, P + 20 * 60e3);
+    assert.ok(!E.sent.slice(k).some(m => m.title === '유축 끝'));
+    const D = at('2026-11-24T13:00'); go({ a: 'start', kind: 'nurse', side: 'L' }, D);
+    const k2 = E.sent.length; Y.checkAlerts({}, D + 45 * 60e3); assert.strictEqual(E.sent.length, k2);
+    go({ a: 'end' }, D + 46 * 60e3);
   });
   test('a failing ntfy server never breaks the record', () => {
     const F = makeEnv(); F.x.setup();

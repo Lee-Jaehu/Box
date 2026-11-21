@@ -79,7 +79,7 @@
   - 단축어 동작 12종: 토글, 시작, 끝, 기저귀, 젖병, 울음, 그침, 잠, 상황, 취소 등
   - 웹 페이지용 함수
 - `stage1/gas/Index.html`: 지금 앱 화면에 저장 방식만 Apps Script로 바꾼 것 (`app/build.js`가 생성)
-- `stage1/gas/Migrate.gs`: 아티팩트 기록 13건과 설정 옮기기
+- `stage1/gas/Migrate.gs`: 아티팩트 기록 16건(11/21까지)과 설정 옮기기
 - `stage1/README.md`: 설치 순서, 단축어 목록, 기기 시험표
 - 테스트
   - `tests/gas.test.js`: 서버 동작 13개 (흉내 낸 구글 환경)

@@ -21,6 +21,7 @@ const NAME = b => b === 'D' ? state.cfg.names.D : b === 'S' ? state.cfg.names.S 
 const STATE_KO = { fridge: '냉장', freezer: '냉동', thawed: '해동', nicu: 'NICU 보냄', used: '먹임', discard: '버림' };
 const SIDE_KO = { L: '왼쪽', R: '오른쪽', B: '양쪽' };
 const OTHER = { L: 'R', R: 'L' };
+const CALM_KO = { feed: '먹여서', diaper: '기저귀 갈아서', sleep: '재워서', hold: '안아줘서', other: '그 밖', unknown: '모름' };
 const icon = (id, cls) => '<svg class="ic' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="#i-' + id + '"/></svg>';
 const bub = (id, tone) => '<span class="bub ' + (tone || '') + '">' + icon(id) + '</span>';
 const face = b => '<svg class="face" viewBox="0 0 48 48" aria-hidden="true"><use href="#face-' + b + '"/></svg>';
@@ -274,7 +275,7 @@ function switchSide(e) {
 }
 const lastOf = pred => { const e = state.events.filter(pred).sort((a, b) => b.t - a.t)[0]; return e || null; };
 const isDFeed = e => (isNurse(e) && e.end) || (e.type === 'bottle' && e.baby === 'D');
-const feedDesc = e => e.type === 'bottle' ? '젖병 ' + (e.milk === 'ebm' ? '모유 ' : '분유 ') + e.ml + 'ml' : (splitText(e) ? '양쪽 직수 (' + splitText(e) + ')' : kindDesc(e.kind, e.side));
+const feedDesc = e => e.type === 'bottle' ? '젖병 ' + (e.milk === 'ebm' ? '모유 ' : '분유 ') + e.ml + 'ml' : (splitText(e) ? '양쪽 직수 (' + splitText(e) + ')' : kindDesc(e.kind, curSide(e)));
 function startSession(kind) {
   const side = kind === 'pump' ? 'B' : (state.side || suggestSide());
   state.side = null;
@@ -283,7 +284,7 @@ function startSession(kind) {
 function endSession(e) {
   const handoff = e.kind === 'nurse' ? '' : state.mode === 'db' ? ' 유축분 처리는 아빠 할 일로 넘겼어요.' : '';
   const night = isNight(Date.now()) && e.kind !== 'pump' ? ' 등 대고, 아기 침대로.' : '';
-  return act(() => Store.patchEvent(e, { end: Date.now(), endBy: state.me || 'mom' }), kindDesc(e.kind, e.side) + ' 기록했어요.' + night + handoff);
+  return act(() => Store.patchEvent(e, { end: Date.now(), endBy: state.me || 'mom' }), (e.kind === 'pump' ? '양쪽 유축' : feedDesc(e)) + ' 기록했어요.' + night + handoff);
 }
 function offerUndo(label, fn) { state.undos = (state.undos || []).concat({ label, fn, until: Date.now() + 30000 }); render(); setTimeout(render, 30100); }
 async function cancelSession(e) {
@@ -469,14 +470,10 @@ function planShortcutBottles() {
 function reconcileBottles() {
   planShortcutBottles();
   reconcileNicu();
-  // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(24시간 이내)을 다시 반영. 값이 절대값이라 여러 번 해도 같음
+  // 기록은 됐는데 팩 차감이 중간에 실패한 젖병(7일 이내)을 다시 반영. 팩마다 이 젖병 표시(used)를 보므로 여러 번 해도 한 번만 빠짐
   for (const e of state.events) if (e.type === 'bottle' && e.plan && e.applied === false && Date.now() - e.t < 7 * DAY && !reconciled.has(e.id)) {
     reconciled.add(e.id); applyBottlePlan(e).then(done => { if (!done) { reconciled.delete(e.id); setTimeout(reconcileBottles, 30000); } }, () => reconciled.delete(e.id));
   }
-}
-function allocBagAny() {
-  const inv = inventory(state.bags, state.events, state.cfg, Date.now());
-  return inv.avail.slice().sort((a, b) => b.pumpedAt - a.pumpedAt)[0] || null;
 }
 
 /* ---------- 시트: 체중·처방·엄마 상태·메모 ---------- */
@@ -599,7 +596,7 @@ function bagSheet(b) {
         if (to === 'used') await Store.addEvent({ type: 'bottle', baby: 'D', ml: b.ml, milk: 'ebm', bagId: b.id, t: now, by: by() });
       }, STATE_KO[to] + '(으)로 바꿨어요')) closeSheet();
     }));
-    root.querySelectorAll('[data-for]').forEach(btn => btn.addEventListener('click', async () => { await act(() => Store.patchBag(b.id, { for: btn.dataset.for }), '바꿨어요'); closeSheet(); }));
+    root.querySelectorAll('[data-for]').forEach(btn => btn.addEventListener('click', async () => { if (await act(() => Store.patchBag(b.id, { for: btn.dataset.for }), '바꿨어요')) closeSheet(); }));
   });
 }
 function sendSheet() {
@@ -765,28 +762,10 @@ function describe(e) {
     case 'break': return '울음 중 잠시 쉬기';
     case 'care': { const it = CARE_ITEMS.find(x => x.id === e.item); return NAME(e.baby) + ' ' + (it ? it.name : e.item) + ' · ' + ({ done: '완료', ok: '정상 확인', nicu: 'NICU에서', undo: '되돌림' }[e.status] || ''); }
     case 'cry': return NAME('D') + ' 울음' + (e.rank && e.rank[0] ? ' · 1순위 ' + e.rank[0].why : '');
-    case 'calm': return '울음 그침 · ' + ({ feed: '먹여서', diaper: '기저귀', sleep: '재워서', hold: '안아줘서', other: '그 밖', unknown: '모름' }[e.how] || e.how);
+    case 'calm': return '울음 그침 · ' + (CALM_KO[e.how] || e.how);
     case 'sleep': return NAME('D') + ' 잠' + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 자는 중');
     case 'order': return NAME('S') + ' 처방 ' + (e.perFeed ? e.perFeed + 'ml×' + e.times + '번 = ' : '') + e.ml + 'ml/일' + (e.note ? ' · ' + e.note : '');
     default: return e.type;
-  }
-}
-function eventIcon(e) {
-  switch (e.type) {
-    case 'session': return KIND[e.kind] ? [KIND[e.kind].ic, KIND[e.kind].tone] : ['clock', ''];
-    case 'bottle': return ['bottle', 'girl'];
-    case 'diaper': return e.stool ? ['poop', 'amber'] : ['pee', 'blue'];
-    case 'weight': return ['scale', e.baby === 'S' ? 'boy' : 'girl'];
-    case 'nicu': return ['cooler', 'boy'];
-    case 'wash': return ['wash', 'blue'];
-    case 'momcheck': return ['heart', 'red'];
-    case 'order': return ['clip', 'boy'];
-    case 'cry': return ['alert', 'amber'];
-    case 'break': return ['heart', 'violet'];
-    case 'care': return ['clip', 'blue'];
-    case 'calm': return ['check', 'green'];
-    case 'sleep': return ['moon', 'violet'];
-    default: return ['note', ''];
   }
 }
 
@@ -916,7 +895,8 @@ function viewTodo() {
   const now = Date.now(), r = running();
   const tk = tasks(state.events, state.bags, state.cfg, now).filter(t => t.kind !== 'running');
   const fl = flags(state.events, state.cfg, now);
-  const nTask = tk.length + extraTasks(now).length;
+  const extra = extraTasks(now);
+  const nTask = tk.length + extra.length;
   let h = title(nTask ? '할 일이 ' + nTask + '개 있어요' : '지금은 할 일이 없어요', nTask ? '위에서부터 처리하면 돼요' : '엄마가 유축을 끝내면 여기에 처리할 일이 생겨요');
   h += syncBanner();
   h += flagsBlock(fl);
@@ -924,7 +904,6 @@ function viewTodo() {
     const long = isNight(now) && r.kind !== 'pump' && now - r.t > 30 * 60e3;
     h += '<div class="alert ' + (long ? 'now' : 'info') + '">' + icon(long ? 'moon' : KIND[r.kind].ic) + '<div><b>엄마가 ' + kindDesc(r.kind, curSide(r)) + ' 중이에요 · <span id="clock">00:00</span></b><span>' + (long ? '30분이 넘었어요. 아기를 안고 잠들지 않았는지 확인하고, 잠들었으면 아기를 자기 침대로.' : '물 한 컵 챙겨 주세요.') + '</span></div></div>';
   }
-  const extra = extraTasks(now);
   if (tk.length || extra.length) h += '<div class="card tight">' + extra.join('') + tk.map(taskRow).join('') + '</div>';
   const lf = lastOf(isDFeed);
   const ld = lastOf(e => e.type === 'diaper');
@@ -943,9 +922,9 @@ function extraTasks(now) {
   if (!(state.cfg.safeSleep && state.cfg.safeSleep.checkedAt)) out.push(row('moon', 'violet', '안전한 잠자리 7가지 확인', '두 아이 따로·등 대고·잠자리엔 아기만 등', '<button class="sbtn" data-safesleep="1">확인하기</button>'));
   // 검진·접종: 할 일엔 한 줄만 (가장 급한 1건 + 나머지 개수). 병원에서 했을 항목은 '퇴원요약지로 확인'
   const due = careDue(state.events, state.cfg, now);
-  const act = due.filter(x => !x.confirm), conf = due.filter(x => x.confirm);
-  if (act.length || conf.length) {
-    const top = act[0];
+  const todo = due.filter(x => !x.confirm), conf = due.filter(x => x.confirm);
+  if (todo.length || conf.length) {
+    const top = todo[0];
     const items = new Set(due.map(x => x.item.id)).size;
     const tt = top ? top.item.name + ' (' + fmtMD(top.item.toT) + '까지)' : '병원에서 한 검사·접종 확인';
     const d = (top && top.overdue ? '기간 지남 · ' : '') + (items > 1 ? '외 ' + (items - 1) + '건 · ' : '') + (conf.length ? '출생 때 한 것은 퇴원요약지로 확인' : NAME('S') + '는 NICU에 물어보기');
@@ -1073,25 +1052,6 @@ function orderChart(now) {
     '<polygon class="stepfill" points="' + area + '"/><polyline class="step" points="' + line + '"/>' +
     '<text x="' + L + '" y="' + (Hh - 4) + '">' + fmtMD(os[0].t) + '</text><text x="' + x(now) + '" y="' + (Hh - 4) + '" text-anchor="end">오늘</text></svg>';
 }
-function weightChart(now) {
-  const cfg = state.cfg, pD = weightPoints(state.events, 'D', cfg), pS = weightPoints(state.events, 'S', cfg);
-  const W = 340, Hh = 170, L = 40, B = 22, T = 10, R = 8;
-  const dolNow = dayOfLife(now, cfg), xmax = Math.max(28, dolNow + 3);
-  const all = pD.concat(pS).map(p => p.g);
-  const lo = Math.floor((Math.min(...all) - 100) / 100) * 100, hi = Math.ceil((Math.max(...all) + 150) / 100) * 100;
-  const x = t => L + (W - L - R) * ((t - birthTime(cfg)) / DAY) / xmax;
-  const y = g => T + (Hh - T - B) * (1 - (g - lo) / (hi - lo));
-  let s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="생후 일수별 체중">';
-  const step = hi - lo <= 600 ? 100 : hi - lo <= 1500 ? 250 : 500;
-  for (let g = Math.ceil(lo / step) * step; g <= hi; g += step) s += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '"/><text x="' + (L - 4) + '" y="' + (y(g) + 3) + '" text-anchor="end">' + n0(g) + '</text>';
-  for (let d = 0; d <= xmax; d += 7) s += '<text x="' + x(birthTime(cfg) + d * DAY) + '" y="' + (Hh - 6) + '" text-anchor="middle">' + d + '일</text>';
-  s += '<line class="birthD" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(cfg.birthG.D) + '" y2="' + y(cfg.birthG.D) + '"/><line class="birthS" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(cfg.birthG.S) + '" y2="' + y(cfg.birthG.S) + '"/>';
-  for (const [pts, c] of [[pS, 'S'], [pD, 'D']]) {
-    s += '<polyline class="l' + c + '" points="' + pts.map(p => x(p.t).toFixed(1) + ',' + y(p.g).toFixed(1)).join(' ') + '"/>';
-    pts.forEach((p, i) => { s += '<circle class="p' + c + '" cx="' + x(p.t).toFixed(1) + '" cy="' + y(p.g).toFixed(1) + '" r="' + (i === pts.length - 1 ? 4.5 : 3) + '"/>'; });
-  }
-  return s + '</svg>';
-}
 
 /* ---------- 화면: 모유 ---------- */
 function viewMilk() {
@@ -1148,7 +1108,6 @@ function pumpChart(ser, target, needMl) {
   return s + '</svg>';
 }
 
-/* ---------- 화면: 기록 ---------- */
 /* ---------- 화면: 기록 (타임라인) ---------- */
 const TL_FILTERS = [['all', '전체'], ['feed', '수유'], ['sleep', '잠'], ['diaper', '기저귀']];
 function tlMatch(e, f) {
@@ -1172,7 +1131,7 @@ function tlItem(e) {
     case 'sleep': return { tone: 'violet', t: e.end ? '잠' : '자는 중', d: e.end ? fmtDur(e.end - e.t) : fmtDur(Date.now() - e.t) + '째' };
     case 'diaper': return { tone: e.stool ? 'amber' : 'blue', t: '기저귀', d: e.wet && e.stool ? '소변 + 대변' : e.wet ? '소변' : '대변' };
     case 'cry': return { tone: 'amber', t: '울음', d: e.rank && e.rank[0] ? '1순위 ' + e.rank[0].why : '' };
-    case 'calm': return { tone: 'green', t: '울음 그침', d: { feed: '먹여서', diaper: '기저귀 갈아서', sleep: '재워서', hold: '안아줘서', other: '그 밖', unknown: '모름' }[e.how] || '' };
+    case 'calm': return { tone: 'green', t: '울음 그침', d: CALM_KO[e.how] || '' };
     default: return { tone: 'gray', t: describe(e), d: '' };
   }
 }
@@ -1223,7 +1182,7 @@ function viewReport() {
     '<td' + (!x.partial && x.dFeeds < th.feedsMin ? ' class="bad"' : '') + '>' + x.dFeeds + '</td><td>' + x.ebmD + '/' + x.formula + '</td>' +
     '<td' + (!x.partial && x.wet < th.wetMin ? ' class="bad"' : '') + '>' + x.wet + '</td><td' + (!x.partial && x.stool < th.stoolMin ? ' class="bad"' : '') + '>' + x.stool + '</td></tr>').join('');
   let h = '<div class="card" id="report"><h2>' + bub('report', 'blue') + '진료용 요약</h2>' +
-    '<p class="small">쌍둥이 2026-11-06 출생, 재태 37+0주 · 생후 ' + dayOfLife(d.now, cfg) + '일</p>' +
+    '<p class="small">쌍둥이 ' + esc(cfg.birthDate) + ' 출생, 재태 37+0주 · 생후 ' + dayOfLife(d.now, cfg) + '일</p>' +
     '<p class="small"><b class="girl-c">' + NAME('D') + '</b> 집, 직수 중심 · ' + w(d.wD, 'D', d.sD) + '</p>' +
     '<p class="small"><b class="boy-c">' + NAME('S') + '</b> NICU (장회전이상 수술 후) · ' + w(d.wS, 'S', d.sS) + '</p>' +
     '<p class="small">' + NAME('S') + ' 경장영양: ' + orderHistory() + ' (수액 병행) · 완전수유 시 약 ' + sN + 'ml/일</p>' +
@@ -1296,7 +1255,7 @@ document.addEventListener('focusout', () => setTimeout(() => { if (state.pending
 document.addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b || b.closest('#panel')) return;
   const d = b.dataset;
-  if (d.tab) { state.tab = d.tab; ls.set('tf.tab2', d.tab); render(); window.scrollTo(0, 0); return; }
+  if (d.tab || d.go) { state.tab = d.tab || d.go; ls.set('tf.tab2', state.tab); render(); window.scrollTo(0, 0); return; }
   if (d.role) { state.me = d.role; ls.set('tf.me', state.me); state.tab = null; render(); return; }
   if (b.id === 'night') { state.night = !state.night; ls.set('tf.night', state.night); render(); return; }
   if (b.id === 'gear') return settingsSheet();
