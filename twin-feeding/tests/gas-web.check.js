@@ -24,7 +24,7 @@ const root = path.join(__dirname, '..');
     window.SpreadsheetApp = { openById: () => ss };
     window.PropertiesService = { getScriptProperties: () => ({ getProperty: k => props[k] ?? null, setProperty: (k,v) => { props[k] = String(v); persist(); } }) };
     window.LockService = { getScriptLock: () => ({ waitLock(){}, releaseLock(){} }) };
-    window.Utilities = { getUuid: () => 'tok00000-0000-0000-0000-000000000000', formatDate: d => d.toISOString().slice(0,16) };
+    window.Utilities = { getUuid: () => 'tok00000-0000-0000-0000-000000000000', formatDate: (d, tz, f) => f === 'H' ? String(d.getHours()) : d.toISOString().slice(0,16) };
     window.ContentService = { createTextOutput: s => ({ text: s }) };
     window.HtmlService = {}; window.ScriptApp = { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }) };
     window.Logger = { log(){} };

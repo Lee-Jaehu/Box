@@ -57,6 +57,21 @@ p { margin: 0; }
 .dol .sync.ok { background: var(--ok); } .dol .sync.warn { background: var(--warn); }
 .iconbtn { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--sub); }
 .iconbtn[aria-pressed="true"] { color: var(--primary); background: var(--primary-weak); }
+.crybtn { min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--warn-weak); color: var(--warn); font-weight: 800; font-size: 14px; margin-right: 4px; }
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+.step:first-child { border-top: 0; }
+.step .no { width: 26px; height: 26px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; font-weight: 800; font-size: 13px; color: var(--sub); }
+.step b { display: block; font-size: 16px; } .step span { font-size: 14px; color: var(--sub); }
+.carecell { min-height: 34px; padding: 0 10px; border-radius: 10px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.carecell.todo { background: var(--warn-weak); color: var(--warn); } .carecell.late { background: var(--crit-weak); color: var(--crit); }
+.carecell.done { background: var(--ok-weak); color: var(--ok); } .carecell.wait { background: var(--fill); color: var(--muted); }
+.carerow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.carerow:first-of-type { border-top: 0; }
+.carerow .nm { font-size: 15px; font-weight: 500; } .carerow .when { font-size: 12px; color: var(--muted); }
+.checkrow { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); width: 100%; text-align: left; }
+.checkrow .ck { margin-top: 2px; }
+
 
 main { padding-block: 4px calc(var(--tabh) + 24px + env(safe-area-inset-bottom, 0px)); }
 main.with-dock { padding-bottom: calc(var(--tabh) + 108px + env(safe-area-inset-bottom, 0px)); }
@@ -277,6 +292,7 @@ details.grp .body { display: flex; flex-direction: column; gap: 12px; padding-bo
 
 <header class="topbar"><div class="wrap">
   <div class="dol"><span class="sync" id="sync"></span><span id="dol"></span></div>
+  <button class="crybtn" id="cryhelp" aria-label="아기가 울 때 순서표">울 때</button>
   <button class="iconbtn" id="night" aria-pressed="false" aria-label="야간 화면"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></button>
   <button class="iconbtn" id="gear" aria-label="설정"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg></button>
 </div></header>

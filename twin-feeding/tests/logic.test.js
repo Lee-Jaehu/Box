@@ -10,7 +10,7 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'app', 'index.html'), 'u
 const src = html.split('/* LOGIC START')[1].split('/* LOGIC END */')[0].replace(/^[^\n]*\n/, '');
 const ctx = {};
 vm.createContext(ctx);
-vm.runInContext(src + '\n;Object.assign(this, {wfaAt, pctLabel, feedGuide, bookRow, feedPattern, HOUR, DAY, DEFAULT_CONFIG, mergeConfig, sonNow, latestOrder, dayKey, dayOfLife, inWindow, stats24, nightGap, dailySeries, weightSlope, need, bagExpiry, inventory, allocate, tasks, flags});', ctx);
+vm.runInContext(src + '\n;Object.assign(this, {careSchedule, careStatus, careDue, cryEpisode, wfaAt, pctLabel, feedGuide, bookRow, feedPattern, HOUR, DAY, DEFAULT_CONFIG, mergeConfig, sonNow, latestOrder, dayKey, dayOfLife, inWindow, stats24, nightGap, dailySeries, weightSlope, need, bagExpiry, inventory, allocate, tasks, flags});', ctx);
 const L = ctx;
 const H = L.HOUR, D = L.DAY;
 
@@ -208,6 +208,35 @@ test('feed pattern: start-to-start median, clusters under 30 min, per-side minut
   assert.strictEqual(Math.round(p.median / 60000), 57);     // 14, 134, 57분 → 중앙값 57
   assert.strictEqual(p.sideAvgMin.toFixed(1), '6.2');       // 8, 8, 8, 5, 2 → 31/5
   assert.strictEqual(JSON.stringify(p.weighed), '[34]');
+});
+
+test('care schedule dates for twins born 11/6 (KDCA/NHIS windows)', () => {
+  const sc = Object.fromEntries(L.careSchedule(cfg).map(i => [i.id, i]));
+  const d = t => { const x = new Date(t); return (x.getMonth() + 1) + '/' + x.getDate(); };
+  assert.strictEqual(d(sc.chk1.fromT) + '~' + d(sc.chk1.toT), '11/20~12/11');   // 생후 14~35일
+  assert.strictEqual(d(sc.bcg.toT), '12/10');                                     // 34일까지
+  assert.strictEqual(d(sc.hepb2.fromT), '12/6');                                  // 1개월
+  assert.strictEqual(d(sc.m2.fromT), '1/6');                                      // 2개월
+  assert.strictEqual(d(sc.chk2.fromT) + '~' + d(sc.chk2.toT), '3/6~5/6');
+});
+test('care due: open items per baby until marked; NICU mark counts as handled', () => {
+  const now = at('2026-11-21T10:00');
+  const due = L.careDue([], cfg, now);
+  assert.ok(due.some(x => x.baby === 'D' && x.item.id === 'chk1' && x.open));
+  assert.ok(!due.some(x => x.item.id === 'm2'));                                  // 1/6은 아직 7일 밖
+  const ev = [{ type: 'care', baby: 'S', item: 'chk1', status: 'nicu', t: now - 1000 }, { type: 'care', baby: 'D', item: 'bcg', status: 'done', t: now - 1000 }];
+  const due2 = L.careDue(ev, cfg, now);
+  assert.ok(!due2.some(x => x.baby === 'S' && x.item.id === 'chk1'));
+  assert.ok(!due2.some(x => x.baby === 'D' && x.item.id === 'bcg'));
+  const ev3 = ev.concat({ type: 'care', baby: 'D', item: 'bcg', status: 'undo', t: now });
+  assert.ok(L.careDue(ev3, cfg, now).some(x => x.baby === 'D' && x.item.id === 'bcg'));
+});
+test('cry episode: continuous cries within 30 min form one episode until a calm', () => {
+  const now = at('2026-11-21T03:30');
+  const ev = [{ type: 'cry', t: now - 25 * 60e3 }, { type: 'cry', t: now - 12 * 60e3 }, { type: 'cry', t: now - 1 * 60e3 }];
+  assert.strictEqual(L.cryEpisode(ev, now).minutes, 25);
+  assert.strictEqual(L.cryEpisode(ev.concat({ type: 'calm', t: now - 30e3 }), now), null);
+  assert.strictEqual(L.cryEpisode([{ type: 'cry', t: now - 50 * 60e3 }], now), null);
 });
 
 console.log('\n' + n + ' tests passed');

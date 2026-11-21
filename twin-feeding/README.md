@@ -9,6 +9,8 @@
 | `app/index.html` | 앱 (빌드 결과, Claude 아티팩트로 게시. 공유 DB로 두 폰 동기화, DB가 없으면 이 기기 저장) |
 | `app/src/` | 앱 소스: `shell.html`(CSS·마크업), `icons.svg.html`(아이콘·아기 얼굴), `logic.js`(계산), `ui.js`(화면). `node twin-feeding/app/build.js`로 `index.html` 생성 |
 | `stage1/` | **1단계 (Claude 없이 쓰기)**: 구글 Apps Script 서버(`gas/Code.gs`), 웹 화면(`gas/Index.html`, 빌드 생성), 기록 옮기기(`gas/Migrate.gs`), 설치·단축어 안내(`README.md`) |
+| `docs/risk-review.md` | 신생아 위험 기준 검토: 위험 분석표, 안전한 잠·울 때·검진·접종 설계, 넣지 않은 기능, 검증 |
+| `docs/safety-sheet.pdf` | 소아과·보건소에 보여줄 안전 문구 확인지 (A4 1장) |
 | `docs/book-vs-twins.md` | 수유 책 가이드·질병관리청 성장도표 중 앱에 넣은 것과 쌍둥이라 바꾼 점 |
 | `docs/handsfree-plan.md` | 화면 안 보고 기록하기 설계: 동작별 조작 경로표, 2단계 조건, 울음 기능, 2주 검증 계획 |
 | `forms/daily-log.pdf` | 오늘부터 쓰는 종이 기록지 (A4 가로 2쪽: 24시간 기록 / 모유 재고·NICU 배송·체중) |

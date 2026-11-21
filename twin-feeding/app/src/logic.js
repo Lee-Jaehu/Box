@@ -316,4 +316,49 @@ function feedPattern(events, now) {
   const weighed = feeds.filter(e => e.preG > 0 && e.postG > 0).map(e => e.postG - e.preG);
   return { count: feeds.length, median, clusters, sideAvgMin: sideN ? sideMs / sideN / 60000 : null, weighed };
 }
+
+/* ---------- 검진·접종 일정 (두 아이 각각) ----------
+ * 출처: 질병관리청 국가예방접종(BCG 생후 4주 이내·34일까지, B형간염 0·1·6개월),
+ * 국민건강보험공단 영유아건강검진(1차 생후 14~35일, 2차 4~6개월), 신생아 선별검사 안내.
+ * 접종 백신 종류·간격의 최종 확인은 예방접종도우미(nip.kdca.go.kr)와 모자보건수첩으로. */
+const CARE_ITEMS = [
+  { id: 'hepb1', kind: '접종', name: 'B형간염 1차', from: { d: 0 }, to: { d: 1 }, hospital: true, note: '출생 시 병원에서. 퇴원요약지에서 날짜 확인' },
+  { id: 'nbs', kind: '검사', name: '선천성대사이상검사 결과', from: { d: 2 }, to: { d: 14 }, hospital: true, note: '생후 48시간~7일에 병원에서 채혈. 결과가 정상인지 확인' },
+  { id: 'hear', kind: '검사', name: '신생아 청각선별검사', from: { d: 0 }, to: { m: 1 }, hospital: true, note: '보통 출산 병원에서 퇴원 전. 생후 1개월 안. 재검이 나오면 3개월 안 정밀검사' },
+  { id: 'chk1', kind: '검진', name: '영유아건강검진 1차', from: { d: 14 }, to: { d: 35 }, note: '키·몸무게·머리둘레 측정. 기간 안에 받으면 본인부담 없음' },
+  { id: 'hepb2', kind: '접종', name: 'B형간염 2차', from: { m: 1 }, to: { m: 1, d: 14 }, note: '생후 1개월. BCG와 같은 날 맞기를 권장' },
+  { id: 'bcg', kind: '접종', name: 'BCG(결핵, 피내용)', from: { d: 0 }, to: { d: 34 }, note: '생후 4주 이내(34일까지). 국가 지원은 피내용' },
+  { id: 'm2', kind: '접종', name: '2개월 접종 (DTaP·폴리오·Hib·폐렴구균·로타 1차)', from: { m: 2 }, to: { m: 2, d: 14 }, note: '백신 종류와 간격은 예방접종도우미에서 확인' },
+  { id: 'chk2', kind: '검진', name: '영유아건강검진 2차', from: { m: 4 }, to: { m: 6 }, note: '생후 4~6개월' },
+];
+function addAge(cfg, a) {
+  const [y, mo, d] = cfg.birthDate.split('-').map(Number);
+  return new Date(y, mo - 1 + (a.m || 0), d + (a.d || 0)).getTime();
+}
+function careSchedule(cfg) { return CARE_ITEMS.map(it => Object.assign({}, it, { fromT: addAge(cfg, it.from), toT: addAge(cfg, it.to) })); }
+// 최근 'care' 기록: {type:'care', baby, item, status:'done'|'nicu'|'ok'|'undo', date}
+function careStatus(events, baby, id) {
+  let best = null;
+  for (const e of events) if (e.type === 'care' && e.baby === baby && e.item === id && (!best || e.t > best.t)) best = e;
+  return best && best.status !== 'undo' ? best : null;
+}
+// 해야 할 일: 기간이 열렸거나 7일 안에 열리는데 아직 안 한 것 (아이별)
+function careDue(events, cfg, now) {
+  const out = [];
+  for (const it of careSchedule(cfg)) for (const baby of ['D', 'S']) {
+    if (careStatus(events, baby, it.id)) continue;
+    if (it.fromT > now + 7 * DAY) continue;
+    out.push({ baby, item: it, overdue: !it.hospital && now > it.toT + DAY, open: now >= it.fromT, confirm: !!it.hospital });
+  }
+  return out.sort((a, b) => a.item.toT - b.item.toT);
+}
+// 울음 묶음: 30분 안에 이어진 울음을 하나로 보고, 그 사이 '그침'이 없으면 계속 우는 중
+function cryEpisode(events, now) {
+  const evs = events.filter(e => (e.type === 'cry' || e.type === 'calm') && e.t <= now && e.t > now - 3 * HOUR).sort((a, b) => b.t - a.t);
+  if (!evs.length || evs[0].type === 'calm') return null;
+  let start = evs[0].t;
+  for (const e of evs) { if (e.type === 'calm') break; if (start - e.t > 30 * 60e3) break; start = e.t; }
+  if (now - evs[0].t > 30 * 60e3) return null;
+  return { start, minutes: Math.round((now - start) / 60000) };
+}
 /* LOGIC END */

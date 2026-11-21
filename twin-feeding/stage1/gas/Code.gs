@@ -227,6 +227,8 @@ function act_(p, now) {
       // 두 폰이 같은 울음을 동시에 감지하면 5분 안의 울음은 하나로
       const prev = recent.filter(e => e.type === 'cry' && e.t > now - 5 * 60e3)[0];
       if (!prev) add({ type: 'cry', baby: 'D', rank });
+      const ep = cryEpisode_(readEvents_().filter(e => !e.deleted && e.t > now - 3 * HOUR), now);
+      if (ep && ep.minutes >= 20) return ep.minutes + '분째 울고 있어요. 먹이기, 기저귀, 체온, 트림을 봤는데도 안 그치면 아기를 등 대고 침대에 눕히고 5분에서 10분 쉬어도 괜찮아요. 흔들지는 마세요. 38도 이상이거나 축 처지면 바로 응급실이에요.';
       return rank.length ? rank.slice(0, 2).map((r, i) => (i ? '다음은 ' : '') + r.say).join('. ') + '.' : '기록했어요.';
     }
     case 'calm': {
@@ -238,9 +240,14 @@ function act_(p, now) {
       const s = recent.filter(e => e.type === 'sleep' && !e.end && e.t > now - 6 * HOUR).sort((a, b) => b.t - a.t)[0];
       if (s) { s.end = now; s.endBy = by; s.updatedAt = now; putEvent_(s); return '깼어요. ' + mins_(now - s.t) + ' 잤어요.'; }
       add({ type: 'sleep', baby: 'D', end: null });
-      return '잠들었어요.';
+      return '잠들었어요. 등 대고, 자기 잠자리에 아기만 있는지 봐 주세요.';
     }
     case 'status': return status_(recent, now, side);
+    case 'break': {
+      add({ type: 'break' });
+      return '아기를 등 대고 침대에 눕혔으면 방을 나와 숨을 고르세요. 10분 뒤에 다시 보러 가요. 도움이 필요하면 배우자를 깨우세요.';
+    }
+    case 'care': return careSay_(all, now);
     case 'undo': {
       const mine = recent.filter(e => e.by === by && (e.updatedAt || e.t) > now - 15 * 60e3).sort((a, b) => (b.updatedAt || b.t) - (a.updatedAt || a.t))[0];
       if (!mine) return '15분 안에 취소할 기록이 없어요.';
@@ -258,8 +265,10 @@ function startSession_(add, kind, side) {
 function endSession_(s, by, now) {
   s.end = now; s.endBy = by; s.endedAt = now; s.updatedAt = now; putEvent_(s);
   const sp = s.kind === 'pump' ? '' : splitText_(s, now);
-  return (s.kind === 'pump' ? '유축' : KIND_KO[s.kind]) + ' 끝. ' + mins_(now - s.t) + '이에요.' + (sp ? ' ' + sp.replace(/왼/g, '왼쪽').replace(/오 /g, '오른쪽 ').replace(/ → /g, ', ') + '분.' : '');
+  const safe = s.kind === 'pump' || !isNight_(now) ? '' : (now - s.t > 30 * 60e3 ? ' 오래 안고 있었어요. 아기는 등 대고 자기 침대로.' : ' 등 대고, 아기 침대로.');
+  return (s.kind === 'pump' ? '유축' : KIND_KO[s.kind]) + ' 끝. ' + mins_(now - s.t) + '이에요.' + (sp ? ' ' + sp.replace(/왼/g, '왼쪽').replace(/오 /g, '오른쪽 ').replace(/ → /g, ', ') + '분.' : '') + safe;
 }
+function isNight_(t) { const h = Number(Utilities.formatDate(new Date(t), TZ, 'H')); return h >= 21 || h < 7; }
 function sideParam_(v) { v = String(v || ''); return /^(L|왼)/i.test(v) ? 'L' : /^(R|오)/i.test(v) ? 'R' : null; }
 function kindParam_(v) { v = String(v || ''); return v === 'nurse' || v === 'nurse+pump' || v === 'pump' ? v : /직수.*유축|both/.test(v) ? 'nurse+pump' : /유축/.test(v) ? 'pump' : /직수/.test(v) ? 'nurse' : null; }
 function calmParam_(v) { v = String(v || ''); return /먹|수유|젖/.test(v) ? 'feed' : /기저귀/.test(v) ? 'diaper' : /재|잠/.test(v) ? 'sleep' : /안/.test(v) ? 'hold' : v ? 'other' : 'unknown'; }
@@ -299,6 +308,35 @@ function status_(evs, now, side) {
   return (open ? (open.kind === 'pump' ? '유축' : SIDE_KO[curSide_(open)] + ' ' + KIND_KO[open.kind]) + ' ' + mins_(now - open.t) + '째예요. ' : '') +
     '마지막 수유 ' + (lf ? mins_(now - lf) + ' 전' : '기록 없음') + ', 다음은 ' + SIDE_KO[side] + '. ' +
     '기저귀 ' + (ld ? mins_(now - ld) + ' 전' : '기록 없음') + '.';
+}
+
+/* ---------- 울음 묶음 (앱 logic.js의 cryEpisode와 같은 규칙) ---------- */
+function cryEpisode_(events, now) {
+  const evs = events.filter(e => (e.type === 'cry' || e.type === 'calm') && e.t <= now).sort((a, b) => b.t - a.t);
+  if (!evs.length || evs[0].type === 'calm' || now - evs[0].t > 30 * 60e3) return null;
+  let start = evs[0].t;
+  for (const e of evs) { if (e.type === 'calm') break; if (start - e.t > 30 * 60e3) break; start = e.t; }
+  return { start, minutes: Math.round((now - start) / 60000) };
+}
+
+/* ---------- 검진·접종 일정 말하기 (앱 logic.js의 CARE_ITEMS와 같은 표) ---------- */
+const CARE_ = [
+  ['chk1', '영유아건강검진 1차', { d: 14 }, { d: 35 }], ['bcg', 'BCG 결핵 접종', { d: 0 }, { d: 34 }], ['hepb2', 'B형간염 2차', { m: 1 }, { m: 1, d: 14 }],
+  ['hear', '청각선별검사', { d: 0 }, { m: 1 }], ['m2', '2개월 접종', { m: 2 }, { m: 2, d: 14 }], ['chk2', '영유아건강검진 2차', { m: 4 }, { m: 6 }],
+];
+function careSay_(evs, now) {
+  const cfg = parse_((ss_().getSheetByName('config') || { getLastRow: () => 0 }).getLastRow() > 1 ? ss_().getSheetByName('config').getRange(2, 2).getValue() : '') || {};
+  const bd = String(cfg.birthDate || '2026-11-06').split('-').map(Number);
+  const at = a => new Date(bd[0], bd[1] - 1 + (a.m || 0), bd[2] + (a.d || 0)).getTime();
+  const md = t => { const d = new Date(t); return (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; };
+  const done = (baby, id) => { let b = null; for (const e of evs) if (e.type === 'care' && e.baby === baby && e.item === id && (!b || e.t > b.t)) b = e; return b && b.status !== 'undo'; };
+  const due = [];
+  for (const [id, name, f, t] of CARE_) {
+    const babies = ['D', 'S'].filter(b => !done(b, id));
+    if (babies.length && at(f) <= now + 7 * DAY) due.push({ name, to: at(t), babies });
+  }
+  if (!due.length) return '일주일 안에 할 검진이나 접종이 없어요.';
+  return due.sort((a, b) => a.to - b.to).slice(0, 3).map(x => x.name + ' ' + md(x.to) + '까지' + (x.babies.length === 1 ? (x.babies[0] === 'D' ? ', 딸' : ', 아들') : '')).join('. ') + '.';
 }
 
 /* ---------- 울음 원인 순위 (분류 모델 아님: 내 기록으로 보는 가능성) ----------

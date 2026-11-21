@@ -57,6 +57,21 @@ p { margin: 0; }
 .dol .sync.ok { background: var(--ok); } .dol .sync.warn { background: var(--warn); }
 .iconbtn { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--sub); }
 .iconbtn[aria-pressed="true"] { color: var(--primary); background: var(--primary-weak); }
+.crybtn { min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--warn-weak); color: var(--warn); font-weight: 800; font-size: 14px; margin-right: 4px; }
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+.step:first-child { border-top: 0; }
+.step .no { width: 26px; height: 26px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; font-weight: 800; font-size: 13px; color: var(--sub); }
+.step b { display: block; font-size: 16px; } .step span { font-size: 14px; color: var(--sub); }
+.carecell { min-height: 34px; padding: 0 10px; border-radius: 10px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.carecell.todo { background: var(--warn-weak); color: var(--warn); } .carecell.late { background: var(--crit-weak); color: var(--crit); }
+.carecell.done { background: var(--ok-weak); color: var(--ok); } .carecell.wait { background: var(--fill); color: var(--muted); }
+.carerow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.carerow:first-of-type { border-top: 0; }
+.carerow .nm { font-size: 15px; font-weight: 500; } .carerow .when { font-size: 12px; color: var(--muted); }
+.checkrow { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); width: 100%; text-align: left; }
+.checkrow .ck { margin-top: 2px; }
+
 
 main { padding-block: 4px calc(var(--tabh) + 24px + env(safe-area-inset-bottom, 0px)); }
 main.with-dock { padding-bottom: calc(var(--tabh) + 108px + env(safe-area-inset-bottom, 0px)); }
@@ -312,6 +327,7 @@ details.grp .body { display: flex; flex-direction: column; gap: 12px; padding-bo
 
 <header class="topbar"><div class="wrap">
   <div class="dol"><span class="sync" id="sync"></span><span id="dol"></span></div>
+  <button class="crybtn" id="cryhelp" aria-label="아기가 울 때 순서표">울 때</button>
   <button class="iconbtn" id="night" aria-pressed="false" aria-label="야간 화면"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></button>
   <button class="iconbtn" id="gear" aria-label="설정"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg></button>
 </div></header>
@@ -642,6 +658,51 @@ function feedPattern(events, now) {
   const weighed = feeds.filter(e => e.preG > 0 && e.postG > 0).map(e => e.postG - e.preG);
   return { count: feeds.length, median, clusters, sideAvgMin: sideN ? sideMs / sideN / 60000 : null, weighed };
 }
+
+/* ---------- 검진·접종 일정 (두 아이 각각) ----------
+ * 출처: 질병관리청 국가예방접종(BCG 생후 4주 이내·34일까지, B형간염 0·1·6개월),
+ * 국민건강보험공단 영유아건강검진(1차 생후 14~35일, 2차 4~6개월), 신생아 선별검사 안내.
+ * 접종 백신 종류·간격의 최종 확인은 예방접종도우미(nip.kdca.go.kr)와 모자보건수첩으로. */
+const CARE_ITEMS = [
+  { id: 'hepb1', kind: '접종', name: 'B형간염 1차', from: { d: 0 }, to: { d: 1 }, hospital: true, note: '출생 시 병원에서. 퇴원요약지에서 날짜 확인' },
+  { id: 'nbs', kind: '검사', name: '선천성대사이상검사 결과', from: { d: 2 }, to: { d: 14 }, hospital: true, note: '생후 48시간~7일에 병원에서 채혈. 결과가 정상인지 확인' },
+  { id: 'hear', kind: '검사', name: '신생아 청각선별검사', from: { d: 0 }, to: { m: 1 }, hospital: true, note: '보통 출산 병원에서 퇴원 전. 생후 1개월 안. 재검이 나오면 3개월 안 정밀검사' },
+  { id: 'chk1', kind: '검진', name: '영유아건강검진 1차', from: { d: 14 }, to: { d: 35 }, note: '키·몸무게·머리둘레 측정. 기간 안에 받으면 본인부담 없음' },
+  { id: 'hepb2', kind: '접종', name: 'B형간염 2차', from: { m: 1 }, to: { m: 1, d: 14 }, note: '생후 1개월. BCG와 같은 날 맞기를 권장' },
+  { id: 'bcg', kind: '접종', name: 'BCG(결핵, 피내용)', from: { d: 0 }, to: { d: 34 }, note: '생후 4주 이내(34일까지). 국가 지원은 피내용' },
+  { id: 'm2', kind: '접종', name: '2개월 접종 (DTaP·폴리오·Hib·폐렴구균·로타 1차)', from: { m: 2 }, to: { m: 2, d: 14 }, note: '백신 종류와 간격은 예방접종도우미에서 확인' },
+  { id: 'chk2', kind: '검진', name: '영유아건강검진 2차', from: { m: 4 }, to: { m: 6 }, note: '생후 4~6개월' },
+];
+function addAge(cfg, a) {
+  const [y, mo, d] = cfg.birthDate.split('-').map(Number);
+  return new Date(y, mo - 1 + (a.m || 0), d + (a.d || 0)).getTime();
+}
+function careSchedule(cfg) { return CARE_ITEMS.map(it => Object.assign({}, it, { fromT: addAge(cfg, it.from), toT: addAge(cfg, it.to) })); }
+// 최근 'care' 기록: {type:'care', baby, item, status:'done'|'nicu'|'ok'|'undo', date}
+function careStatus(events, baby, id) {
+  let best = null;
+  for (const e of events) if (e.type === 'care' && e.baby === baby && e.item === id && (!best || e.t > best.t)) best = e;
+  return best && best.status !== 'undo' ? best : null;
+}
+// 해야 할 일: 기간이 열렸거나 7일 안에 열리는데 아직 안 한 것 (아이별)
+function careDue(events, cfg, now) {
+  const out = [];
+  for (const it of careSchedule(cfg)) for (const baby of ['D', 'S']) {
+    if (careStatus(events, baby, it.id)) continue;
+    if (it.fromT > now + 7 * DAY) continue;
+    out.push({ baby, item: it, overdue: !it.hospital && now > it.toT + DAY, open: now >= it.fromT, confirm: !!it.hospital });
+  }
+  return out.sort((a, b) => a.item.toT - b.item.toT);
+}
+// 울음 묶음: 30분 안에 이어진 울음을 하나로 보고, 그 사이 '그침'이 없으면 계속 우는 중
+function cryEpisode(events, now) {
+  const evs = events.filter(e => (e.type === 'cry' || e.type === 'calm') && e.t <= now && e.t > now - 3 * HOUR).sort((a, b) => b.t - a.t);
+  if (!evs.length || evs[0].type === 'calm') return null;
+  let start = evs[0].t;
+  for (const e of evs) { if (e.type === 'calm') break; if (start - e.t > 30 * 60e3) break; start = e.t; }
+  if (now - evs[0].t > 30 * 60e3) return null;
+  return { start, minutes: Math.round((now - start) / 60000) };
+}
 /* LOGIC END */
 </script>
 <script>
@@ -661,6 +722,7 @@ const fmtMD = t => { const d = new Date(t); return (d.getMonth() + 1) + '/' + d.
 const fmtDur = ms => { if (ms === null || ms === undefined) return '—'; const m = Math.round(ms / 60000); return m < 60 ? m + '분' : Math.floor(m / 60) + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : ''); };
 const fmtAgo = t => { if (!t) return '기록 없음'; const ms = Date.now() - t; return ms < 90e3 ? '방금' : fmtDur(ms) + ' 전'; };
 const fmtAgoShort = t => { if (!t) return '—'; const m = Math.round((Date.now() - t) / 60000); return m < 2 ? '방금' : m < 60 ? m + '분 전' : Math.floor(m / 60) + '시간 전'; };
+const isNight = t => { const h = new Date(t).getHours(); return h >= 21 || h < 7; };
 const n0 = v => Number(v || 0).toLocaleString('ko-KR');
 const bagCode = t => { const d = new Date(t); return pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()); };
 const NAME = b => b === 'D' ? state.cfg.names.D : b === 'S' ? state.cfg.names.S : '';
@@ -928,7 +990,8 @@ function startSession(kind) {
 }
 function endSession(e) {
   const handoff = e.kind === 'nurse' ? '' : state.mode === 'db' ? ' 유축분 처리는 아빠 할 일로 넘겼어요.' : '';
-  return act(() => Store.patchEvent(e, { end: Date.now(), endBy: state.me || 'mom' }), kindDesc(e.kind, e.side) + ' 기록했어요.' + handoff);
+  const night = isNight(Date.now()) && e.kind !== 'pump' ? ' 등 대고, 아기 침대로.' : '';
+  return act(() => Store.patchEvent(e, { end: Date.now(), endBy: state.me || 'mom' }), kindDesc(e.kind, e.side) + ' 기록했어요.' + night + handoff);
 }
 function offerUndo(label, fn) { state.undos = (state.undos || []).concat({ label, fn, until: Date.now() + 30000 }); render(); setTimeout(render, 30100); }
 async function cancelSession(e) {
@@ -1131,13 +1194,18 @@ function weightSheet(baby) {
   openSheet(sheetHead(NAME(baby) + ' 체중을 적어 주세요', '같은 체중계로, 수유 전·기저귀 벗고 재면 추세가 정확해요') +
     '<label class="f">체중 (g)<input id="g" inputmode="numeric" pattern="[0-9]*" placeholder="예: 2850"></label>' +
     '<p class="lab">어디서 쟀나요?</p>' + chips('src', [['home', '집'], ['nicu', 'NICU'], ['clinic', '소아과']], src) +
+    '<div class="grid2"><label class="f">키 cm (검진 때만)<input id="len" inputmode="decimal" placeholder="선택"></label><label class="f">머리둘레 cm (검진 때만)<input id="hc" inputmode="decimal" placeholder="선택"></label></div>' +
     '<button class="btn" id="save">기록하기</button>', root => {
     bindChips(root, 'src', v => { src = v; });
     root.querySelector('#g').focus();
     root.querySelector('#save').addEventListener('click', async () => {
       const g = Number(root.querySelector('#g').value);
       if (!(g > 1000 && g < 10000)) { toast('그램 단위로 적어 주세요 (예: 2850)', true); return; }
-      if (await act(() => Store.addEvent({ id: wid, type: 'weight', baby, g, src, t: Date.now(), by: by() }), NAME(baby) + ' ' + n0(g) + 'g을 기록했어요')) closeSheet();
+      const len = Number(root.querySelector('#len').value), hc = Number(root.querySelector('#hc').value);
+      const ev = { id: wid, type: 'weight', baby, g, src, t: Date.now(), by: by() };
+      if (len > 30 && len < 90) ev.lengthCm = len;
+      if (hc > 25 && hc < 50) ev.hcCm = hc;
+      if (await act(() => Store.addEvent(ev), NAME(baby) + ' ' + n0(g) + 'g을 기록했어요')) closeSheet();
     });
   });
 }
@@ -1300,6 +1368,98 @@ function testWeighSheet(e) {
     });
   });
 }
+/* ---------- 아기가 울 때: 확인 순서 + 잠시 쉬기 + 연락 기준 ----------
+ * 출처: CDC 흔들린 아이(학대성 머리 손상) 예방 안내(안전한 곳에 눕히고 5~10분마다 확인),
+ * PURPLE 울음 교육(생후 2주쯤 늘어 2개월 무렵 가장 많음), AAP 발열 영아 지침(3개월 미만 38.0℃),
+ * 기존 위험 신호 기준표. 앱은 순서만 보여주고 판단은 부모·의료진이 한다. */
+function crySheet() {
+  const now = Date.now();
+  const lf = lastOf(isDFeed), ld = lastOf(e => e.type === 'diaper');
+  const sl = lastOf(e => e.type === 'sleep' && e.end);
+  const ep = cryEpisode(state.events, now);
+  const step = (no, t, d) => '<div class="step"><span class="no">' + no + '</span><div><b>' + t + '</b><span>' + d + '</span></div></div>';
+  const calm = [['feed', '먹여서'], ['diaper', '기저귀'], ['sleep', '재워서'], ['hold', '안아줘서'], ['unknown', '모름']];
+  openSheet(sheetHead('아기가 울 때', (ep ? ep.minutes + '분째 울고 있어요 · ' : '') + '위에서부터 하나씩 확인해요') +
+    '<div class="steps">' +
+    step(1, '배고픈가요?', '입을 찾거나 손을 빨면 먹이기. 마지막 수유 ' + (lf ? fmtAgo(lf.end || lf.t) : '기록 없음')) +
+    step(2, '기저귀', '마지막 교체 ' + (ld ? fmtAgo(ld.t) : '기록 없음')) +
+    step(3, '체온 재기', '<b style="display:inline;color:var(--crit)">38.0℃ 이상이면 바로 응급실</b> (생후 3개월 미만)') +
+    step(4, '덥거나 춥지 않나요?', '목 뒤를 만져 땀이 나면 한 겹 벗기기. 모자·두꺼운 이불은 빼기') +
+    step(5, '트림', '세워 안고 등을 쓸어 주기') +
+    step(6, '졸린가요?', (sl ? '깬 지 ' + fmtAgo(sl.end).replace(' 전', '') + '. ' : '') + '어둡고 조용하게, 안아서 천천히 토닥이기. 흔들지 않기') +
+    '</div>' +
+    '<div class="alert info">' + icon('heart') + '<div><b>그래도 안 그치고 내가 지치면</b><span>아기를 등 대고 아기 침대에 눕히고 방을 나와 5~10분 쉬어도 괜찮아요. 우는 건 아기를 다치게 하지 않지만, <b style="display:inline">흔들면 크게 다칠 수 있어요.</b> 쉬는 동안 배우자를 깨우거나 누군가에게 전화하세요.</span></div></div>' +
+    '<button class="btn weak" id="brk">' + icon('clock') + '10분 쉬기 시작</button><p id="brkt" class="small" style="text-align:center"></p>' +
+    '<div class="alert now">' + icon('alert') + '<div><b>이럴 땐 바로 119·응급실</b><span>38.0℃ 이상 · 축 처지고 깨워도 잘 안 깸 · 숨쉬기 힘들거나 입술이 파래짐 · 초록색 구토 · 날카로운 울음이 계속되고 먹지 않음</span></div></div>' +
+    '<p class="lab">그쳤어요</p><div class="chips" data-chips="calm">' + calm.map(([v, l]) => '<button type="button" data-v="' + v + '">' + l + '</button>').join('') + '</div>' +
+    '<p class="xs muted">울음은 생후 2주쯤부터 늘어 2개월 무렵 가장 많고 3~5개월에 줄어요. 두 아이가 같이 울면 한 명을 먼저 안전하게 눕히고 한 명씩 달래요.</p>', root => {
+    root.querySelectorAll('[data-chips="calm"] button').forEach(b => b.addEventListener('click', async () => {
+      if (await act(() => Store.addEvent({ type: 'calm', baby: 'D', how: b.dataset.v, t: Date.now(), by: by() }), '그친 걸 기록했어요')) closeSheet();
+    }));
+    root.querySelector('#brk').addEventListener('click', async () => {
+      await act(() => Store.addEvent({ type: 'break', t: Date.now(), by: by() }));
+      const end = Date.now() + 10 * 60e3, out = root.querySelector('#brkt');
+      const iv = setInterval(() => {
+        if (!document.body.contains(out)) return clearInterval(iv);
+        const left = Math.max(0, end - Date.now());
+        out.textContent = left ? '쉬는 중 ' + pad(Math.floor(left / 60000)) + ':' + pad(Math.floor(left / 1000) % 60) + ' · 아기는 안전한 침대에 있어요' : '10분 지났어요. 아기를 보러 가요.';
+        if (!left) { clearInterval(iv); try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch {} }
+      }, 1000);
+    });
+  });
+}
+
+/* ---------- 안전한 잠자리 점검 (AAP 2022) ---------- */
+const SAFE_SLEEP = [
+  ['sep', '두 아이는 각자 자기 잠자리에', '쌍둥이도 한 침대에 같이 눕히지 않아요'],
+  ['back', '잘 때는 항상 등을 대고', '아들도 집에 오면 등으로 (NICU에서 엎드려 있었더라도)'],
+  ['flat', '단단하고 평평한 매트', '기울어진 바운서·흔들침대에서 재우지 않기'],
+  ['bare', '잠자리엔 아기만', '베개·이불·범퍼·인형·수유쿠션 없이'],
+  ['room', '부모와 같은 방, 다른 잠자리', '어른 침대에서 같이 자지 않기'],
+  ['sofa', '소파·안락의자에서 졸리면 먼저 아기를 눕히기', '안고 잠들었다면 깨자마자 아기 자리로'],
+  ['warm', '덥지 않게', '모자 벗기고, 이불 대신 얇은 겉싸개'],
+];
+function safeSleepSheet() {
+  const ss = state.cfg.safeSleep || {}, items = Object.assign({}, ss.items || {});
+  openSheet(sheetHead('안전한 잠자리 점검', '미국소아과학회 2022 권고. 지금 집 잠자리를 보면서 하나씩 확인해요') +
+    '<div>' + SAFE_SLEEP.map(([k, t, d]) => '<button class="checkrow pick" data-ss="' + k + '" aria-pressed="' + !!items[k] + '"><span class="ck">' + icon('check') + '</span><span class="tx"><span class="t" style="font-weight:700">' + t + '</span><br><span class="xs muted">' + d + '</span></span></button>').join('') + '</div>' +
+    '<button class="btn" id="save">확인했어요</button>', root => {
+    root.querySelectorAll('[data-ss]').forEach(b => b.addEventListener('click', () => { const k = b.dataset.ss; items[k] = !items[k]; b.setAttribute('aria-pressed', items[k]); }));
+    root.querySelector('#save').addEventListener('click', async () => {
+      const all = SAFE_SLEEP.every(([k]) => items[k]);
+      const cfg = Object.assign({}, state.cfgRaw || {}, { safeSleep: { items, checkedAt: all ? Date.now() : null } });
+      if (await act(() => Store.setConfig(cfg), all ? '잠자리 점검을 마쳤어요' : '저장했어요. 안 된 항목이 남아 있어요')) closeSheet();
+    });
+  });
+}
+
+/* ---------- 검진·접종 기록 ---------- */
+function careSheet(baby, id) {
+  const it = careSchedule(state.cfg).find(x => x.id === id), cur = careStatus(state.events, baby, id);
+  const opts = [['done', it.kind === '검사' ? '검사 받았어요' : it.kind === '검진' ? '검진 받았어요' : '맞았어요', 'check', 'green']];
+  if (it.kind === '검사') opts.push(['ok', '결과 정상 확인했어요', 'check', 'green']);
+  if (baby === 'S') opts.push(['nicu', 'NICU에서 했어요', 'clip', 'boy']);
+  if (cur) opts.push(['undo', '아직 안 했어요로 되돌리기', 'swap', '']);
+  openSheet(sheetHead(NAME(baby) + ' · ' + it.name, fmtMD(it.fromT) + ' ~ ' + fmtMD(it.toT) + ' · ' + it.note) +
+    '<div>' + opts.map(([v, l, ic, tone]) => '<button class="li" data-care="' + v + '">' + bub(ic, tone) + '<span class="tx"><span class="t">' + l + '</span></span>' + icon('chev', 'chev') + '</button>').join('') + '</div>' +
+    '<p class="xs muted">날짜는 질병관리청 예방접종도우미·모자보건수첩과 한 번 맞춰 보세요.</p>', root => {
+    root.querySelectorAll('[data-care]').forEach(b => b.addEventListener('click', async () => {
+      if (await act(() => Store.addEvent({ type: 'care', baby, item: id, status: b.dataset.care, t: Date.now(), by: by() }), '기록했어요')) closeSheet();
+    }));
+  });
+}
+function careCard(now) {
+  const sc = careSchedule(state.cfg).filter(it => it.fromT <= now + 45 * DAY);
+  const cell = (baby, it) => {
+    const st = careStatus(state.events, baby, it.id);
+    const cls = st ? 'done' : it.hospital && now >= it.fromT ? 'todo' : now > it.toT + DAY ? 'late' : now >= it.fromT ? 'todo' : 'wait';
+    const txt = st ? (st.status === 'nicu' ? 'NICU' : st.status === 'ok' ? '정상' : '완료') : it.hospital && now >= it.fromT ? '확인' : now > it.toT + DAY ? '지남' : now >= it.fromT ? '할 때' : fmtMD(it.fromT);
+    return '<button class="carecell ' + cls + '" data-carebaby="' + baby + '" data-careitem="' + it.id + '">' + NAME(baby) + ' ' + txt + '</button>';
+  };
+  return '<div class="card"><h2>' + bub('clip', 'blue') + '검진·접종</h2>' +
+    sc.map(it => '<div class="carerow"><div><div class="nm">' + it.name + '</div><div class="when">' + fmtMD(it.fromT) + ' ~ ' + fmtMD(it.toT) + '</div></div>' + cell('D', it) + cell('S', it) + '</div>').join('') +
+    '<p class="xs muted">' + NAME('S') + '는 NICU에서 맞은 접종·검사를 \'NICU\'로 표시해요. 날짜는 예방접종도우미·모자보건수첩과 맞춰 보세요.</p></div>';
+}
 function describe(e) {
   switch (e.type) {
     case 'session': return NAME('D') && e.kind !== 'pump' ? NAME('D') + ' ' + (splitText(e) ? '양쪽 직수' + (e.kind === 'nurse+pump' ? '+유축' : '') + ' (' + splitText(e) + ')' : kindDesc(e.kind, curSide(e))) + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 중') + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '') : '양쪽 유축' + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 중') + (e.processed ? ' · ' + sessionMl(e) + 'ml' : '');
@@ -1310,6 +1470,8 @@ function describe(e) {
     case 'wash': return '유축 부품 세척';
     case 'momcheck': return '엄마 상태' + (e.temp ? ' ' + e.temp + '°C' : '') + (e.pain !== undefined ? ' · 통증 ' + e.pain : '') + (e.epds !== undefined ? ' · EPDS ' + e.epds : '');
     case 'note': return e.text;
+    case 'break': return '울음 중 잠시 쉬기';
+    case 'care': { const it = CARE_ITEMS.find(x => x.id === e.item); return NAME(e.baby) + ' ' + (it ? it.name : e.item) + ' · ' + ({ done: '완료', ok: '정상 확인', nicu: 'NICU에서', undo: '되돌림' }[e.status] || ''); }
     case 'cry': return NAME('D') + ' 울음' + (e.rank && e.rank[0] ? ' · 1순위 ' + e.rank[0].why : '');
     case 'calm': return '울음 그침 · ' + ({ feed: '먹여서', diaper: '기저귀', sleep: '재워서', hold: '안아줘서', other: '그 밖', unknown: '모름' }[e.how] || e.how);
     case 'sleep': return NAME('D') + ' 잠' + (e.end ? ' ' + fmtDur(e.end - e.t) : ' 자는 중');
@@ -1328,6 +1490,8 @@ function eventIcon(e) {
     case 'momcheck': return ['heart', 'red'];
     case 'order': return ['clip', 'boy'];
     case 'cry': return ['alert', 'amber'];
+    case 'break': return ['heart', 'violet'];
+    case 'care': return ['clip', 'blue'];
     case 'calm': return ['check', 'green'];
     case 'sleep': return ['moon', 'violet'];
     default: return ['note', ''];
@@ -1363,6 +1527,7 @@ function settingsSheet() {
       f('removalsMin', '젖 비우기 목표 (회)', c.th.removalsMin, 'numeric') + f('maxGapH', '가장 긴 공백 목표 (시간)', c.th.maxGapH, 'decimal') +
       f('epdsTh', 'K-EPDS 기준 점수', c.th.epds, 'numeric') + '</div>' +
       '<div class="li"><span class="tx"><span class="t">소아과 확인 완료</span></span><button class="switch" id="confirmed" role="switch" aria-checked="' + !!c.th.confirmed + '" aria-label="소아과 확인 완료"></button></div>') +
+    '<button class="li" data-safesleep="1">' + bub('moon', 'violet') + '<span class="tx"><span class="t">안전한 잠자리 점검</span><span class="d">' + (c.safeSleep && c.safeSleep.checkedAt ? fmtMD(c.safeSleep.checkedAt) + ' 확인함' : '아직 안 함') + '</span></span>' + icon('chev', 'chev') + '</button>' +
     grp('babies', 'girl', '아기 정보',
       '<div class="grid2">' + f('nameD', '첫째 이름', c.names.D) + f('nameS', '둘째 이름', c.names.S) + f('birthD', '첫째 출생체중 g', c.birthG.D, 'numeric') + f('birthS', '둘째 출생체중 g', c.birthG.S, 'numeric') + '</div>') +
     '</div>' +
@@ -1373,6 +1538,7 @@ function settingsSheet() {
     root.querySelectorAll('[data-role]').forEach(b => b.addEventListener('click', () => { state.me = b.dataset.role; ls.set('tf.me', state.me); state.tab = null; validTab(); closeSheet(); }));
     const sw = root.querySelector('#confirmed'); sw.addEventListener('click', () => sw.setAttribute('aria-checked', sw.getAttribute('aria-checked') !== 'true'));
     root.querySelectorAll('[data-savecfg]').forEach(b => b.addEventListener('click', () => saveSettings(root)));
+    const ssb = root.querySelector('[data-safesleep]'); if (ssb) ssb.addEventListener('click', () => safeSleepSheet());
   });
 }
 function saveSettings(root) {
@@ -1380,7 +1546,7 @@ function saveSettings(root) {
   const n = (id, d) => { const x = Number(v(id)); return v(id) !== '' && Number.isFinite(x) ? x : d; };
   const hm = (id, d) => /^\d{1,2}:\d{2}$/.test(v(id)) ? v(id).padStart(5, '0') : d;
   const c = state.cfg;
-  const cfg = {
+  const cfg = Object.assign({}, state.cfgRaw || {}, {
     birthDate: c.birthDate, names: { D: v('nameD') || c.names.D, S: v('nameS') || c.names.S },
     birthG: { D: n('birthD', c.birthG.D), S: n('birthS', c.birthG.S) },
     sonOrderMl: c.sonOrderMl || 0, mlPerKg: n('mlPerKg', c.mlPerKg), reserveDays: n('reserveDays', c.reserveDays), pumpBuffer: n('pumpBuffer', c.pumpBuffer),
@@ -1389,7 +1555,7 @@ function saveSettings(root) {
     momSleep: { start: hm('momStart', c.momSleep.start), end: hm('momEnd', c.momSleep.end) }, dadSleep: { start: hm('dadStart', c.dadSleep.start), end: hm('dadEnd', c.dadSleep.end) },
     spareSets: n('spareSets', c.spareSets),
     th: { confirmed: root.querySelector('#confirmed').getAttribute('aria-checked') === 'true', removalsMin: n('removalsMin', c.th.removalsMin), maxGapH: n('maxGapH', c.th.maxGapH), wetMin: n('wetMin', c.th.wetMin), stoolMin: n('stoolMin', c.th.stoolMin), feedsMin: n('feedsMin', c.th.feedsMin), feedGapH: n('feedGapH', c.th.feedGapH), momTemp: n('momTemp', c.th.momTemp), epds: n('epdsTh', c.th.epds), gainMin: n('gainMin', c.th.gainMin) },
-  };
+  });
   act(() => Store.setConfig(cfg), '설정을 저장했어요');
 }
 
@@ -1429,6 +1595,7 @@ function viewFeed() {
     h += title(kindDesc(r.kind, curSide(r)) + ' 중이에요', fmtT(r.t) + '에 시작했어요' + (splitText(r) ? ' · ' + splitText(r) : ''));
     h += syncBanner() + '<div class="spacer"></div>';
     h += '<div class="card">' + '<div class="li" style="min-height:auto">' + bub(KIND[r.kind].ic, KIND[r.kind].tone) + '<span class="tx"><span class="t">' + KIND[r.kind].label + '</span><span class="d">' + kindDesc(r.kind, curSide(r)) + '</span></span></div>' +
+      (isNight(now) && r.kind !== 'pump' && now - r.t > 25 * 60e3 ? '<div class="alert info">' + icon('moon') + '<div><b>졸리면 먼저 아기를 아기 침대에</b><span>소파·의자에서 아기를 안고 잠드는 게 가장 위험해요. 잠들었다 깨면 바로 아기 자리로.</span></div></div>' : '') +
       '<div class="timer" id="clock">00:00</div>' +
       (r.kind !== 'pump' ? '<button class="btn weak" data-switch="' + r.id + '">' + icon('swap') + SIDE_KO[OTHER[curSide(r)]] + '으로 바꾸기</button>' : '') +
       '<button class="btn" data-end="' + r.id + '">끝내기</button>' +
@@ -1455,11 +1622,16 @@ function viewTodo() {
   const now = Date.now(), r = running();
   const tk = tasks(state.events, state.bags, state.cfg, now).filter(t => t.kind !== 'running');
   const fl = flags(state.events, state.cfg, now);
-  let h = title(tk.length ? '할 일이 ' + tk.length + '개 있어요' : '지금은 할 일이 없어요', tk.length ? '위에서부터 처리하면 돼요' : '엄마가 유축을 끝내면 여기에 처리할 일이 생겨요');
+  const nTask = tk.length + extraTasks(now).length;
+  let h = title(nTask ? '할 일이 ' + nTask + '개 있어요' : '지금은 할 일이 없어요', nTask ? '위에서부터 처리하면 돼요' : '엄마가 유축을 끝내면 여기에 처리할 일이 생겨요');
   h += syncBanner();
   h += flagsBlock(fl);
-  if (r) h += '<div class="alert info">' + icon(KIND[r.kind].ic) + '<div><b>엄마가 ' + kindDesc(r.kind, curSide(r)) + ' 중이에요 · <span id="clock">00:00</span></b><span>물 한 컵 챙겨 주세요.</span></div></div>';
-  if (tk.length) h += '<div class="card tight">' + tk.map(taskRow).join('') + '</div>';
+  if (r) {
+    const long = isNight(now) && r.kind !== 'pump' && now - r.t > 30 * 60e3;
+    h += '<div class="alert ' + (long ? 'now' : 'info') + '">' + icon(long ? 'moon' : KIND[r.kind].ic) + '<div><b>엄마가 ' + kindDesc(r.kind, curSide(r)) + ' 중이에요 · <span id="clock">00:00</span></b><span>' + (long ? '30분이 넘었어요. 아기를 안고 잠들지 않았는지 확인하고, 잠들었으면 아기를 자기 침대로.' : '물 한 컵 챙겨 주세요.') + '</span></div></div>';
+  }
+  const extra = extraTasks(now);
+  if (tk.length || extra.length) h += '<div class="card tight">' + extra.join('') + tk.map(taskRow).join('') + '</div>';
   const lf = lastOf(isDFeed);
   const ld = lastOf(e => e.type === 'diaper');
   const lb = lastOf(e => e.type === 'bottle');
@@ -1470,6 +1642,22 @@ function viewTodo() {
     '<div class="stat"><span class="k">젖병</span><span class="vv">' + (lb ? fmtAgoShort(lb.t) : '—') + '</span></div></div></div>';
   h += '<div class="card tight"><div class="li">' + bub('phone', 'blue') + '<span class="tx"><span class="t">대기 모드</span><span class="d">' + (state.standby ? '화면을 켜 두면 엄마가 시작할 때 소리로 알려요. ' + state.cfg.dadSleep.start + '–' + state.cfg.dadSleep.end + '엔 무음' : '엄마가 수유를 시작하면 소리로 알려요') + '</span></span><button class="switch" id="standby" role="switch" aria-checked="' + state.standby + '" aria-label="대기 모드"></button></div></div>';
   return h;
+}
+function extraTasks(now) {
+  const out = [];
+  const row = (ic, tone, tt, d, btn) => '<div class="li">' + bub(ic, tone) + '<span class="tx"><span class="t">' + tt + '</span><span class="d">' + d + '</span></span>' + (btn || '') + '</div>';
+  if (!(state.cfg.safeSleep && state.cfg.safeSleep.checkedAt)) out.push(row('moon', 'violet', '안전한 잠자리 7가지 확인', '두 아이 따로·등 대고·잠자리엔 아기만 등', '<button class="sbtn" data-safesleep="1">확인하기</button>'));
+  // 검진·접종: 할 일엔 한 줄만 (가장 급한 1건 + 나머지 개수). 병원에서 했을 항목은 '퇴원요약지로 확인'
+  const due = careDue(state.events, state.cfg, now);
+  const act = due.filter(x => !x.confirm), conf = due.filter(x => x.confirm);
+  if (act.length || conf.length) {
+    const top = act[0];
+    const items = new Set(due.map(x => x.item.id)).size;
+    const tt = top ? top.item.name + ' (' + fmtMD(top.item.toT) + '까지)' : '병원에서 한 검사·접종 확인';
+    const d = (top && top.overdue ? '기간 지남 · ' : '') + (items > 1 ? '외 ' + (items - 1) + '건 · ' : '') + (conf.length ? '출생 때 한 것은 퇴원요약지로 확인' : NAME('S') + '는 NICU에 물어보기');
+    out.push(row('clip', top && top.overdue ? 'red' : 'blue', tt, d, '<button class="sbtn" data-go="kids">보기</button>'));
+  }
+  return out;
 }
 function taskRow(t) {
   const now = Date.now();
@@ -1517,11 +1705,16 @@ function viewKids() {
     orderChart(now) +
     '<div class="li" style="border-top:1px solid var(--line)">' + bub('scale', 'boy') + '<span class="tx"><span class="t">체중</span><span class="d">' + (wS ? fmtMD(wS.t) + ' · ' + (wS.src === 'nicu' ? 'NICU' : wS.src === 'clinic' ? '소아과' : '집') : '출생') + ' · ' + pctLabel('S', dayOfLife(now, cfg), gS) + '</span></span><span class="v">' + n0(gS) + 'g<small>' + (gS - cfg.birthG.S >= 0 ? '+' : '') + n0(gS - cfg.birthG.S) + 'g</small></span><button class="sbtn gray" data-q="weightS">적기</button></div>' +
     '</div>';
+  h += careCard(now);
   h += guideCard(now, gD, sD);
-  h += '<div class="card"><h2>' + bub('scale', 'girl') + NAME('D') + ' 성장</h2><p class="small">' + pctLabel('D', dayOfLife(now, cfg), gD) + ' · 출생 때 ' + pctLabel('D', 0, cfg.birthG.D) + '</p>' + growthChart('D', now) + growthLegend() + '</div>';
-  h += '<div class="card"><h2>' + bub('scale', 'boy') + NAME('S') + ' 성장</h2><p class="small">' + pctLabel('S', dayOfLife(now, cfg), gS) + ' · 출생 때 ' + pctLabel('S', 0, cfg.birthG.S) + '</p>' + growthChart('S', now) + growthLegend() + '</div>';
+  h += '<div class="card"><h2>' + bub('scale', 'girl') + NAME('D') + ' 성장</h2><p class="small">' + pctLabel('D', dayOfLife(now, cfg), gD) + ' · 출생 때 ' + pctLabel('D', 0, cfg.birthG.D) + measureText('D') + '</p>' + growthChart('D', now) + growthLegend() + '</div>';
+  h += '<div class="card"><h2>' + bub('scale', 'boy') + NAME('S') + ' 성장</h2><p class="small">' + pctLabel('S', dayOfLife(now, cfg), gS) + ' · 출생 때 ' + pctLabel('S', 0, cfg.birthG.S) + measureText('S') + '</p>' + growthChart('S', now) + growthLegend() + '</div>';
   h += '<p class="foot">백분위 띠는 질병관리청 2017 소아청소년 성장도표(36개월 미만은 WHO 성장기준)의 개월별 값을 날짜 사이로 이어 그린 근사치예요. 한 번의 숫자보다 자기 선을 따라 꾸준히 크는지가 중요해요.</p>';
   return h;
+}
+function measureText(baby) {
+  const m = state.events.filter(e => e.type === 'weight' && e.baby === baby && (e.lengthCm || e.hcCm)).sort((a, b) => b.t - a.t)[0];
+  return m ? '<br><span class="xs muted">' + fmtMD(m.t) + ' 검진: ' + (m.lengthCm ? '키 ' + m.lengthCm + 'cm' : '') + (m.lengthCm && m.hcCm ? ' · ' : '') + (m.hcCm ? '머리둘레 ' + m.hcCm + 'cm' : '') + ' (백분위는 검진 결과지·질병관리청 성장 계산기로)</span>' : '';
 }
 function guideCard(now, gD, sD) {
   const cfg = state.cfg, age = dayOfLife(now, cfg), fg = feedGuide(gD), br = bookRow(age), fp = feedPattern(state.events, now);
@@ -1792,8 +1985,13 @@ function render() {
   $('nav.tabs').hidden = !state.me;
   tick();
 }
+const longWarned = new Set();
 function tick() {
   const r = running(), el = document.getElementById('clock');
+  if (r && state.me === 'dad' && state.standby && r.kind !== 'pump' && isNight(Date.now()) && Date.now() - r.t > 30 * 60e3 && !longWarned.has(r.id) && !inWindow(Date.now(), state.cfg.dadSleep)) {
+    longWarned.add(r.id); chime(); try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch {}
+    toast('엄마 수유가 30분 넘었어요. 아기를 안고 잠들지 않았는지 봐 주세요.', true, 15000);
+  }
   if (r && el) { const s = Math.floor((Date.now() - r.t) / 1000); el.textContent = (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); }
 }
 setInterval(tick, 1000);
@@ -1808,6 +2006,9 @@ document.addEventListener('click', async e => {
   if (d.role) { state.me = d.role; ls.set('tf.me', state.me); state.tab = null; render(); return; }
   if (b.id === 'night') { state.night = !state.night; ls.set('tf.night', state.night); render(); return; }
   if (b.id === 'gear') return settingsSheet();
+  if (b.id === 'cryhelp') return crySheet();
+  if (d.safesleep) return safeSleepSheet();
+  if (d.careitem) return careSheet(d.carebaby, d.careitem);
   if (d.start) return startSession(d.start);
   if (d.end) { const r = state.events.find(x => x.id === d.end); if (r) endSession(r); return; }
   if (d.cancel) { const r = state.events.find(x => x.id === d.cancel); if (r) cancelSession(r); return; }

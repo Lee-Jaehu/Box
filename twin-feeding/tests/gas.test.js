@@ -28,7 +28,7 @@ function makeEnv() {
     SpreadsheetApp: { openById: () => ss },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] ?? null, setProperty: (k, v) => { props[k] = String(v); } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
-    Utilities: { getUuid: () => 'abcd1234-ef56-7890-abcd-1234567890ab', formatDate: (d) => d.toISOString().slice(0, 16).replace('T', ' ') },
+    Utilities: { getUuid: () => 'abcd1234-ef56-7890-abcd-1234567890ab', formatDate: (d, tz, f) => f === 'H' ? String(d.getHours()) : d.toISOString().slice(0, 16).replace('T', ' ') },
     ContentService: { createTextOutput: s => ({ text: s }) },
     HtmlService: { createHtmlOutputFromFile: () => ({ getContent: () => '<p>__TOKEN__</p>' }), createHtmlOutput: h => ({ html: h, setTitle() { return this; }, addMetaTag() { return this; } }) },
     ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }) },
@@ -60,14 +60,14 @@ test('wrong token is refused; page gets the token injected', () => {
 });
 test('action button toggles: start (default 직수+유축, 왼쪽) → end → next start on the other side', () => {
   assert.strictEqual(act({ a: 'feed' }, T0), '왼쪽 직수 유축 시작했어요.');
-  assert.strictEqual(act({ a: 'feed' }, T0 + 22 * 60e3), '직수 유축 끝. 22분이에요.');
+  assert.ok(act({ a: 'feed' }, T0 + 22 * 60e3).startsWith('직수 유축 끝. 22분이에요.'), '직수 유축 끝. 22분이에요.');
   assert.strictEqual(act({ a: 'feed' }, T0 + 3 * 3600e3), '오른쪽 직수 유축 시작했어요.');
-  assert.strictEqual(act({ a: 'end' }, T0 + 3 * 3600e3 + 15 * 60e3), '직수 유축 끝. 15분이에요.');
+  assert.ok(act({ a: 'end' }, T0 + 3 * 3600e3 + 15 * 60e3).startsWith('직수 유축 끝. 15분이에요.'), '직수 유축 끝. 15분이에요.');
 });
 test('start with spoken kind and side; starting while one is open ends it first', () => {
   assert.strictEqual(act({ a: 'start', kind: '직수', side: '오른쪽' }, T0 + 5 * 3600e3), '오른쪽 직수 시작했어요.');
   assert.strictEqual(act({ a: 'start', kind: 'pump' }, T0 + 5 * 3600e3 + 20 * 60e3), '앞 기록을 끝내고 양쪽 유축 시작했어요.');
-  assert.strictEqual(act({ a: 'end' }, T0 + 5 * 3600e3 + 40 * 60e3), '유축 끝. 20분이에요.');
+  assert.ok(act({ a: 'end' }, T0 + 5 * 3600e3 + 40 * 60e3).startsWith('유축 끝. 20분이에요.'), '유축 끝. 20분이에요.');
   assert.strictEqual(act({ a: 'end' }, T0 + 6 * 3600e3), '진행 중인 수유가 없어요.');
 });
 test('diaper, bottle with spoken amount, status', () => {
@@ -88,7 +88,7 @@ test('undo right after ending a feed reopens it', () => {
   act({ a: 'feed' }, T0 + 8 * 3600e3);
   act({ a: 'feed' }, T0 + 8 * 3600e3 + 10 * 60e3);
   assert.ok(/끝낸 걸 되돌렸어요/.test(act({ a: 'undo' }, T0 + 8 * 3600e3 + 11 * 60e3)));
-  assert.strictEqual(act({ a: 'end' }, T0 + 8 * 3600e3 + 20 * 60e3), '직수 유축 끝. 20분이에요.');
+  assert.ok(act({ a: 'end' }, T0 + 8 * 3600e3 + 20 * 60e3).startsWith('직수 유축 끝. 20분이에요.'), '직수 유축 끝. 20분이에요.');
 });
 test('cry ranking: long since feed → hunger first; recent feed & old diaper → diaper first', () => {
   const H = 3600e3;
@@ -102,7 +102,7 @@ test('cry ranking: long since feed → hunger first; recent feed & old diaper �
   assert.strictEqual(act({ a: 'calm', how: '먹였어' }, T0 + 10 * 3600e3 + 5 * 60e3), '먹여서 그친 걸 기록했어요.');
 });
 test('sleep toggle', () => {
-  assert.strictEqual(act({ a: 'sleep' }, T0 + 11 * 3600e3), '잠들었어요.');
+  assert.strictEqual(act({ a: 'sleep' }, T0 + 11 * 3600e3), '잠들었어요. 등 대고, 자기 잠자리에 아기만 있는지 봐 주세요.');
   assert.strictEqual(act({ a: 'sleep' }, T0 + 12.5 * 3600e3), '깼어요. 1시간 30분 잤어요.');
 });
 test('bag updates are refused when the version moved (another phone changed it)', () => {
@@ -139,15 +139,41 @@ test('switching sides mid-feed: split is spoken, and next start suggests the les
   const B = T0 + 20 * 3600e3;
   assert.strictEqual(act({ a: 'start', kind: 'nurse', side: 'L' }, B), '왼쪽 직수 시작했어요.');
   assert.strictEqual(act({ a: 'switch' }, B + 5 * 60e3), '오른쪽으로 바꿨어요.');
-  assert.strictEqual(act({ a: 'end' }, B + 7 * 60e3), '직수 끝. 7분이에요. 왼쪽 5, 오른쪽 2분.');
+  assert.ok(act({ a: 'end' }, B + 7 * 60e3).startsWith('직수 끝. 7분이에요. 왼쪽 5, 오른쪽 2분.'), '직수 끝. 7분이에요. 왼쪽 5, 오른쪽 2분.');
   // 왼 5, 오 2 → 다음은 덜 먹인 오른쪽
   assert.strictEqual(act({ a: 'start', kind: 'nurse' }, B + 60 * 60e3), '오른쪽 직수 시작했어요.');
-  assert.strictEqual(act({ a: 'end' }, B + 68 * 60e3), '직수 끝. 8분이에요.');
+  assert.ok(act({ a: 'end' }, B + 68 * 60e3).startsWith('직수 끝. 8분이에요.'), '직수 끝. 8분이에요.');
   // 한쪽만 먹였으면 반대쪽
   assert.strictEqual(act({ a: 'start', kind: 'nurse' }, B + 120 * 60e3), '왼쪽 직수 시작했어요.');
   assert.strictEqual(act({ a: 'switch' }, B + 121 * 60e3) !== '바꿀 직수가 없어요.', true);
   act({ a: 'end' }, B + 130 * 60e3);
   assert.strictEqual(act({ a: 'switch' }, B + 131 * 60e3), '바꿀 직수가 없어요.');
+});
+
+test('night safety: ending a night feed adds the safe-sleep line; long feeds get a stronger line; sleep start reminds', () => {
+  const N = at('2026-11-21T02:00');
+  act({ a: 'start', kind: 'nurse', side: 'L' }, N);
+  assert.ok(/등 대고, 아기 침대로\.$/.test(act({ a: 'end' }, N + 10 * 60e3)));
+  act({ a: 'start', kind: 'nurse', side: 'R' }, N + 60 * 60e3);
+  assert.ok(/오래 안고 있었어요/.test(act({ a: 'end' }, N + 100 * 60e3)));
+  const D0 = at('2026-11-21T14:00');
+  act({ a: 'start', kind: 'nurse', side: 'L' }, D0);
+  assert.ok(!/침대/.test(act({ a: 'end' }, D0 + 10 * 60e3)));     // 낮에는 말하지 않음
+  assert.ok(/등 대고/.test(act({ a: 'sleep' }, D0 + 20 * 60e3)));
+  act({ a: 'sleep' }, D0 + 80 * 60e3);
+});
+test('crying 20+ minutes: the reply switches to the check-order and safe-break plan; break is logged', () => {
+  const C = at('2026-11-22T03:00');
+  act({ a: 'cry' }, C); act({ a: 'cry' }, C + 9 * 60e3);
+  const r = act({ a: 'cry' }, C + 22 * 60e3);
+  assert.ok(/22분째 울고 있어요/.test(r) && /흔들지는 마세요/.test(r) && /38도/.test(r), r);
+  assert.ok(/10분 뒤에 다시 보러 가요/.test(act({ a: 'break' }, C + 23 * 60e3)));
+  act({ a: 'calm', how: 'feed' }, C + 30 * 60e3);
+  assert.ok(!/분째 울고/.test(act({ a: 'cry' }, C + 40 * 60e3)));  // 그친 뒤 새 울음은 처음부터
+});
+test('care schedule by voice lists what is due within a week', () => {
+  const r = act({ a: 'care' }, at('2026-11-21T10:00'));
+  assert.ok(/영유아건강검진 1차 12월 11일까지/.test(r) && /BCG/.test(r), r);
 });
 
 console.log('\n' + n + ' tests passed');
