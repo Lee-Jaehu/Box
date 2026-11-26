@@ -1,0 +1,53 @@
+[Worklog] 실행 환경 초기 설정을 시작합니다. Python 3.12를 씁니다(3.15 같은 더 새 버전은 설치가 안 됩니다).
+          순서: Conda 환경 -> embedded Python(runtime\python) -> .venv. 먼저 성공한 하나만 준비합니다.
+          인터넷(또는 프록시)이 필요합니다. 오프라인이면 wheels 폴더를 프로그램 폴더에 두세요. 몇 분 걸릴 수 있습니다.
+
+[setup] packages will be downloaded from PyPI (internet or proxy needed; set HTTPS_PROXY in config.json if your network requires it)
+[setup] app folder: C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main
+[setup] order: conda -> embedded -> venv
+[setup] [conda] skipped: no conda installation found
+[setup] [embedded] skipped: C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\runtime\python\python.exe not found (unpack the Python 3.12 'Windows embeddable package (64-bit)' there to use this option)
+[setup] installing packages: C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Scripts\python.exe -m pip install -r requirements.txt
+    ERROR: Exception:
+    Traceback (most recent call last):
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\cli\base_command.py", line 105, in _run_wrapper
+        status = _inner_run()
+                 ^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\cli\base_command.py", line 96, in _inner_run
+        return self.run(options, args)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\cli\req_command.py", line 67, in wrapper
+        return func(self, options, args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\commands\install.py", line 343, in run
+        reqs = self.get_requirements(args, options, finder, session)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\cli\req_command.py", line 255, in get_requirements
+        for parsed_req in parse_requirements(
+                          ^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\req\req_file.py", line 151, in parse_requirements
+        for parsed_line in parser.parse(filename, constraint):
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\req\req_file.py", line 332, in parse
+        yield from self._parse_and_recurse(filename, constraint)
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\req\req_file.py", line 337, in _parse_and_recurse
+        for line in self._parse_file(filename, constraint):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\req\req_file.py", line 368, in _parse_file
+        _, content = get_file_content(filename, self._session)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\req\req_file.py", line 548, in get_file_content
+        content = auto_decode(f.read())
+                  ^^^^^^^^^^^^^^^^^^^^^
+      File "C:\Users\jaehu\Desktop\Worklog-v3-main (4)\Worklog-v3-main\.venv\Lib\site-packages\pip\_internal\utils\encoding.py", line 34, in auto_decode
+        return data.decode(
+               ^^^^^^^^^^^^
+    UnicodeDecodeError: 'cp949' codec can't decode byte 0xec in position 22: illegal multibyte sequence
+    decoding with 'cp949' codec failed
+[setup] [venv] package install failed
+[setup] no option worked. Install Python 3.12 (python.org) or Miniconda, or unpack the embeddable package to runtime\python, then run again.
+RESULT|FAILED
+
+[Worklog] 설정하지 못했습니다 (종료 코드 1). 위의 [setup] 메시지에서 이유를 확인하세요.
+          인터넷 차단: 인터넷 되는 PC에서 scripts\make-wheelhouse.ps1 로 wheels 폴더를 만들어 복사한 뒤 다시 실행.
+          Python 없음: python.org 의 Python 3.12 또는 Miniconda 를 설치하거나 runtime\python 에 3.12 embeddable 패키지를 푸세요.
